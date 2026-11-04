@@ -53,8 +53,17 @@ var SRV = (function () {
     if (DEMO) {
       return new Promise(function (ok) { setTimeout(function () { ok(CORE.manejar(envDemo(), JSON.parse(JSON.stringify(b)))); }, 120); });
     }
-    return fetch(CONFIG.API_URL, { method: 'POST', body: JSON.stringify(b), headers: { 'Content-Type': 'text/plain;charset=utf-8' }, redirect: 'follow' })
-      .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); });
+    var intento = 0;
+    function una() {
+      return fetch(CONFIG.API_URL, { method: 'POST', body: JSON.stringify(b), headers: { 'Content-Type': 'text/plain;charset=utf-8' }, redirect: 'follow' })
+        .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+        .then(function (r) {
+          // servidor ocupado con otra solicitud: se reintenta solo, sin que la persona haga nada
+          if (r && r.ocupado && intento++ < 5) return new Promise(function (ok) { setTimeout(ok, 2500 * intento); }).then(una);
+          return r;
+        });
+    }
+    return una();
   }
 
   /* ---------- cola de eventos ---------- */
