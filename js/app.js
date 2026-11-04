@@ -85,7 +85,7 @@
   setInterval(function () {
     if (!Tiempo.item) return;
     if (document.visibilityState === 'visible' && Date.now() - Tiempo.activo < Tiempo.limite) Tiempo.acc += 5;
-    if (Date.now() - ultVolcado > 60000) { ultVolcado = Date.now(); Tiempo.volcar(); SRV.enviar(S.token); }
+    if (Date.now() - ultVolcado > 150000) { ultVolcado = Date.now(); Tiempo.volcar(); SRV.enviar(S.token); }
     if (typeof Tiempo.onTick === 'function') Tiempo.onTick();
   }, 5000);
   document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'hidden') { Tiempo.volcar(); SRV.enviar(S.token); } });
