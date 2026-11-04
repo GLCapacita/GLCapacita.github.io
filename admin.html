@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#0F3B4C">
+<title>PyV Capacita · Panel</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/app.css">
+<style>
+  main { max-width: 1100px; }
+  .barra-in { max-width: 1100px; }
+  .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-bottom: 16px; }
+  .kpi { background: #fff; border-radius: 12px; padding: 12px 14px; box-shadow: var(--sombra); }
+  .kpi b { display: block; font-family: var(--fuente-c); font-size: 34px; color: var(--fiordo); line-height: 1.1; }
+  .kpi span { font-size: 14px; color: var(--roca); }
+  .filtros { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; }
+  .filtros > * { flex: 1 1 180px; margin: 0; }
+  table.tabla { width: 100%; border-collapse: collapse; background: #fff; border-radius: 12px; overflow: hidden; box-shadow: var(--sombra); font-size: 15px; }
+  .tabla th { text-align: left; background: var(--fiordo); color: #fff; font-weight: 600; padding: 10px; font-size: 14px; }
+  .tabla td { padding: 10px; border-bottom: 1px solid var(--bruma-2); vertical-align: top; }
+  .tabla tr:last-child td { border-bottom: 0; }
+  .mini { height: 8px; background: var(--bruma-2); border-radius: 99px; overflow: hidden; width: 110px; margin-top: 4px; }
+  .mini i { display: block; height: 100%; background: var(--alga); }
+  .acciones { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 14px; }
+  .acciones button, .acciones a { background: none; border: 0; padding: 0; color: var(--fiordo-2); text-decoration: underline; cursor: pointer; font-size: 14px; }
+  .tabla-scroll { overflow-x: auto; border-radius: 12px; }
+  .codigo-ses { font-family: var(--fuente-c); font-size: 40px; letter-spacing: 6px; color: var(--chaleco-osc); font-weight: 700; }
+  .grid2 { display: grid; grid-template-columns: 1fr; gap: 0 14px; }
+  @media (min-width: 700px) { .grid2 { grid-template-columns: 1fr 1fr; } }
+  dialog { border: 0; border-radius: 16px; padding: 20px; max-width: 560px; width: 92vw; box-shadow: 0 20px 60px rgba(0,0,0,.3); }
+  dialog::backdrop { background: rgba(15,59,76,.45); }
+  .det-lista { font-size: 15px; margin: 0; padding: 0; list-style: none; max-height: 50vh; overflow: auto; }
+  .det-lista li { display: flex; justify-content: space-between; gap: 10px; padding: 6px 0; border-bottom: 1px solid var(--bruma-2); }
+</style>
+</head>
+<body>
+<div id="demo-banda" class="demo-banda oculto">Modo demostración: clave de administración <b>demo</b> y de supervisor <b>supervisor</b>.</div>
+<header class="barra"><div class="barra-in">
+  <div class="marca"><span class="logo-chip"><img src="img/logo_pyv.png" alt=""></span>PyV Capacita · Panel</div>
+  <div class="esp"></div>
+  <button id="btn-salir" class="btn-barra oculto" type="button">Salir</button>
+</div></header>
+<main id="app"><div class="cargando">Cargando…</div></main>
+<dialog id="dlg"></dialog>
+<div id="toast" class="toast oculto" role="status" aria-live="polite"></div>
+<script src="js/config.js"></script>
+<script src="js/plan.js"></script>
+<script src="js/qrcode.js"></script>
+<script src="js/logo.js"></script>
+<script src="js/core.js"></script>
+<script src="js/api.js"></script>
+<script src="js/admin.js"></script>
+</body>
+</html>

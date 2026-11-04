@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0F3B4C">
+<title>Verificar certificado · PyV Capacita</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+<header class="barra"><div class="barra-in"><div class="marca"><span class="logo-chip"><img src="img/logo_pyv.png" alt=""></span>PyV Capacita</div></div></header>
+<main>
+  <h1>Verificar un certificado</h1>
+  <p class="suave">Escribe el código impreso en el certificado o escanea su código QR.</p>
+  <form id="f" class="tarjeta"><label class="campo">Código<input type="text" name="c" placeholder="PYV-XXXXXXXXXX" autocapitalize="characters" required></label><button class="btn btn-pri btn-bloque" type="submit">Verificar</button></form>
+  <div id="res"></div>
+</main>
+<script src="js/config.js"></script>
+<script src="js/plan.js"></script>
+<script src="js/qrcode.js"></script>
+<script src="js/logo.js"></script>
+<script src="js/core.js"></script>
+<script src="js/api.js"></script>
+<script>
+(function () {
+  function h(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  function fecha(f) { var m = String(f || '').match(/(\d{4})-(\d{2})-(\d{2})/); return m ? m[3] + '-' + m[2] + '-' + m[1] : f; }
+  var res = document.getElementById('res'), f = document.getElementById('f');
+  function verificar(c) {
+    res.innerHTML = '<div class="cargando">Verificando…</div>';
+    SRV.llamar('verificar', { codigo: c }).then(function (r) {
+      if (!r.ok) { res.innerHTML = '<div class="aviso error">' + h(r.error) + '</div>'; return; }
+      var x = r.certificado, est = { vigente: ['ok', 'Certificado vigente'], vencido: ['info', 'Certificado vencido: requiere recapacitación'], anulado: ['error', 'Certificado anulado'] }[x.estado];
+      res.innerHTML = '<div class="aviso ' + est[0] + '"><b>' + est[1] + '</b></div><section class="tarjeta"><h2>' + h(x.nombre) + '</h2><p>RUN ' + h(x.run) + ' · ' + h(x.cargo) + '</p>' +
+        '<p>' + h(x.curso) + ', ' + h(x.horas) + ' horas.</p><p>Emitido el ' + fecha(x.fechaEmision) + ' · vigente hasta ' + fecha(x.vence) + '.</p><p class="suave peq">' + h(x.empresa) + ' · Código ' + h(x.codigo) + '</p></section>';
+    }).catch(function () { res.innerHTML = '<div class="aviso error">No se pudo conectar. Inténtalo de nuevo.</div>'; });
+  }
+  f.addEventListener('submit', function (e) { e.preventDefault(); verificar(f.c.value.trim()); });
+  var q = new URLSearchParams(location.search).get('c'); if (q) { f.c.value = q; verificar(q); }
+})();
+</script>
+</body>
+</html>
