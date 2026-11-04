@@ -37,6 +37,8 @@ var SRV = (function () {
         guardarImagen: function (carpeta, nombre) { return { id: carpeta + '/' + nombre, url: '' }; },
         guardarEvidencia: function (sid, nombre) { return { id: sid + '/' + nombre, url: '' }; },
         guardarDocumento: function (nombre, dataUrl) { return { id: nombre, url: String(dataUrl).length < 1500000 ? dataUrl : '' }; },
+        guardarFirma: function (nombre, dataUrl) { var id = 'firma_' + nombre; ls('pyv_demo_' + id, dataUrl); return id; },
+        leerImagen: function (id) { return ls('pyv_demo_' + id) || ''; },
         nuevaCarpetaExpediente: function (n) { return 'demo/Expedientes/' + n; },
         copiarRegistro: function () { return ''; },
         urlCarpeta: function () { return ''; },

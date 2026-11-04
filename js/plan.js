@@ -28,7 +28,7 @@ var PLAN = {
      minMin = minutos mínimos de permanencia real para dar la etapa por completada. */
   cursos: [
     { id: 'ds44', titulo: 'Curso obligatorio de prevención de riesgos', sub: 'Art. 16 D.S. 44 · 8 horas · Res. Ex. 1117/2026', obligatorio: true,
-      horas: 8, doc: 'certificado', vigenciaMeses: 24, plazoMeses: 3, cargos: '*',
+      horas: 8, duracionMin: 480, doc: 'certificado', vigenciaMeses: 12, plazoMeses: 3, cargos: '*',
       contenidos: 'Derechos y obligaciones (Ley 16.744 y D.S. 44) · Identificación de peligros y MIPER · Efectos en la salud · Medidas de control · Emergencias y desastres · Señalización · Incendios y extintores · Riesgos del cargo en PyV · Talleres prácticos',
       modulos: [
         { n: 0, titulo: 'Inicio' }, { n: 1, titulo: 'Módulo 1 · Derechos y obligaciones' }, { n: 2, titulo: 'Módulo 2 · Identificación de peligros' },
@@ -71,7 +71,7 @@ var PLAN = {
       ] },
 
     { id: 'irl', titulo: 'Los riesgos de tu cargo (IRL)', sub: 'Obligación de informar · art. 15 D.S. 44', obligatorio: true,
-      horas: 1, doc: 'certificado', vigenciaMeses: 0, plazoMeses: 0, cargos: '*',
+      horas: 0.5, duracionMin: 30, doc: 'certificado', vigenciaMeses: 12, plazoMeses: 0, cargos: '*',
       contenidos: 'Riesgos del cargo según la Matriz IPER · Medidas preventivas y métodos de trabajo correctos · Rol en emergencias · Derechos del trabajador',
       etapas: [
         { id: 'l1', tipo: 'leccion', titulo: 'Cápsula: lo que puede pasar en tu trabajo', minMin: 8 },
@@ -81,7 +81,7 @@ var PLAN = {
       ] },
 
     { id: 'iper', titulo: 'Cómo leer la Matriz IPER de PyV', sub: 'Peligro, riesgo, P × S y jerarquía de controles',
-      horas: 1, doc: 'certificado', vigenciaMeses: 0, plazoMeses: 0, cargos: '*',
+      horas: 0.5, duracionMin: 30, doc: 'certificado', vigenciaMeses: 12, plazoMeses: 0, cargos: '*',
       contenidos: 'Estructura de la Matriz IPER · Evaluación P × S y niveles de riesgo · Protocolos MINSAL · Jerarquía de controles · Riesgo residual',
       etapas: [
         { id: 'l1', tipo: 'leccion', titulo: 'Cápsula: cómo se lee la matriz', minMin: 8 },
@@ -90,7 +90,7 @@ var PLAN = {
       ] },
 
     { id: 'prrd', titulo: 'Emergencias y desastres en PyV', sub: 'Plan para la Reducción del Riesgo de Desastres 2026',
-      horas: 1, doc: 'certificado', vigenciaMeses: 12, plazoMeses: 0, cargos: '*',
+      horas: 0.5, duracionMin: 30, doc: 'certificado', vigenciaMeses: 12, plazoMeses: 0, cargos: '*',
       contenidos: 'Amenazas por escenario · Organización y roles · Alerta y comunicación · Planes de respuesta ACCEDER · Tsunami y sismo en fiordos · Directorio',
       etapas: [
         { id: 'l1', tipo: 'leccion', titulo: 'Cápsula: el plan de emergencias de PyV', minMin: 8 },
@@ -100,7 +100,7 @@ var PLAN = {
       ] },
 
     { id: 'epp', titulo: 'EPP: uso, cuidado y reposición', sub: 'PTS-001 · capacitación mínima de 1 hora',
-      horas: 1, doc: 'certificado', vigenciaMeses: 12, plazoMeses: 0, cargos: '*',
+      horas: 0.5, duracionMin: 30, doc: 'certificado', vigenciaMeses: 12, plazoMeses: 0, cargos: '*',
       contenidos: 'Gestión del EPP en 8 etapas · Uso correcto · Mantención · Criterios de reposición · Disposición final',
       etapas: [
         { id: 'l1', tipo: 'leccion', titulo: 'Cápsula: tu EPP de principio a fin', minMin: 10 },
@@ -111,7 +111,7 @@ var PLAN = {
       ] },
 
     { id: 'acc', titulo: 'Qué hacer ante un accidente', sub: 'Procedimiento de accidentes y PTS-018',
-      horas: 1, doc: 'certificado', vigenciaMeses: 0, plazoMeses: 0, cargos: '*',
+      horas: 0.33, duracionMin: 20, doc: 'certificado', vigenciaMeses: 12, plazoMeses: 0, cargos: '*',
       contenidos: 'Accidente leve, grave y fatal · Denuncia DIAT · Suspensión y notificación · Investigación con árbol de causas · Accidente de trayecto',
       etapas: [
         { id: 'l1', tipo: 'leccion', titulo: 'Cápsula: paso a paso ante un accidente', minMin: 8 },
@@ -138,7 +138,7 @@ var PLAN = {
   P.forEach(function (p) {
     var id = p[0].toLowerCase();
     PLAN.cursos.push({ id: id, titulo: p[0] + ' · ' + p[1], sub: 'Procedimiento de trabajo seguro', pts: p[0],
-      horas: 1, doc: 'certificado', vigenciaMeses: 12, plazoMeses: 0, cargos: p[2],
+      horas: 0.33, duracionMin: 20, doc: 'certificado', vigenciaMeses: 12, plazoMeses: 0, cargos: p[2],
       contenidos: 'Objetivo y alcance · Responsabilidades · EPP · Secuencia de trabajo · Criterios de detención · Puntos clave del ' + p[0],
       etapas: [
         { id: 'l1', tipo: 'leccion', titulo: 'Cápsula: el procedimiento paso a paso', minMin: 8 },
@@ -154,6 +154,12 @@ PLAN.etapas = [];
 PLAN.cursos.forEach(function (c) {
   c.etapas.forEach(function (e) { e.curso = c.id; e.local = e.id; e.id = c.id + '.' + e.id; if (e.modulo == null) e.modulo = 0; PLAN.etapas.push(e); });
 });
+PLAN.duracionTxt = function (min) {
+  min = Math.round(+min || 0);
+  if (min < 60) return min + ' minutos';
+  var h = Math.floor(min / 60), m = min % 60;
+  return h + (h === 1 ? ' hora' : ' horas') + (m ? ' ' + m + ' minutos' : '') + ' cronológica' + (h === 1 && !m ? '' : 's');
+};
 PLAN.curso = function (id) { for (var i = 0; i < PLAN.cursos.length; i++) if (PLAN.cursos[i].id === id) return PLAN.cursos[i]; return null; };
 PLAN.etapa = function (id) { for (var i = 0; i < PLAN.etapas.length; i++) if (PLAN.etapas[i].id === id) return PLAN.etapas[i]; return null; };
 PLAN.cargo = function (id) { for (var i = 0; i < PLAN.cargos.length; i++) if (PLAN.cargos[i].id === id) return PLAN.cargos[i]; return null; };
@@ -166,7 +172,7 @@ if (typeof module !== 'undefined') module.exports = PLAN;
 PLAN.registrarExtra = function (x) {
   var viejo = PLAN.curso(x.id);
   if (viejo) { PLAN.cursos.splice(PLAN.cursos.indexOf(viejo), 1); PLAN.etapas = PLAN.etapas.filter(function (e) { return e.curso !== x.id; }); }
-  var c = { id: x.id, titulo: x.titulo, sub: x.sub || 'Capacitación de la empresa', extra: true, horas: x.horas || 1, doc: 'certificado', vigenciaMeses: x.vigenciaMeses || 0, plazoMeses: 0,
+  var c = { id: x.id, titulo: x.titulo, sub: x.sub || 'Capacitación de la empresa', extra: true, horas: x.horas || 1, duracionMin: Math.round((parseFloat(String(x.horas || 1).replace(',', '.')) || 1) * 60), doc: 'certificado', vigenciaMeses: +x.vigenciaMeses || 12, plazoMeses: 0,
     cargos: x.cargos, contenidos: x.sub || x.titulo, documentoUrl: x.documentoUrl || '',
     etapas: [{ id: 'l1', tipo: 'leccion', titulo: 'Cápsula', minMin: Math.max(2, Math.min(20, ((x.contenido && x.contenido.diapositivas) || []).length)) },
       { id: 'q1', tipo: 'quiz', titulo: 'Evaluación', banco: x.id }] };

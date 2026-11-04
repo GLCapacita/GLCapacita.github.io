@@ -205,7 +205,8 @@
     var av = avanceCurso(cur.id), total = av.total, n = av.n;
     var seg = L.reduce(function (s, e) { return s + prog(e.id).segundos; }, 0);
     var actual = etapaActual(cur.id);
-    var chips = '<span class="chip">Tiempo registrado <b>' + hTxt(seg) + '</b></span>';
+    var rq = (P.cursos && P.cursos[cur.id] && P.cursos[cur.id].requisitos) || {}, durMin = rq.duracionMin || cur.duracionMin || 0;
+    var chips = '<span class="chip">Tiempo registrado <b>' + hTxt(seg) + '</b>' + (durMin ? ' de ' + h(PLAN.duracionTxt(durMin).replace(' cronológicas', '').replace(' cronológica', '')) : '') + '</span>';
     if (esDs && P.fechaLimite && !cert) {
       var dias = Math.ceil((new Date(P.fechaLimite + 'T23:59:59') - new Date()) / 86400000);
       chips += '<span class="chip' + (dias < 0 ? ' peligro' : dias <= 21 ? ' alerta' : '') + '">' + (dias < 0 ? 'Plazo vencido' : 'Plazo hasta <b>' + fechaTxt(P.fechaLimite) + '</b>') + '</span>';
@@ -241,6 +242,8 @@
     var fin = completo(cur.id), vig = cur.vigenciaMeses ? (cur.vigenciaMeses % 12 === 0 ? (cur.vigenciaMeses / 12) + (cur.vigenciaMeses === 12 ? ' año' : ' años') : cur.vigenciaMeses + ' meses') : '';
     html += '<div class="puerto"><h2>' + (cert && !cert.vencido ? 'Capacitación aprobada' : 'Certificado') + '</h2>' +
       (cert && !cert.vencido ? '<p>Código ' + h(cert.codigo) + (cert.vence ? ' · vigente hasta ' + fechaTxt(cert.vence) : '') + '.</p><button class="btn btn-pri" type="button" data-cert>Ver mi certificado</button>'
+        : cert && cert.vencido ? '<p>Tu certificado anterior (' + h(cert.codigo) + ') venció el ' + fechaTxt(cert.vence) + '. Pide a prevención de riesgos que reinicie esta capacitación para renovarlo.</p>'
+        : fin && durMin && seg < durMin * 60 ? '<p>Completaste todas las etapas. El programa dura <b>' + h(PLAN.duracionTxt(durMin)) + '</b> y llevas ' + hTxt(seg) + ' registrados: te faltan unos <b>' + Math.ceil((durMin * 60 - seg) / 60) + ' minutos</b>. Repasa las cápsulas, lecturas y talleres; el tiempo se suma solo mientras estás activo en la pantalla.</p>'
         : fin ? '<p>Completaste todas las etapas. Ya puedes emitir tu certificado.</p><button class="btn btn-pri" type="button" data-cert>Emitir mi certificado</button>'
           : '<p>Se emite al completar todas las etapas' + (esDs && reqDs44().requiereSesiones ? ' y las sesiones' : '') + '. Queda guardado con tu RUN' + (vig ? ' y vale ' + vig : '') + '.</p>') + '</div>';
     html += '</div><p class="pie">' + h(CONTENIDO.empresa.nombre) + ' · Facilitadora: ' + h(P.facilitador || CONTENIDO.empresa.apr) + '</p>';

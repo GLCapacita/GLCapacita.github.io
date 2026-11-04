@@ -275,22 +275,55 @@
   }
 
   /* ---------- configuración ---------- */
+  function cajaFirma(q, titulo, id) {
+    return '<div class="campo"><b>' + h(titulo) + '</b><span class="ayuda" style="display:block;margin-bottom:6px">' + (id ? 'Firma guardada ✓ (dibuja otra para reemplazarla)' : 'Aún sin firma') + '</span>' +
+      '<canvas id="fz-' + q + '" width="600" height="200" style="width:100%;max-width:420px;aspect-ratio:3/1;border:1px dashed #9fb3bb;border-radius:8px;background:#fff;touch-action:none"></canvas>' +
+      '<div class="fila-btn"><button class="btn btn-sec" type="button" id="fl-' + q + '">Borrar</button><label class="btn btn-sec">Subir imagen<input type="file" accept="image/png,image/jpeg" id="fa-' + q + '" hidden></label><button class="btn btn-pri" type="button" id="fg-' + q + '">Guardar firma</button>' +
+      (id ? '<button class="btn btn-sec" type="button" id="fq-' + q + '">Quitar</button>' : '') + '</div></div>';
+  }
   function vConfig() {
     var C = A.datos.config;
     function campo(k, et, ayuda) { return '<label class="campo">' + et + (ayuda ? '<span class="ayuda">' + ayuda + '</span>' : '') + '<input type="text" name="' + k + '" value="' + h(C[k] || '') + '"></label>'; }
     $('#vista').innerHTML = '<section class="tarjeta"><h2>Datos del curso y del certificado</h2><form id="fc"><div class="grid2">' +
       campo('FACILITADOR_NOMBRE', 'Nombre de la facilitadora') + campo('FACILITADOR_RUN', 'RUN de la facilitadora') +
       campo('FACILITADOR_TITULO', 'Título profesional') + campo('FACILITADOR_REGISTRO', 'N° de registro SEREMI', 'Opcional') +
-      campo('EMPRESA', 'Empresa') + campo('RUT_EMPRESA', 'RUT de la empresa') + campo('ORGANISMO', 'Organismo administrador') + campo('HORAS_CURSO', 'Horas del programa') +
+      campo('EMPRESA', 'Empresa') + campo('RUT_EMPRESA', 'RUT de la empresa') + campo('ORGANISMO', 'Organismo administrador') + campo('HORAS_CURSO', 'Horas del curso obligatorio', 'También es el tiempo mínimo que el trabajador debe tener registrado para certificar.') +
+      campo('RL_NOMBRE', 'Nombre del representante legal') + campo('RL_RUN', 'RUN del representante legal') + campo('RL_CARGO', 'Cargo del representante legal') +
       '<label class="campo">¿Exigir sesiones prácticas para certificar?<span class="ayuda">Por defecto el curso es 100% asincrónico (las actividades presenciales están adaptadas como talleres). Activa esto solo si quieres sumar sesiones en vivo.</span><select name="REQUIERE_SESIONES"><option value="SI"' + (C.REQUIERE_SESIONES === 'SI' ? ' selected' : '') + '>Sí</option><option value="NO"' + (C.REQUIERE_SESIONES === 'NO' ? ' selected' : '') + '>No</option></select></label>' +
       campo('SESIONES_REQUERIDAS', 'Número de sesiones requeridas') +
-      campo('MIN_MINUTOS_DS44', 'Minutos mínimos de permanencia para certificar el curso obligatorio', '0 = solo exige completar todas las etapas. Ej.: 360 exige 6 horas registradas.') +
       campo('URL_SITIO', 'Dirección del sitio', 'Se usa en el QR de verificación del certificado. Ej.: https://pyv-capacita.github.io') + '</div>' +
       '<h3>Cambiar claves</h3><div class="grid2"><label class="campo">Nueva clave de administración<input type="password" name="adm" autocomplete="new-password"></label><label class="campo">Nueva clave de supervisores<input type="password" name="sup" autocomplete="new-password"></label></div>' +
-      '<button class="btn btn-pri" type="submit">Guardar configuración</button></form></section>';
+      '<button class="btn btn-pri" type="submit">Guardar configuración</button></form></section>' +
+      '<section class="tarjeta"><h2>Firmas del certificado</h2><p class="suave">Firma con el dedo o el mouse en el recuadro, o sube una foto de la firma sobre papel blanco. Se imprime sobre la línea de firma de todos los certificados que se emitan desde ahora.</p><div class="grid2">' +
+      cajaFirma('apr', 'Prevención de riesgos (' + (C.FACILITADOR_NOMBRE || 'facilitadora') + ')', C.FIRMA_APR_ID) +
+      cajaFirma('rl', 'Representante legal (' + (C.RL_NOMBRE || 'sin nombre') + ')', C.FIRMA_RL_ID) + '</div></section>';
+    ['apr', 'rl'].forEach(function (q) {
+      var cv = $('#fz-' + q), cx = cv.getContext('2d'), dib = false, hay = false;
+      cx.lineWidth = 2.6; cx.lineCap = 'round'; cx.lineJoin = 'round'; cx.strokeStyle = '#10243a';
+      function pos(e) { var r = cv.getBoundingClientRect(); return [(e.clientX - r.left) * cv.width / r.width, (e.clientY - r.top) * cv.height / r.height]; }
+      cv.addEventListener('pointerdown', function (e) { dib = true; hay = true; cv.setPointerCapture(e.pointerId); var p = pos(e); cx.beginPath(); cx.moveTo(p[0], p[1]); e.preventDefault(); });
+      cv.addEventListener('pointermove', function (e) { if (!dib) return; var p = pos(e); cx.lineTo(p[0], p[1]); cx.stroke(); e.preventDefault(); });
+      cv.addEventListener('pointerup', function () { dib = false; });
+      $('#fl-' + q).addEventListener('click', function () { cx.clearRect(0, 0, cv.width, cv.height); hay = false; });
+      $('#fa-' + q).addEventListener('change', function (e) {
+        var file = e.target.files[0]; if (!file) return;
+        var img = new Image(); img.onload = function () {
+          cx.clearRect(0, 0, cv.width, cv.height); var k = Math.min(cv.width / img.width, cv.height / img.height);
+          cx.drawImage(img, (cv.width - img.width * k) / 2, (cv.height - img.height * k) / 2, img.width * k, img.height * k);
+          // fondo blanco → transparente, para que no tape la línea
+          var d = cx.getImageData(0, 0, cv.width, cv.height); for (var i = 0; i < d.data.length; i += 4) { if (d.data[i] > 200 && d.data[i + 1] > 200 && d.data[i + 2] > 200) d.data[i + 3] = 0; } cx.putImageData(d, 0, 0);
+          hay = true;
+        }; img.src = URL.createObjectURL(file);
+      });
+      $('#fg-' + q).addEventListener('click', function () {
+        if (!hay) { toast('Primero firma o sube la imagen.'); return; }
+        llamar('adminFirma', { quien: q, imagen: cv.toDataURL('image/png') }).then(function (r) { toast(r.ok ? 'Firma guardada.' : r.error); if (r.ok) cargar(); });
+      });
+      var bq = $('#fq-' + q); if (bq) bq.addEventListener('click', function () { llamar('adminFirma', { quien: q, imagen: '' }).then(function (r) { toast(r.ok ? 'Firma quitada.' : r.error); if (r.ok) cargar(); }); });
+    });
     $('#fc').addEventListener('submit', function (ev) {
       ev.preventDefault(); var f = ev.target, val = {};
-      ['FACILITADOR_NOMBRE', 'FACILITADOR_RUN', 'FACILITADOR_TITULO', 'FACILITADOR_REGISTRO', 'EMPRESA', 'RUT_EMPRESA', 'ORGANISMO', 'HORAS_CURSO', 'REQUIERE_SESIONES', 'SESIONES_REQUERIDAS', 'MIN_MINUTOS_DS44', 'URL_SITIO'].forEach(function (k) { val[k] = f[k].value.trim(); });
+      ['FACILITADOR_NOMBRE', 'FACILITADOR_RUN', 'FACILITADOR_TITULO', 'FACILITADOR_REGISTRO', 'EMPRESA', 'RUT_EMPRESA', 'ORGANISMO', 'HORAS_CURSO', 'REQUIERE_SESIONES', 'SESIONES_REQUERIDAS', 'URL_SITIO', 'RL_NOMBRE', 'RL_RUN', 'RL_CARGO'].forEach(function (k) { val[k] = f[k].value.trim(); });
       llamar('adminConfig', { valores: val, nuevaClaveAdmin: f.adm.value || undefined, nuevaClaveSupervisor: f.sup.value || undefined }).then(function (r) { toast(r.ok ? 'Configuración guardada.' : r.error); if (r.ok) cargar(); });
     });
   }
