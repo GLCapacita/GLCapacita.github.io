@@ -431,12 +431,16 @@
   function vistaLeccion(e) {
     var def = CONTENIDO.lecciones[e.id]; if (typeof def === 'function') def = def(S.perfil.cargo);
     var D = (def && def.diapositivas) || [], k = 0, visto = {}, ok = hecho(e.id), voz = window.speechSynthesis;
+    /* retoma en la última diapositiva vista (por trabajador y cápsula) */
+    var claveMarca = 'pyv_marca_' + (S.perfil && S.perfil.run || '') + '_' + e.id, marca = SRV.ls(claveMarca) || {};
+    if (!ok && marca.k > 0 && marca.k < D.length) { k = marca.k; (marca.v || []).forEach(function (j) { if (j < D.length) visto[j] = 1; }); }
+    function guardarMarca() { if (!ok) SRV.ls(claveMarca, { k: k, v: Object.keys(visto).map(Number) }); }
     Tiempo.iniciar(e.id);
     function texto(d) { return [d.t, d.x || ''].concat(d.l || [], d.tip ? [d.tip] : []).join('. '); }
     function pintar() {
-      var d = D[k] || { t: 'Sin contenido' }; visto[k] = 1;
+      var d = D[k] || { t: 'Sin contenido' }; visto[k] = 1; guardarMarca();
       var falta = Math.max(0, e.minMin * 60 - prog(e.id).segundos), todas = Object.keys(visto).length >= D.length;
-      app.innerHTML = encabezadoEtapa(e) + '<section class="tarjeta diapo"><div class="contador">' + (k + 1) + ' de ' + D.length + '</div><h2>' + h(d.t) + '</h2>' +
+      app.innerHTML = encabezadoEtapa(e) + '<section class="tarjeta diapo"><div class="contador">' + (k + 1) + ' de ' + D.length + (marca.k > 0 && !ok && k === marca.k ? ' · retomas donde quedaste' : '') + '</div><h2>' + h(d.t) + '</h2>' +
         (d.x ? String(d.x).split(/\n\n+/).map(function (p) { return '<p>' + h(p).replace(/\n/g, '<br>') + '</p>'; }).join('') : '') +
         (d.l && d.l.length ? '<ul class="diapo-l">' + d.l.map(function (x) { return '<li>' + h(x) + '</li>'; }).join('') + '</ul>' : '') +
         (d.tip ? '<div class="aviso info">' + h(d.tip) + '</div>' : '') +
