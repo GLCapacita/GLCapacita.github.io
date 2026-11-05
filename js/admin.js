@@ -66,12 +66,37 @@
   }
 
   /* ---------- trabajadores ---------- */
+  /* ---------- versión vigente del documento y recapacitación masiva ---------- */
+  function afectados() { return A.datos.trabajadores.filter(function (t) { var c = cdc(t); return c && (c.certificado || c.iniciado || c.hechos > 0); }); }
+  function cajaVersion() {
+    var cur = PLAN.curso(A.filtro.curso), ver = (A.datos.config || {})['VERSION_' + A.filtro.curso] || '', n = afectados().length;
+    return '<section class="tarjeta"><h2>Documento vigente y actualización</h2>' +
+      '<p class="suave">Versión del documento en que se basa «' + h(cur ? cur.titulo : '') + '». Se imprime en cada certificado nuevo.</p>' +
+      '<div class="fila-btn"><input type="text" id="ver-v" placeholder="Ej.: 03 o Rev. 2026-11" value="' + h(ver) + '" style="max-width:220px"><button class="btn btn-sec" type="button" id="ver-g">Guardar versión</button></div>' +
+      '<h3>¿Cambió el documento?</h3><p class="suave">Pide esta capacitación de nuevo a todos los que ya la iniciaron o aprobaron (' + n + ' trabajador' + (n === 1 ? '' : 'es') + '). Su avance y certificado anterior quedan archivados en el historial; deberán hacerla otra vez con el documento nuevo.</p>' +
+      '<div class="grid2"><label class="campo">Nueva versión<input type="text" id="re-v" placeholder="Ej.: 04"></label><label class="campo">Motivo<input type="text" id="re-m" placeholder="Ej.: actualización del PTS por cambio de método"></label></div>' +
+      '<div class="fila-btn"><button class="btn btn-pri" type="button" id="re-1"' + (n ? '' : ' disabled') + '>Recapacitar a todos</button></div><div id="re-c"></div></section>';
+  }
+  function enlazarVersion() {
+    $('#ver-g').addEventListener('click', function () { llamar('adminVersion', { curso: A.filtro.curso, version: $('#ver-v').value }).then(function (r) { toast(r.ok ? 'Versión guardada.' : r.error); if (r.ok) cargar(); }); });
+    $('#re-1').addEventListener('click', function () {
+      var m = $('#re-m').value.trim(), v = $('#re-v').value.trim(), n = afectados().length;
+      if (!m) { toast('Escribe el motivo.'); $('#re-m').focus(); return; }
+      $('#re-c').innerHTML = '<div class="aviso alerta">Se pedirá de nuevo la capacitación a <b>' + n + '</b> trabajador' + (n === 1 ? '' : 'es') + (v ? ' con la versión <b>' + h(v) + '</b>' : '') + '. ¿Confirmas?</div><div class="fila-btn"><button class="btn btn-pri" type="button" id="re-si">Sí, recapacitar</button><button class="btn btn-sec" type="button" id="re-no">Cancelar</button></div>';
+      $('#re-no').onclick = function () { $('#re-c').innerHTML = ''; };
+      $('#re-si').onclick = function () {
+        this.disabled = true; this.textContent = 'Procesando…';
+        llamar('adminReiniciarCurso', { curso: A.filtro.curso, motivo: m, version: v }).then(function (r) { toast(r.ok ? 'Listo: ' + r.reiniciados + ' trabajador(es) deben hacer la capacitación de nuevo.' : r.error); if (r.ok) cargar(); });
+      };
+    });
+  }
   function vTrabajadores() {
     var v = $('#vista'), F = A.filtro;
     v.innerHTML = '<div class="filtros"><input type="text" id="q" placeholder="Buscar por nombre o RUN" value="' + h(F.q) + '">' +
       '<select id="fc"><option value="">Todos los cargos</option>' + PLAN.cargos.map(function (c) { return '<option value="' + c.id + '"' + (F.cargo === c.id ? ' selected' : '') + '>' + h(c.nombre) + '</option>'; }).join('') + '</select>' +
       '<select id="fe"><option value="">Todos los estados</option>' + Object.keys(ESTADOS).map(function (k) { return '<option value="' + k + '"' + (F.estado === k ? ' selected' : '') + '>' + ESTADOS[k] + '</option>'; }).join('') + '</select></div>' +
-      '<div class="tabla-scroll" id="tab"></div><div class="fila-btn"><button class="btn btn-sec" type="button" id="csv">Descargar nómina (CSV)</button><button class="btn btn-sec" type="button" id="rec">Actualizar</button></div>';
+      '<div class="tabla-scroll" id="tab"></div><div class="fila-btn"><button class="btn btn-sec" type="button" id="csv">Descargar nómina (CSV)</button><button class="btn btn-sec" type="button" id="rec">Actualizar</button></div>' +
+      (A.rol === 'admin' ? cajaVersion() : '');
     function filas() {
       var q = F.q.toLowerCase().replace(/[.\-]/g, '');
       return A.datos.trabajadores.filter(function (t) {
@@ -100,6 +125,7 @@
     $('#fc').addEventListener('change', function () { F.cargo = this.value; tabla(); });
     $('#fe').addEventListener('change', function () { F.estado = this.value; tabla(); });
     $('#rec').addEventListener('click', cargar);
+    if (A.rol === 'admin') enlazarVersion();
     $('#csv').addEventListener('click', function () {
       var cab = ['RUN', 'Nombre', 'Cargo', 'Teléfono', 'Registro', 'Inicio', 'Plazo', 'Etapas', 'Tiempo (min)', 'Sesiones', 'Estado', 'Certificado', 'Emisión', 'Vence'];
       var rows = filas().map(function (t) { var c = cdc(t); return [t.run, t.nombre, cargoN(t.cargo), t.telefono, t.fechaRegistro, t.fechaInicio, t.fechaLimite, c.hechos + '/' + c.total, Math.round(c.segundos / 60), t.sesiones, ESTADOS[estadoDe(t)], c.certificado ? c.certificado.codigo : '', c.certificado ? c.certificado.fecha : '', c.certificado ? c.certificado.vence : '']; });

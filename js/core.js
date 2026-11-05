@@ -11,7 +11,7 @@ var CORE = (function () {
     Evaluaciones: ['fecha', 'run', 'ciclo', 'evaluacion', 'intento', 'puntaje', 'aprobado', 'respuestas'],
     Sesiones: ['id', 'codigo', 'fecha', 'horaInicio', 'horaTermino', 'tema', 'modalidad', 'lugar', 'facilitador', 'estado', 'evidencias', 'creada'],
     Asistencia: ['sesionId', 'run', 'nombre', 'ciclo', 'fecha', 'metodo', 'firmaArchivo'],
-    Certificados: ['codigo', 'run', 'nombre', 'cargo', 'ciclo', 'fechaEmision', 'vence', 'horasProgramadas', 'segundosRegistrados', 'archivoId', 'archivoUrl', 'estado', 'curso'],
+    Certificados: ['codigo', 'run', 'nombre', 'cargo', 'ciclo', 'fechaEmision', 'vence', 'horasProgramadas', 'segundosRegistrados', 'archivoId', 'archivoUrl', 'estado', 'curso', 'version'],
     Encuestas: ['fecha', 'run', 'ciclo', 'respuestas'],
     Firmas: ['fecha', 'run', 'nombre', 'cargo', 'curso', 'item', 'declaracion', 'firmaUrl', 'constanciaUrl'],
     CursosExtra: ['id', 'titulo', 'sub', 'cargos', 'horas', 'vigenciaMeses', 'firma', 'declaracion', 'documentoUrl', 'contenido', 'estado', 'creado', 'actualizado']
@@ -207,6 +207,7 @@ var CORE = (function () {
       '<tr><td class="k">Fecha de aprobación</td><td>' + esc(fechaCl(cert.fechaEmision)) + '</td></tr>' +
       '<tr><td class="k">Vigencia</td><td>' + (cert.vence ? '12 meses, hasta el ' + esc(fechaCl(cert.vence)) + ', o antes si cambian el procedimiento o el cargo, o tras un accidente' : 'Hasta que cambien el procedimiento o el cargo, o tras un accidente') + '</td></tr>' +
       '<tr><td class="k">Contenidos</td><td>' + esc(cur.contenidos || '') + '</td></tr>' +
+      (cert.version ? '<tr><td class="k">Documento base</td><td>' + esc(cur.titulo) + ' · versión ' + esc(cert.version) + '</td></tr>' : '') +
       '<tr><td class="k">Código de verificación</td><td><b>' + esc(cert.codigo) + '</b></td></tr></table>' +
       '<table class="firmas"><tr><td class="firma">' + firmaImg(C._firmaApr) + '<div class="linea"><b>' + esc(C.FACILITADOR_NOMBRE) + '</b><br>' + esc(C.FACILITADOR_TITULO) + (C.FACILITADOR_RUN ? '<br>RUN ' + esc(C.FACILITADOR_RUN) : '') + (C.FACILITADOR_REGISTRO ? '<br>Reg. SEREMI ' + esc(C.FACILITADOR_REGISTRO) : '') + '<br>Facilitadora · Prevención de Riesgos</div></td><td class="sep"></td>' +
       '<td class="firma">' + firmaImg(C._firmaRl) + '<div class="linea"><b>' + esc(C.RL_NOMBRE || 'Representante legal') + '</b>' + (C.RL_RUN ? '<br>RUN ' + esc(C.RL_RUN) : '') + '<br>' + esc(C.RL_CARGO ? C.RL_CARGO + ' · Representante legal' : 'Representante legal') + '<br>' + esc(C.EMPRESA) + '</div></td></tr></table>' +
@@ -415,7 +416,7 @@ var CORE = (function () {
       var ahora = env.now(), prefijo = 'PYV-';
       c = { codigo: prefijo + codigoCorto(env), run: t.run, nombre: t.nombre, cargo: t.cargo, ciclo: 1, fechaEmision: env.fmt(ahora, 'fecha'),
         vence: cur.vigenciaMeses ? env.fmt(sumarMeses(ahora, cur.vigenciaMeses), 'fecha') : '', horasProgramadas: cursoId === 'ds44' ? C.HORAS_CURSO : cur.horas,
-        segundosRegistrados: R.segundos, archivoId: '', archivoUrl: '', estado: 'vigente', curso: cursoId };
+        segundosRegistrados: R.segundos, archivoId: '', archivoUrl: '', estado: 'vigente', curso: cursoId, version: C['VERSION_' + cursoId] || '' };
       var html = certificadoHtml(C, t, c, qr(urlVerif(C, c.codigo)), R.segundos);
       var f = env.drive.guardarPdf(t.carpetaId, (cur.doc === 'certificado' ? 'Certificado_' : 'Constancia_') + cursoId.toUpperCase() + '_' + c.codigo + '.pdf', html);
       c.archivoId = f.id || ''; c.archivoUrl = f.url || '';
@@ -530,16 +531,39 @@ var CORE = (function () {
     t.pinHash = hashPin(t.run, b.pin); t.token = ''; env.db.update('Trabajadores', t); log(env, t, 'clave_restablecida', '', '', 'por administradora', ''); return { ok: true };
   };
   /* Reinicia un curso: archiva su avance (queda en el registro con otro nombre) y deja el certificado anterior como reemplazado. */
-  A.adminReiniciar = function (env, b) {
-    if (!admin(env, b, true)) return NO_AUT; var t = trabajador(env, b.run); if (!t) return { ok: false, error: 'Trabajador no encontrado.' };
-    var cursoId = b.curso || 'ds44', sello = '~archivado_' + env.fmt(env.now(), 'archivo');
-    env.db.read('Progreso').forEach(function (p) { if (limpiarRun(p.run) === limpiarRun(t.run) && cursoDe(p.item) === cursoId && PLAN.etapa(p.item)) { p.item = p.item + sello; env.db.update('Progreso', p); } });
-    env.db.read('Certificados').forEach(function (c) { if (limpiarRun(c.run) === limpiarRun(t.run) && (c.curso || 'ds44') === cursoId && c.estado === 'vigente') { c.estado = 'reemplazado'; env.db.update('Certificados', c); } });
+  function reiniciarTrabajador(env, t, cursoId, motivo) {
+    var sello = '~archivado_' + env.fmt(env.now(), 'archivo'), hubo = false;
+    env.db.read('Progreso').forEach(function (p) { if (limpiarRun(p.run) === limpiarRun(t.run) && cursoDe(p.item) === cursoId && PLAN.etapa(p.item)) { p.item = p.item + sello; env.db.update('Progreso', p); hubo = true; } });
+    env.db.read('Certificados').forEach(function (c) { if (limpiarRun(c.run) === limpiarRun(t.run) && (c.curso || 'ds44') === cursoId && c.estado === 'vigente') { c.estado = 'reemplazado'; env.db.update('Certificados', c); hubo = true; } });
     if (cursoId === 'ds44') {
       env.db.read('Asistencia').forEach(function (a) { if (limpiarRun(a.run) === limpiarRun(t.run) && a.ciclo !== 'archivado') { a.ciclo = 'archivado'; env.db.update('Asistencia', a); } });
       t.fechaInicio = ''; t.fechaLimite = ''; t.estado = 'registrado'; t.certCodigo = ''; t.certFecha = ''; t.certVence = ''; env.db.update('Trabajadores', t);
     }
-    log(env, t, 'curso_reiniciado', cursoId, '', b.motivo || '', ''); return { ok: true };
+    log(env, t, 'curso_reiniciado', cursoId, '', motivo || '', '');
+    return hubo;
+  }
+  A.adminReiniciar = function (env, b) {
+    if (!admin(env, b, true)) return NO_AUT; var t = trabajador(env, b.run); if (!t) return { ok: false, error: 'Trabajador no encontrado.' };
+    reiniciarTrabajador(env, t, b.curso || 'ds44', b.motivo); return { ok: true };
+  };
+  /* Nueva versión de un documento: registra la versión vigente y pide la capacitación de nuevo a todos los que ya la habían iniciado o aprobado. */
+  A.adminReiniciarCurso = function (env, b) {
+    if (!admin(env, b, true)) return NO_AUT;
+    var cur = PLAN.curso(b.curso); if (!cur) return { ok: false, error: 'Capacitación no encontrada.' };
+    if (!String(b.motivo || '').trim()) return { ok: false, error: 'Indica el motivo (por ejemplo: nueva versión del PTS).' };
+    if (b.version) env.setConfig('VERSION_' + cur.id, String(b.version).trim());
+    var n = 0;
+    env.db.read('Trabajadores').forEach(function (t) {
+      if (t.estado === 'baja' || !aplica(cur, t.cargo)) return;
+      var tieneAlgo = env.db.read('Progreso').some(function (p) { return limpiarRun(p.run) === limpiarRun(t.run) && cursoDe(p.item) === cur.id && PLAN.etapa(p.item); }) || !!certDe(env, t, cur.id);
+      if (tieneAlgo && reiniciarTrabajador(env, t, cur.id, b.motivo + (b.version ? ' · versión ' + b.version : ''))) n++;
+    });
+    return { ok: true, reiniciados: n };
+  };
+  A.adminVersion = function (env, b) {
+    if (!admin(env, b, true)) return NO_AUT;
+    var cur = PLAN.curso(b.curso); if (!cur) return { ok: false, error: 'Capacitación no encontrada.' };
+    env.setConfig('VERSION_' + cur.id, String(b.version || '').trim()); return { ok: true };
   };
   A.adminConfig = function (env, b) {
     if (!admin(env, b, true)) return NO_AUT;

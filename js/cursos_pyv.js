@@ -127,12 +127,38 @@ CONTENIDO.lecciones['irl.l1'] = function (cargo) {
 CONTENIDO.juegos['irl.j1'] = { intro: 'Une cada riesgo de tu cargo con lo que puede causar, según la Matriz IPER de PyV.', partes: [{ tipo: 'emparejar', desdeIper: true }] };
 CONTENIDO.firmas['irl.f1'] = function (cargo) {
   var R = _riesgosCargo(cargo);
-  return { texto: 'Declaro que ' + CONTENIDO.empresa.nombre + ' me informó, mediante esta capacitación, los riesgos de mi cargo de ' + _nombreCargo(cargo) + ' identificados en la Matriz IPER vigente, las medidas preventivas para controlarlos, los métodos de trabajo correctos, mi rol en emergencias y los procedimientos que me aplican, conforme al artículo 15 del D.S. N° 44/2024. Tuve la posibilidad de consultar mis dudas a Prevención de Riesgos.',
-    lista: R.map(function (r) { return [r.riesgo + ' (' + r.nivelTxt + ')', [].concat(r.administrativo.slice(0, 1), r.eppItems.slice(0, 3)).join('; ')]; }) };
+  return { texto: 'Declaro que ' + CONTENIDO.empresa.nombre + ' me informó, mediante esta capacitación, los riesgos de mi cargo de ' + _nombreCargo(cargo) + ' identificados en la Matriz IPER vigente, las medidas preventivas para controlarlos, los métodos de trabajo correctos, mi rol en emergencias y los procedimientos que me aplican y los protocolos de vigilancia a los que estoy expuesto, conforme al artículo 15 del D.S. N° 44/2024. Tuve la posibilidad de consultar mis dudas a Prevención de Riesgos.',
+    lista: R.map(function (r) { return [r.riesgo + ' (' + r.nivelTxt + ')', [].concat(r.administrativo.slice(0, 1), r.eppItems.slice(0, 3)).join('; ')]; }).concat(
+      _protocolosCargo(cargo).map(function (p) { return ['Protocolo: ' + p.nombre, 'Por: ' + p.riesgos.slice(0, 3).join(', ')]; })) };
 };
 
 /* ---------- IRL ampliada (3 horas) ---------- */
 function _lista(a, n) { return (a || []).filter(Boolean).slice(0, n || 4); }
+/* Protocolos y normas de vigilancia según los riesgos del cargo (hoja "Protocolos aplicables" de la Matriz IPER) */
+var _PROTOCOLOS = [
+  { re: /ruido/i, id: 'PREXOR', nombre: 'Protocolo de Exposición Ocupacional a Ruido (PREXOR, MINSAL)', l: ['Se mide la dosis de ruido de tu puesto (motores, compresores, equipos).', 'Si supera el criterio de acción, ingresas a vigilancia médica con audiometrías en la ACHS.', 'Protección auditiva obligatoria donde esté indicado.'] },
+  { re: /radiaci.*no ionizantes/i, id: 'RUV', nombre: 'Guía Técnica de Radiación Ultravioleta de origen solar (MINSAL)', l: ['En el mar la radiación UV llega directa y reflejada en el agua, aun nublado.', 'Protector solar, ropa manga larga, legionario o gorro y lentes con filtro UV.', 'Revisa el índice UV del día; en soldadura la radiación del arco se controla con careta y ropa ignífuga.'] },
+  { re: /fr[ií]o/i, id: 'FRIO', nombre: 'Guía ISP para la evaluación y control del riesgo por exposición a frío a la intemperie (Res. Ex. N° 4.142/2026)', l: ['Aplica a trabajo al aire libre con 10 °C o menos, considerando viento y lluvia.', 'Pausas de recuperación, ropa en capas, cambio de ropa mojada y vigilancia de signos de hipotermia.'] },
+  { re: /exposici[oó]n a calor/i, id: 'CALOR', nombre: 'D.S. 594 · exposición a calor', l: ['Trabajo en caliente, sala de máquinas o trajes impermeables pueden sobrecalentarte.', 'Hidratación, pausas y ventilación.'] },
+  { re: /vibraciones/i, id: 'VIB', nombre: 'D.S. 594 · exposición a vibraciones', l: ['Herramientas como esmeriles y equipos de raspado transmiten vibración a manos y brazos.', 'Tiempos de uso, mantención de equipos y guantes adecuados.'] },
+  { re: /repetitivo/i, id: 'TMERT', nombre: 'Protocolo de vigilancia de trastornos musculoesqueléticos de extremidades superiores (TMERT-EESS, MINSAL)', l: ['Identifica tareas con movimientos repetidos de manos, muñecas y brazos.', 'Si el riesgo no es aceptable se aplican medidas: pausas, rotación, cambios en la tarea.'] },
+  { re: /manipulaci[oó]n manual/i, id: 'MMC', nombre: 'Ley 20.949 y Guía técnica de Manejo Manual de Carga (MMC)', l: ['Peso máximo de 25 kg por persona; 20 kg para mujeres y menores de edad.', 'Usa ayudas mecánicas y levanta entre dos cuando corresponda.', 'Técnica: carga pegada al cuerpo, espalda recta, sin girar el tronco.'] },
+  { re: /postural|postura|fatiga visual/i, id: 'ERGO', nombre: 'Evaluación ergonómica de sobrecarga postural (Guía técnica MINSAL / D.S. 594)', l: ['Posturas forzadas o mantenidas: tronco inclinado, en cuclillas, de pie o sentado por largo tiempo.', 'Pausas activas, alternar posturas y ajustar el puesto de trabajo.'] },
+  { re: /dimensi[oó]n|exigencias psicol|carga de trabajo/i, id: 'CEAL', nombre: 'Protocolo de vigilancia de riesgos psicosociales en el trabajo · cuestionario CEAL-SM (SUSESO)', l: ['La empresa aplica el cuestionario CEAL-SM; tu participación es voluntaria y anónima.', 'Con los resultados se definen medidas sobre carga de trabajo, liderazgo y desarrollo.'] },
+  { re: /violencia|acoso/i, id: 'KARIN', nombre: 'Ley 21.643 (Ley Karin) · prevención del acoso laboral, sexual y la violencia en el trabajo', l: ['La empresa tiene un protocolo de prevención y un canal de denuncia.', 'Puedes denunciar a la empresa o a la Dirección del Trabajo; la investigación es reservada.'] },
+  { re: /aerosol|gases|vapores|qu[ií]mic|c[aá]ustic/i, id: 'QUIM', nombre: 'D.S. 594 · agentes químicos (límites permisibles) y Hojas de Datos de Seguridad', l: ['Desinfectantes, combustibles y humos de soldadura tienen límites de exposición.', 'Revisión de la HDS, ventilación y protección respiratoria cuando corresponda.'] },
+  { re: /transmisi[oó]n|fluidos|biol[oó]gic/i, id: 'BIO', nombre: 'D.S. 594 · agentes biológicos (criterio ISP)', l: ['Contacto con residuos orgánicos, mortalidad, biofouling o fluidos corporales.', 'Guantes, higiene de manos y vacunas cuando corresponda.'] },
+  { re: /altas presiones/i, id: 'BUCEO', nombre: 'Normativa de buceo de la Autoridad Marítima y PTS-006', l: ['Trabajo hiperbárico: tablas de descompresión, equipos certificados y supervisión de buceo.', 'Exámenes de salud compatibles con el buceo según la normativa.'] }
+];
+function _protocolosCargo(cargo) {
+  var R = _riesgosCargo(cargo), out = [];
+  _PROTOCOLOS.forEach(function (p) {
+    var rs = R.filter(function (r) { return p.re.test(r.riesgo); }).map(function (r) { return r.riesgo; });
+    if (rs.length) out.push({ id: p.id, nombre: p.nombre, l: p.l, riesgos: rs });
+  });
+  return out;
+}
+CONTENIDO.protocolosCargo = _protocolosCargo;
 CONTENIDO.lecciones['irl.l2'] = function (cargo) {
   var R = _riesgosCargo(cargo).slice().sort(function (a, b) { return b.nivel - a.nivel; });
   var d = [{ t: 'Tus riesgos, uno por uno', x: 'La Matriz IPER 2026 identifica ' + R.length + ' riesgos para el cargo de ' + _nombreCargo(cargo) + '. En cada tarjeta verás:',
@@ -150,6 +176,11 @@ CONTENIDO.lecciones['irl.l2'] = function (cargo) {
         r.eppItems && r.eppItems.length ? ['EPP: ' + r.eppItems.slice(0, 6).join(', ')] : [],
         r.pts && r.pts.length ? ['Procedimiento: ' + _lista(r.pts, 2).join(', ')] : []) });
   });
+  var P = _protocolosCargo(cargo);
+  if (P.length) {
+    d.push({ t: 'Protocolos y normas a los que estás expuesto', x: 'Según tus funciones, la Matriz IPER asocia tu cargo a estos protocolos de vigilancia y normas. Algunos implican mediciones en tu puesto o evaluaciones de salud en la ACHS.', l: P.map(function (p) { return p.nombre; }) });
+    P.forEach(function (p) { d.push({ t: p.nombre, x: 'Riesgos de tu cargo que lo activan: ' + p.riesgos.join(', ') + '.', l: p.l }); });
+  }
   d.push({ t: 'Lo importante', l: ['Los riesgos con nivel Importante o Intolerable no se aceptan: si sus controles no están, el trabajo no empieza.', 'Si ves un riesgo que no aparece aquí, avísalo: la Matriz se actualiza con lo que informan los trabajadores.', 'Tienes derecho a detener tu trabajo ante un riesgo grave e inminente.'] });
   return { diapositivas: d };
 };
