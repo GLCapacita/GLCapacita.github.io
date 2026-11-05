@@ -72,7 +72,7 @@ var PLAN = {
 
     { id: 'irl', titulo: 'Los riesgos de tu cargo (IRL)', sub: 'Obligación de informar · art. 15 D.S. 44', obligatorio: true,
       horas: 3, duracionMin: 180, doc: 'certificado', vigenciaMeses: 12, plazoMeses: 0, cargos: '*',
-      contenidos: 'Características del lugar de trabajo, equipos y orden y aseo · Riesgos del cargo según la Matriz IPER · Evaluación P × S · Jerarquía de controles y métodos de trabajo correctos · Procedimientos del cargo · Productos y sustancias peligrosas (HDS y SGA) · Rol en emergencias (PRRD) · EPP · Procedimiento ante accidentes · Derechos y obligaciones',
+      contenidos: 'Características del lugar de trabajo, equipos y orden y aseo · Riesgos del cargo según la Matriz IPER · Evaluación P × S · Jerarquía de controles y métodos de trabajo correctos · Procedimientos del cargo · Productos y sustancias peligrosas (HDS y SGA) · Exposición a frío a la intemperie (Guía ISP 2026) · Rol en emergencias (PRRD) · EPP · Procedimiento ante accidentes · Derechos y obligaciones',
       etapas: [
         { id: 'l1', tipo: 'leccion', titulo: 'Cápsula 1: tu derecho a saber', minMin: 10 },
         { id: 'lw', tipo: 'leccion', titulo: 'Cápsula 2: tu lugar de trabajo', minMin: 15 },
@@ -82,10 +82,11 @@ var PLAN = {
         { id: 'l3', tipo: 'leccion', titulo: 'Cápsula 4: cómo se controlan y cómo trabajar bien', minMin: 25 },
         { id: 'j2', tipo: 'juego', titulo: 'Ordena los controles' },
         { id: 'ls', tipo: 'leccion', titulo: 'Cápsula 5: productos y sustancias peligrosas', minMin: 10 },
+        { id: 'lf', tipo: 'leccion', titulo: 'Cápsula 6: exposición a frío', minMin: 10 },
         { id: 'js', tipo: 'juego', titulo: 'Pictogramas de peligro' },
-        { id: 'l4', tipo: 'leccion', titulo: 'Cápsula 6: emergencias en PyV y tu rol', minMin: 15 },
+        { id: 'l4', tipo: 'leccion', titulo: 'Cápsula 7: emergencias en PyV y tu rol', minMin: 15 },
         { id: 'j3', tipo: 'juego', titulo: '¿Qué hago si…? Emergencias' },
-        { id: 'l5', tipo: 'leccion', titulo: 'Cápsula 7: tu EPP y qué hacer ante un accidente', minMin: 15 },
+        { id: 'l5', tipo: 'leccion', titulo: 'Cápsula 8: tu EPP y qué hacer ante un accidente', minMin: 15 },
         { id: 'j4', tipo: 'juego', titulo: 'Derechos y obligaciones' },
         { id: 't2', tipo: 'taller', titulo: 'Taller final: mi compromiso de seguridad', minMin: 10 },
         { id: 'q1', tipo: 'quiz', titulo: 'Evaluación', banco: 'pyv' },
