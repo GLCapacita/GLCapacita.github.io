@@ -181,6 +181,43 @@ CONTENIDO.lecciones['irl.l3'] = function (cargo) {
   return { diapositivas: d };
 };
 CONTENIDO.juegos['irl.j2'] = CONTENIDO.juegos['ds44.j4'];
+CONTENIDO.lecciones['irl.lw'] = function (cargo) {
+  var cg = PLAN.cargo(cargo) || {}, I = (window.PYV_IPER || {})[cargo] || { riesgos: [], procesos: [] }, emp = CONTENIDO.empresa;
+  var tareas = [];
+  I.riesgos.forEach(function (r) { (r.tareas || []).forEach(function (t) { if (tareas.indexOf(t) < 0) tareas.push(t); }); });
+  var faena = cg.area !== 'oficina';
+  var d = [{ t: 'Dónde trabajas', x: faena ? 'Tu trabajo en ' + emp.nombre + ' se desarrolla principalmente en embarcaciones de apoyo y en los módulos, jaulas y pontones de los centros de cultivo de las empresas mandantes, en mar abierto o canales de la región de Aysén.' : 'Tu trabajo se desarrolla principalmente en la oficina de ' + emp.nombre + ', en Las Rosas 121, Puerto Aysén.',
+    l: faena ? ['Embarcaciones de la empresa: ' + emp.embarcaciones.join(', ') + '.', 'Superficies mojadas, inestables y en movimiento por el oleaje.', 'Clima cambiante: viento, lluvia, frío y radiación UV incluso nublado.', 'Lugares aislados: la ayuda médica puede estar a horas de distancia.'] : ['Puestos con computador, escritorio y silla.', 'Bodega, archivo y espacios comunes.', 'Salidas de emergencia, extintores y punto de encuentro de la oficina.'] }];
+  if ((I.procesos || []).length) d.push({ t: 'Los procesos donde participas', l: I.procesos });
+  if (tareas.length) d.push({ t: 'Tus tareas según la Matriz IPER', x: 'Estas son las tareas registradas para el cargo de ' + _nombreCargo(cargo) + ':', l: tareas.slice(0, 12) });
+  if (tareas.length > 12) d.push({ t: 'Más tareas de tu cargo', l: tareas.slice(12, 24) });
+  d.push(faena ? { t: 'Ambiente de trabajo a bordo y en el centro', l: ['Cubiertas y pasillos de módulos resbaladizos: calzado antideslizante y manos libres al desplazarte.', 'Bordes sin baranda: chaleco salvavidas puesto y abrochado siempre.', 'Ruido de motores, compresores y equipos: protección auditiva donde esté indicado.', 'Frío y humedad: ropa adecuada y pausas para recuperar temperatura.', 'Espacios reducidos bajo flotadores y en sala de máquinas: ventilación y comunicación permanente.'] }
+    : { t: 'Ambiente de trabajo en la oficina', l: ['Iluminación, temperatura y ventilación adecuadas.', 'Puesto ergonómico: pantalla a la altura de los ojos, pies apoyados, pausas activas.', 'Cables ordenados y enchufes sin sobrecarga.', 'Pasillos y salidas libres de cajas y archivos.'] });
+  d.push(faena ? { t: 'Máquinas, equipos y herramientas', l: ['Motores, winches y pluma o grúa de la embarcación: solo los opera personal autorizado.', 'Cabos, grilletes, zunchos y flotadores: revisar su estado antes de usarlos; nunca pisar ni meter manos en el seno de un cabo en tensión.', 'Compresor e hidrolavadora: revisión previa, mangueras sin daños y operación según el procedimiento.', 'Equipos de corte y soldadura: con permiso de trabajo en caliente, extintor y vigía.', 'Herramientas manuales: en buen estado, amarradas cuando trabajas sobre el agua.', 'Todo equipo con falla se informa y se saca de uso.'] }
+    : { t: 'Equipos y herramientas de oficina', l: ['Computadores, impresoras y equipos eléctricos en buen estado.', 'Cortacartón y tijeras: guardar con la hoja protegida.', 'Escaleras o pisos para alcanzar en altura: nunca usar sillas.', 'Hervidor y microondas: no dejarlos funcionando sin supervisión.'] });
+  d.push({ t: 'Orden y aseo', x: 'El orden y el aseo son una medida de control en sí mismos: evitan caídas, golpes, incendios y pérdida de herramientas.', l: faena ? ['Cubierta despejada: cabos adujados, materiales estibados y amarrados.', 'Residuos en sus contenedores; no se tiran al mar.', 'Herramientas de vuelta en su lugar al terminar.', 'Derrames de combustible o aceite se limpian de inmediato.', 'Vías de escape y equipos de emergencia siempre accesibles.'] : ['Escritorio y pasillos despejados.', 'Archivos en estanterías firmes, lo pesado abajo.', 'Productos de aseo rotulados y guardados.', 'Salidas y extintores siempre libres.'] });
+  d.push({ t: 'Servicios para ti', l: faena ? ['Agua potable y alimentación según la faena.', 'Servicios higiénicos y lugar para cambiarte en la embarcación o en el centro, según la mandante.', 'Botiquín y equipos de rescate a bordo.'] : ['Servicios higiénicos y comedor de la oficina.', 'Botiquín de primeros auxilios.', 'Agua potable.'] });
+  return { diapositivas: d };
+};
+CONTENIDO.lecciones['irl.ls'] = function (cargo) {
+  var R = _riesgosCargo(cargo).filter(function (r) { return /qu[ií]mic|gases|vapores|c[aá]ustic|aerosol/i.test(r.riesgo); });
+  var d = [{ t: 'Productos peligrosos en PyV', x: 'En el trabajo se usan productos que pueden dañar tu salud si no se manejan bien.', l: ['Desinfectantes para limpieza y desinfección de estructuras (se preparan en dilución).', 'Combustibles: petróleo de las embarcaciones y bencina de compresores y equipos.', 'Gas licuado (GLP) para cocina a bordo.', 'Gases y humos de corte y soldadura.', 'Aceites, lubricantes y productos de aseo.'] },
+    { t: 'La Hoja de Datos de Seguridad (HDS)', x: 'Cada producto químico tiene su HDS. Es obligatoria y debe estar disponible donde se usa el producto.', l: ['Dice qué peligros tiene el producto.', 'Qué EPP usar al manipularlo.', 'Cómo almacenarlo y qué no mezclar.', 'Qué hacer si te salpica, lo inhalas o lo tragas (primeros auxilios).', 'Qué hacer ante un derrame o incendio.'], tip: 'Tienes derecho a ver la HDS de cualquier producto que uses. Pídela a tu supervisor o a Prevención de Riesgos.' },
+    { t: 'La etiqueta y los pictogramas (SGA)', x: 'Los envases llevan pictogramas con borde rojo en forma de rombo según el Sistema Globalmente Armonizado:', l: ['Llama: inflamable.', 'Corrosión (líquido sobre mano y metal): corrosivo, quema piel y ojos.', 'Calavera: tóxico agudo, puede matar en pequeñas cantidades.', 'Signo de exclamación: irritante o nocivo.', 'Silueta con estrella en el pecho: peligro grave para la salud a largo plazo.', 'Cilindro de gas: gas a presión.', 'Llama sobre círculo: comburente, aviva el fuego.', 'Pez y árbol: peligroso para el medio ambiente acuático.'] },
+    { t: 'Reglas de oro', l: ['Usa solo productos rotulados; nunca en botellas de bebida.', 'Prepara las diluciones según la ficha técnica y la HDS, con EPP químico.', 'Nunca mezcles productos ni residuos.', 'Aplica a favor del viento y con distancia de los compañeros.', 'Guarda los productos cerrados, lejos de fuentes de calor y del GLP.', 'Lava tus implementos y tus manos al terminar.', 'Si te salpica: lava con abundante agua por 15 minutos y avisa de inmediato.'] }];
+  R.forEach(function (r) { d.push({ t: 'En tu cargo: ' + r.riesgo, x: 'Peligro: ' + _lista(r.peligros, 2).join(' / ') + '.', l: [].concat(_lista(r.administrativo, 2).map(function (c) { return 'Control: ' + c; }), r.eppItems && r.eppItems.length ? ['EPP: ' + r.eppItems.slice(0, 6).join(', ')] : []) }); });
+  if (!R.length) d.push({ t: 'En tu cargo', x: 'La Matriz IPER no registra exposición directa a sustancias peligrosas en tu cargo. Igual aplica lo anterior para productos de aseo y combustibles.' });
+  return { diapositivas: d };
+};
+CONTENIDO.juegos['irl.js'] = { intro: 'Une cada pictograma de peligro con lo que significa.', partes: [{ tipo: 'emparejar', pares: [
+  { a: 'Llama', b: 'Inflamable: se enciende con facilidad' },
+  { a: 'Líquido que corroe una mano y un metal', b: 'Corrosivo: quema piel y ojos' },
+  { a: 'Calavera con tibias', b: 'Toxicidad aguda: puede matar en pequeñas cantidades' },
+  { a: 'Signo de exclamación', b: 'Irritante o nocivo' },
+  { a: 'Silueta humana con estrella en el pecho', b: 'Daño grave a la salud a largo plazo' },
+  { a: 'Cilindro de gas', b: 'Gas a presión: puede explotar si se calienta' },
+  { a: 'Pez y árbol muerto', b: 'Peligroso para el medio ambiente acuático' }] }] };
+
 CONTENIDO.lecciones['irl.l4'] = function (cargo) {
   var base = (CONTENIDO.lecciones['prrd.l1'] && CONTENIDO.lecciones['prrd.l1'].diapositivas) || [];
   return { diapositivas: base.concat([{ t: 'Tu rol como ' + _nombreCargo(cargo), l: CONTENIDO.rolEmergencia[cargo] || [] },
