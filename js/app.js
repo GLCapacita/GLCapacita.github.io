@@ -401,7 +401,8 @@
   /* ---------- actividades prácticas ---------- */
   function defJuego(e) {
     var area = PLAN.area(S.perfil.cargo), fuente = e.tipo === 'taller' ? CONTENIDO.talleres : CONTENIDO.juegos;
-    return (area === 'oficina' && fuente[e.id + '_oficina']) || fuente[e.id];
+    var d = (area === 'oficina' && fuente[e.id + '_oficina']) || fuente[e.id];
+    return typeof d === 'function' ? d(S.perfil.cargo) : d;
   }
   function vistaJuego(e) {
     var area = PLAN.area(S.perfil.cargo), def = defJuego(e), esTaller = e.tipo === 'taller';

@@ -152,10 +152,14 @@ var PLAN = {
     var id = p[0].toLowerCase();
     PLAN.cursos.push({ id: id, titulo: p[0] + ' · ' + p[1], sub: 'Procedimiento de trabajo seguro', pts: p[0],
       horas: 1, duracionMin: 60, doc: 'certificado', vigenciaMeses: 12, plazoMeses: 0, cargos: p[2],
-      contenidos: 'Objetivo y alcance · Responsabilidades · EPP · Secuencia de trabajo · Criterios de detención · Puntos clave del ' + p[0],
+      contenidos: 'Objetivo y alcance · Responsabilidades por cargo · EPP · Secuencia de trabajo · Riesgos de la tarea según la Matriz IPER · Criterios de detención · Taller de casos · Puntos clave del ' + p[0],
       etapas: [
-        { id: 'l1', tipo: 'leccion', titulo: 'Cápsula: el procedimiento paso a paso', minMin: 8 },
+        { id: 'l1', tipo: 'leccion', titulo: 'Cápsula 1: el procedimiento paso a paso', minMin: 8 },
+        { id: 'ld', tipo: 'leccion', titulo: 'Cápsula 2: quién hace qué y el documento completo', minMin: 12 },
         { id: 'j1', tipo: 'juego', titulo: 'Ordena la secuencia' },
+        { id: 'lr', tipo: 'leccion', titulo: 'Cápsula 3: los riesgos de esta tarea (Matriz IPER)', minMin: 12 },
+        { id: 'j2', tipo: 'juego', titulo: '¿Detengo o continúo?' },
+        { id: 't1', tipo: 'taller', titulo: 'Taller: casos del procedimiento', minMin: 12 },
         { id: 'q1', tipo: 'quiz', titulo: 'Evaluación', banco: id },
         { id: 'f1', tipo: 'firma', titulo: 'Firma: recibí y comprendí el ' + p[0] }
       ] });

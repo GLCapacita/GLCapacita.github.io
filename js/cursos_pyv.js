@@ -601,6 +601,44 @@ Object.keys(_PTS).forEach(function (cod) {
       { t: 'Puntos clave', l: proc.claves.length ? proc.claves : P.detener }
     ]) };
   };
+  CONTENIDO.lecciones[id + '.ld'] = function (cargo) {
+    var d = [{ t: 'Quién participa en el ' + cod, x: 'Un procedimiento funciona cuando cada persona sabe qué le toca. Estas son las responsabilidades de cada cargo en esta tarea:' }];
+    Object.keys(P.roles).filter(function (k) { return k !== '_'; }).forEach(function (k) {
+      d.push({ t: (k === cargo ? 'Tú: ' : '') + _nombreCargo(k), l: P.roles[k], tip: k === cargo ? 'Esta es tu parte. Si no puedes cumplir alguno de estos puntos, avisa antes de empezar.' : undefined });
+    });
+    d.push({ t: 'Coordinación antes de empezar', l: ['Charla y AST con todo el equipo: tareas, riesgos, controles y señales de comunicación.', 'Permiso de trabajo firmado cuando la tarea lo exige (trabajo en caliente, altura, izaje, buceo).', 'Revisión de clima, equipos, EPP y condiciones del área.', 'Cada persona confirma que entendió su rol y que está en condiciones de trabajar.'] });
+    if (proc.archivo) d.push({ t: 'Lee el documento completo', x: 'Abre el ' + cod + ' con el botón «Ver documento completo» y revisa con calma: alcance, definiciones, responsabilidades, desarrollo de la tarea y registros.', l: ['Fíjate en los pasos que te tocan a ti.', 'Busca los criterios para detener el trabajo.', 'Anota tus dudas para consultarlas a tu Supervisor o a Prevención de Riesgos.'], tip: 'El tiempo que pasas leyendo el documento con la cápsula abierta cuenta para tu registro.' });
+    d.push({ t: 'Registros del procedimiento', l: ['AST o análisis seguro de trabajo de la jornada.', 'Permiso de trabajo cuando corresponde.', 'Checklist de equipos y EPP.', 'Registro de capacitación y de entrega de EPP.', 'Reporte de incidentes y condiciones inseguras.'] });
+    return { documento: proc.archivo, diapositivas: d };
+  };
+  CONTENIDO.lecciones[id + '.lr'] = function (cargo) {
+    var todos = _riesgosCargo(cargo), R = todos.filter(function (r) { return (r.pts || []).some(function (x) { return String(x).toUpperCase().indexOf(cod) >= 0; }); });
+    if (R.length < 3) R = todos.filter(function (r) { return r.nivel >= 2; });
+    R = R.slice().sort(function (a, b) { return b.nivel - a.nivel; }).slice(0, 14);
+    var d = [{ t: 'Los riesgos de esta tarea', x: 'Según la Matriz IPER 2026 de PyV, al trabajar con el ' + cod + ' como ' + _nombreCargo(cargo) + ' te expones a estos riesgos. Para cada uno verás qué lo provoca, qué puede causar y cómo se controla.' }];
+    R.forEach(function (r, i) {
+      d.push({ t: (i + 1) + '. ' + r.riesgo + ' · ' + r.nivelTxt, x: 'Peligro: ' + _lista(r.peligros, 2).join(' / ') + '.\nPuede causar: ' + _lista(r.consecuencias, 1).join('') + '.',
+        l: [].concat(_lista(r.ingenieria, 1).map(function (c) { return 'Ingeniería: ' + c; }), _lista(r.administrativo, 2).map(function (c) { return 'Administrativo: ' + c; }), r.eppItems && r.eppItems.length ? ['EPP: ' + r.eppItems.slice(0, 6).join(', ')] : []) });
+    });
+    d.push({ t: 'Recuerda', l: ['Los controles funcionan solo si están todos: si falta uno, la tarea no empieza.', 'Si ves un riesgo que no está en esta lista, avísalo: la Matriz se actualiza con lo que informan los trabajadores.'] });
+    return { diapositivas: d };
+  };
+  CONTENIDO.juegos[id + '.j2'] = { intro: 'Durante el ' + cod + ' pasan cosas. Decide en cada caso si detienes el trabajo y avisas, o si puedes continuar.', partes: [{ tipo: 'clasificar',
+    categorias: [{ id: 'det', nombre: 'Detengo y aviso' }, { id: 'sig', nombre: 'Puedo continuar' }],
+    items: P.detener.slice(0, 5).map(function (x) { return { t: x.charAt(0).toUpperCase() + x.slice(1), c: 'det', fb: 'Es un criterio de detención del ' + cod + ': se detiene, se avisa y solo se reanuda cuando se corrige.' }; }).concat(
+      [].concat.apply([], P.pasos.map(function (st) { return st.l.slice(0, 1); })).slice(0, 4).map(function (x) { return { t: 'Se cumple: ' + x.charAt(0).toLowerCase() + x.slice(1), c: 'sig', fb: 'Es parte normal del procedimiento: si se cumple, la tarea sigue.' }; })) }] };
+  CONTENIDO.talleres[id + '.t1'] = function (cargo) {
+    var paso = P.pasos[Math.min(1, P.pasos.length - 1)], det = P.detener[0] || 'falta un control crítico';
+    return { intro: 'Aplica el ' + cod + ' a situaciones reales. Tus respuestas quedan registradas para Prevención de Riesgos.', partes: [
+      { tipo: 'abierta', p: 'En la etapa «' + paso.t + '», ¿qué podría salir mal y qué haces tú para evitarlo, en tu rol de ' + _nombreCargo(cargo) + '?', min: 60, alApr: true,
+        modelo: 'Una buena respuesta nombra un paso concreto (por ejemplo: ' + (paso.l[0] || '') + '), el riesgo si no se cumple y la acción que te corresponde: verificar, avisar o detener.' },
+      { tipo: 'abierta', p: 'Estás en la faena y ocurre esto: «' + det + '». ¿Qué haces, a quién avisas y cuándo se puede reanudar el trabajo?', min: 50, alApr: true,
+        modelo: 'Se detiene la tarea de inmediato, se avisa al Supervisor (y al Patrón si es a bordo), se corrige la condición y solo se reanuda cuando el Supervisor confirma que los controles están en su lugar.' },
+      { tipo: 'vep', desdeIper: true, n: 2 },
+      { tipo: 'abierta', p: '¿Qué parte del ' + cod + ' cuesta más cumplir en la práctica y qué propondrías para mejorarla?', min: 30, alApr: true,
+        modelo: 'Gracias. Prevención de Riesgos revisa estas respuestas al actualizar el procedimiento.' }
+    ] };
+  };
   CONTENIDO.juegos[id + '.j1'] = { intro: 'Ordena los pasos principales del ' + cod + ', del primero al último.', partes: [{ tipo: 'ordenar', enunciado: 'Secuencia del ' + cod, items: P.orden, fb: 'Revisa el procedimiento completo si tuviste dudas.' }] };
   CONTENIDO.quiz[id] = { n: P.quiz.length, preguntas: P.quiz.map(function (q) { return { p: q.p, op: q.op, ok: q.ok, fbOk: 'Correcto.', fbNo: 'La respuesta correcta es: ' + q.op[q.ok - 1] + '.' }; }) };
   CONTENIDO.firmas[id + '.f1'] = function (cargo) {
