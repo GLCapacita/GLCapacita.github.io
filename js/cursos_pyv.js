@@ -131,6 +131,78 @@ CONTENIDO.firmas['irl.f1'] = function (cargo) {
     lista: R.map(function (r) { return [r.riesgo + ' (' + r.nivelTxt + ')', [].concat(r.administrativo.slice(0, 1), r.eppItems.slice(0, 3)).join('; ')]; }) };
 };
 
+/* ---------- IRL ampliada (3 horas) ---------- */
+function _lista(a, n) { return (a || []).filter(Boolean).slice(0, n || 4); }
+CONTENIDO.lecciones['irl.l2'] = function (cargo) {
+  var R = _riesgosCargo(cargo).slice().sort(function (a, b) { return b.nivel - a.nivel; });
+  var d = [{ t: 'Tus riesgos, uno por uno', x: 'La Matriz IPER 2026 identifica ' + R.length + ' riesgos para el cargo de ' + _nombreCargo(cargo) + '. En cada tarjeta verás:',
+    l: ['Dónde aparece (tarea y peligro).', 'Qué te puede pasar.', 'Cómo se evalúa (Probabilidad × Severidad).', 'Qué controles existen y qué EPP usas.', 'Qué procedimiento lo regula.'],
+    tip: 'Lee cada tarjeta con calma y piensa en un momento real de tu trabajo en que te pasa. Puedes usar el botón Escuchar.' }];
+  R.forEach(function (r, i) {
+    var ctrl = [].concat(
+      _lista(r.eliminacion, 1).map(function (c) { return 'Eliminar: ' + c; }),
+      _lista(r.ingenieria, 2).map(function (c) { return 'Ingeniería: ' + c; }),
+      _lista(r.senalizacion, 1).map(function (c) { return 'Señalización: ' + c; }),
+      _lista(r.administrativo, 3).map(function (c) { return 'Administrativo: ' + c; }));
+    d.push({ t: (i + 1) + '. ' + r.riesgo + ' · ' + r.nivelTxt + (r.tipo ? ' (' + r.tipo + ')' : ''),
+      x: 'Dónde aparece: ' + _lista(r.tareas, 2).join(' / ') + '.\nPeligro: ' + _lista(r.peligros, 2).join(' / ') + '.\nPuede causar: ' + _lista(r.consecuencias, 2).join(' / ') + '.',
+      l: ['Evaluación: P ' + (r.p || '?') + ' × S ' + (r.s || '?') + ' = ' + ((r.p && r.s) ? r.p * r.s : '?') + ' → ' + r.nivelTxt].concat(ctrl,
+        r.eppItems && r.eppItems.length ? ['EPP: ' + r.eppItems.slice(0, 6).join(', ')] : [],
+        r.pts && r.pts.length ? ['Procedimiento: ' + _lista(r.pts, 2).join(', ')] : []) });
+  });
+  d.push({ t: 'Lo importante', l: ['Los riesgos con nivel Importante o Intolerable no se aceptan: si sus controles no están, el trabajo no empieza.', 'Si ves un riesgo que no aparece aquí, avísalo: la Matriz se actualiza con lo que informan los trabajadores.', 'Tienes derecho a detener tu trabajo ante un riesgo grave e inminente.'] });
+  return { diapositivas: d };
+};
+CONTENIDO.talleres['irl.t1'] = {
+  intro: 'Este taller te ayuda a mirar tu propio puesto con la Matriz IPER en la mano. No hay respuestas únicas: lo que escribas queda registrado para Prevención de Riesgos y sirve para mejorar la Matriz.',
+  partes: [
+    { tipo: 'vep', desdeIper: true, n: 4 },
+    { tipo: 'abierta', p: 'Elige la tarea de tu trabajo donde te sientes más expuesto. ¿Qué tarea es, qué te podría pasar y qué control usas hoy para evitarlo?', min: 60, alApr: true,
+      modelo: 'Una buena respuesta nombra la tarea concreta (por ejemplo, pasar cabos desde el pasillo del módulo), el riesgo (caída al agua, atrapamiento de manos) y el control real que se aplica (chaleco puesto y abrochado, línea de vida, guantes, coordinación con el Patrón).' },
+    { tipo: 'abierta', p: '¿Has visto un incidente o un "casi accidente" en tu trabajo? Cuéntalo sin nombres: qué pasó, por qué crees que pasó y qué habría que cambiar.', min: 40, alApr: true,
+      modelo: 'Los casi accidentes son avisos gratuitos. Informarlos permite corregir antes de que alguien se lesione. Recuerda que también puedes informarlo a tu supervisor o al Delegado de SST.' },
+    { tipo: 'abierta', p: '¿Qué riesgo de tu trabajo crees que falta en la Matriz IPER, o cuál crees que está mal evaluado?', min: 20, alApr: true,
+      modelo: 'Gracias. Prevención de Riesgos revisa estas respuestas al actualizar la Matriz IPER.' }
+  ]
+};
+CONTENIDO.lecciones['irl.l3'] = function (cargo) {
+  var d = [
+    { t: 'La jerarquía de controles', x: 'No todos los controles protegen igual. La Matriz IPER de PyV ordena las medidas de la más a la menos eficaz:', l: ['1. Eliminar el peligro.', '2. Sustituirlo por algo menos peligroso.', '3. Controles de ingeniería: barandas, protecciones, líneas de vida, resguardos.', '4. Señalización y advertencias.', '5. Controles administrativos: procedimientos, permisos de trabajo, AST, capacitación, pausas.', '6. EPP: la última barrera, cuando lo anterior no basta.'], tip: 'El EPP no reemplaza a los otros controles: los complementa.' },
+    { t: 'Método de trabajo correcto', l: ['Antes de empezar: AST y permiso de trabajo cuando corresponde; revisar clima, equipos y EPP.', 'Durante: seguir los pasos del procedimiento; comunicación clara con el Patrón o Supervisor.', 'Al terminar: dejar orden y aseo, guardar equipos e informar fallas o incidentes.', 'Si algo cambia (clima, equipo, personal): se detiene y se vuelve a evaluar.'] },
+    { t: 'Cuándo detener el trabajo', l: ['Viento, marejada o visibilidad fuera de lo permitido.', 'Falta un control crítico: chaleco, línea de vida, permiso, vigía, extintor.', 'Un equipo falla o no está certificado.', 'Alguien no está en condiciones físicas.', 'Cualquier riesgo grave e inminente: te alejas y avisas de inmediato.'] }];
+  CONTENIDO.procedimientosDe(cargo).forEach(function (p) {
+    var x = _PTS[p.id];
+    if (!x) { d.push({ t: p.id + ' · ' + p.titulo, x: 'Procedimiento que aplica a tu cargo. Tiene su propia capacitación en la plataforma.' }); return; }
+    var rol = (x.roles && x.roles[cargo]) || [];
+    var claves = [].concat.apply([], (x.pasos || []).map(function (s) { return (s.l || []).slice(0, 2); })).slice(0, 5);
+    d.push({ t: p.id + ' · ' + p.titulo, x: x.objetivo, l: [].concat(rol.length ? ['Tu responsabilidad: ' + rol.slice(0, 2).join(' ')] : [], claves.map(function (c) { return 'Paso clave: ' + c; }), (x.detener || []).slice(0, 2).map(function (c) { return 'Detener si: ' + c; })) });
+  });
+  d.push({ t: 'Tu parte', l: ['Conocer y aplicar los procedimientos de tu cargo.', 'Usar los controles que existen y no retirarlos.', 'Informar cuando un control no está o no sirve.', 'Cada procedimiento tiene su capacitación con certificado en "Procedimientos de tu cargo".'] });
+  return { diapositivas: d };
+};
+CONTENIDO.juegos['irl.j2'] = CONTENIDO.juegos['ds44.j4'];
+CONTENIDO.lecciones['irl.l4'] = function (cargo) {
+  var base = (CONTENIDO.lecciones['prrd.l1'] && CONTENIDO.lecciones['prrd.l1'].diapositivas) || [];
+  return { diapositivas: base.concat([{ t: 'Tu rol como ' + _nombreCargo(cargo), l: CONTENIDO.rolEmergencia[cargo] || [] },
+    { t: 'Números que debes conocer', l: ['ACHS urgencias: 1404.', 'Autoridad Marítima: 137.', 'SAMU: 131 · Bomberos: 132 · Carabineros: 133.', 'Prevención de Riesgos PyV: ' + (window.CONFIG && CONFIG.SOPORTE || '') + '.'] }]) };
+};
+CONTENIDO.juegos['irl.j3'] = CONTENIDO.juegos['ds44.j5'];
+CONTENIDO.lecciones['irl.l5'] = function () {
+  var a = (CONTENIDO.lecciones['epp.l1'] && CONTENIDO.lecciones['epp.l1'].diapositivas) || [];
+  var b = (CONTENIDO.lecciones['acc.l1'] && CONTENIDO.lecciones['acc.l1'].diapositivas) || [];
+  return { diapositivas: a.concat(b) };
+};
+CONTENIDO.juegos['irl.j4'] = CONTENIDO.juegos['ds44.j1'];
+CONTENIDO.talleres['irl.t2'] = {
+  intro: 'Para cerrar, escribe tu compromiso. Queda registrado junto a tu firma de recepción de la IRL.',
+  partes: [
+    { tipo: 'abierta', p: 'Nombra los 3 riesgos de tu cargo que consideras más importantes y, para cada uno, la medida que vas a aplicar siempre.', min: 80, alApr: true,
+      modelo: 'Ejemplo: 1) Caída al agua: chaleco puesto y abrochado en todo momento sobre cubierta y módulos. 2) Atrapamiento con cabos: nunca poner manos ni pies en el seno del cabo y coordinar con el Patrón. 3) Hipotermia: ropa adecuada y pausas para recuperar temperatura.' },
+    { tipo: 'abierta', p: '¿A quién avisas, y cómo, si ves una condición insegura o te accidentas?', min: 30,
+      modelo: 'Al Supervisor o al Patrón de inmediato, aunque parezca leve. Si te accidentas: primeros auxilios, traslado a la ACHS y la jefatura envía la DIAT dentro de 24 horas. También puedes acudir al Delegado de SST.' }
+  ]
+};
+
 /* =====================================================================
    CÓMO LEER LA MATRIZ IPER
    ===================================================================== */
