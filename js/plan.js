@@ -94,11 +94,16 @@ var PLAN = {
       ] },
 
     { id: 'iper', titulo: 'Cómo leer la Matriz IPER de PyV', sub: 'Peligro, riesgo, P × S y jerarquía de controles',
-      horas: 1, duracionMin: 60, doc: 'certificado', vigenciaMeses: 12, plazoMeses: 0, cargos: '*',
-      contenidos: 'Estructura de la Matriz IPER · Evaluación P × S y niveles de riesgo · Protocolos MINSAL · Jerarquía de controles · Riesgo residual',
+      horas: 1.5, duracionMin: 90, doc: 'certificado', vigenciaMeses: 12, plazoMeses: 0, cargos: '*',
+      contenidos: 'Estructura de la Matriz IPER · Peligro y riesgo · Evaluación P × S y niveles · Protocolos MINSAL e ISP · Jerarquía de controles · Riesgo residual · La matriz de los procesos y tareas del cargo',
       etapas: [
-        { id: 'l1', tipo: 'leccion', titulo: 'Cápsula: cómo se lee la matriz', minMin: 8 },
+        { id: 'l1', tipo: 'leccion', titulo: 'Cápsula 1: cómo se lee la matriz', minMin: 10 },
+        { id: 'j2', tipo: 'juego', titulo: '¿Peligro o riesgo?' },
+        { id: 'l2', tipo: 'leccion', titulo: 'Cápsula 2: evaluar, controlar y el riesgo residual', minMin: 10 },
+        { id: 'j1', tipo: 'juego', titulo: 'Clasifica y ordena los controles' },
+        { id: 'lp', tipo: 'leccion', titulo: 'Cápsula 3: la matriz de tus procesos y tareas', minMin: 20 },
         { id: 't1', tipo: 'taller', titulo: 'Taller: evalúa tres riesgos reales', minMin: 12 },
+        { id: 't2', tipo: 'taller', titulo: 'Taller: lee una fila completa de la matriz', minMin: 15 },
         { id: 'q1', tipo: 'quiz', titulo: 'Evaluación', banco: 'iper' }
       ] },
 
@@ -106,17 +111,23 @@ var PLAN = {
       horas: 1, duracionMin: 60, doc: 'certificado', vigenciaMeses: 12, plazoMeses: 0, cargos: '*',
       contenidos: 'Amenazas por escenario · Organización y roles · Alerta y comunicación · Planes de respuesta ACCEDER · Tsunami y sismo en fiordos · Directorio',
       etapas: [
-        { id: 'l1', tipo: 'leccion', titulo: 'Cápsula: el plan de emergencias de PyV', minMin: 8 },
+        { id: 'l1', tipo: 'leccion', titulo: 'Cápsula 1: el plan de emergencias de PyV', minMin: 8 },
+        { id: 'l2', tipo: 'leccion', titulo: 'Cápsula 2: los planes de respuesta paso a paso', minMin: 12 },
         { id: 'j1', tipo: 'juego', titulo: '¿Qué haces? Situaciones del plan' },
+        { id: 'l3', tipo: 'leccion', titulo: 'Cápsula 3: tu rol, recursos y comunicaciones', minMin: 8 },
         { id: 'j2', tipo: 'juego', titulo: 'Chequeo de recursos de emergencia' },
+        { id: 't1', tipo: 'taller', titulo: 'Taller: simulacro de escritorio', minMin: 12 },
         { id: 'q1', tipo: 'quiz', titulo: 'Evaluación', banco: 'prrd' }
       ] },
 
     { id: 'epp', titulo: 'EPP: uso, cuidado y reposición', sub: 'PTS-001 · capacitación mínima de 1 hora',
       horas: 1, duracionMin: 60, doc: 'certificado', vigenciaMeses: 12, plazoMeses: 0, cargos: '*',
-      contenidos: 'Gestión del EPP en 8 etapas · Uso correcto · Mantención · Criterios de reposición · Disposición final',
+      contenidos: 'Gestión del EPP en 8 etapas · EPP según los riesgos del cargo (Matriz IPER) · Uso, ajuste y cuidado · Criterios de reposición · Disposición final',
       etapas: [
-        { id: 'l1', tipo: 'leccion', titulo: 'Cápsula: tu EPP de principio a fin', minMin: 10 },
+        { id: 'l1', tipo: 'leccion', titulo: 'Cápsula 1: tu EPP de principio a fin', minMin: 10 },
+        { id: 'l2', tipo: 'leccion', titulo: 'Cápsula 2: el EPP de cada riesgo de tu cargo', minMin: 10 },
+        { id: 'j2', tipo: 'juego', titulo: '¿Qué EPP para cada riesgo?' },
+        { id: 'l3', tipo: 'leccion', titulo: 'Cápsula 3: cómo se usa, ajusta y cuida', minMin: 8 },
         { id: 'j1', tipo: 'juego', titulo: '¿Sirve o se repone?' },
         { id: 't1', tipo: 'taller', titulo: 'Taller: inspecciona tu propio EPP', minMin: 15 },
         { id: 'q1', tipo: 'quiz', titulo: 'Evaluación', banco: 'epp' },
@@ -127,8 +138,12 @@ var PLAN = {
       horas: 1, duracionMin: 60, doc: 'certificado', vigenciaMeses: 12, plazoMeses: 0, cargos: '*',
       contenidos: 'Accidente leve, grave y fatal · Denuncia DIAT · Suspensión y notificación · Investigación con árbol de causas · Accidente de trayecto',
       etapas: [
-        { id: 'l1', tipo: 'leccion', titulo: 'Cápsula: paso a paso ante un accidente', minMin: 8 },
+        { id: 'l1', tipo: 'leccion', titulo: 'Cápsula 1: paso a paso ante un accidente', minMin: 8 },
         { id: 'j1', tipo: 'juego', titulo: '¿Leve, grave o fatal?' },
+        { id: 'l2', tipo: 'leccion', titulo: 'Cápsula 2: la DIAT, el trayecto y tus derechos en la ACHS', minMin: 8 },
+        { id: 'j2', tipo: 'juego', titulo: 'Ordena el accidente grave' },
+        { id: 'l3', tipo: 'leccion', titulo: 'Cápsula 3: investigar para que no se repita (PTS-018)', minMin: 10 },
+        { id: 't1', tipo: 'taller', titulo: 'Taller: investiga un accidente', minMin: 15 },
         { id: 'q1', tipo: 'quiz', titulo: 'Evaluación', banco: 'acc' }
       ] }
   ]

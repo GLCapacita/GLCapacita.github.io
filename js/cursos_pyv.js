@@ -646,3 +646,124 @@ Object.keys(_PTS).forEach(function (cod) {
       lista: P.detener.map(function (d) { return ['Detener si', d]; }) };
   };
 });
+
+/* =====================================================================
+   AMPLIACIÓN: MATRIZ IPER (90 min), PRRD, EPP Y ACCIDENTES (60 min)
+   ===================================================================== */
+CONTENIDO.juegos['iper.j1'] = CONTENIDO.juegos['ds44.j4'];
+CONTENIDO.juegos['iper.j2'] = function (cargo) {
+  var R = _riesgosCargo(cargo).slice(0, 12), it = [];
+  R.slice(0, 5).forEach(function (r) { if (r.peligros[0]) it.push({ t: r.peligros[0], c: 'pel', fb: 'Es un peligro: la fuente o condición que puede causar daño.' }); });
+  R.slice(0, 5).forEach(function (r) { it.push({ t: r.riesgo, c: 'rie', fb: 'Es un riesgo: la posibilidad de que el peligro te dañe (lo que puede pasar).' }); });
+  return { intro: 'En la matriz, el peligro es la fuente del daño y el riesgo es lo que puede pasar. Clasifica estos textos reales de la Matriz IPER de tu cargo.', partes: [{ tipo: 'clasificar',
+    categorias: [{ id: 'pel', nombre: 'Peligro' }, { id: 'rie', nombre: 'Riesgo' }], items: it }] };
+};
+CONTENIDO.lecciones['iper.l2'] = { diapositivas: [
+  { t: 'Probabilidad (P)', x: '¿Qué tan seguido puede ocurrir?', l: ['Baja = 1: rara vez, mensual o menos.', 'Media = 2: varias veces, semanal.', 'Alta = 4: siempre o casi siempre, diario.'] },
+  { t: 'Severidad (S)', x: '¿Qué tan grave sería el daño?', l: ['Ligeramente dañino = 1: lesiones superficiales, molestias.', 'Dañino = 2: laceraciones, quemaduras, esguinces, fracturas menores.', 'Extremadamente dañino = 4: lesiones graves, amputaciones, muerte.'] },
+  { t: 'El nivel de riesgo: P × S', l: ['1 o 2 · Tolerable: se mantienen los controles.', '4 · Moderado: hay que reducirlo en un plazo definido.', '8 · Importante: no se empieza ni continúa hasta reducirlo.', '16 · Intolerable: no se empieza; si no se puede reducir, el trabajo se prohíbe.'], tip: 'Ejemplo: caída al agua en traslado, P 2 × S 4 = 8 Importante. Por eso el chaleco es obligatorio y no se transita por bordas sin baranda.' },
+  { t: 'Riesgos que se evalúan con protocolo', x: 'Los riesgos de higiene, ergonómicos y psicosociales no se evalúan con P × S sino con su protocolo o guía:', l: ['Ruido: PREXOR.', 'Radiación UV de origen solar: guía técnica MINSAL.', 'Frío a la intemperie: Guía ISP 2026 (10 °C o menos con viento y lluvia).', 'Movimientos repetitivos: TMERT-EESS. Manejo manual de carga: Ley 20.949 y guía MMC.', 'Psicosociales: cuestionario CEAL-SM. Violencia y acoso: Ley Karin.', 'Químicos y biológicos: D.S. 594 y HDS.'] },
+  { t: 'La jerarquía de controles', l: ['1. Eliminación: quitar el peligro.', '2. Sustitución: cambiarlo por algo menos peligroso.', '3. Ingeniería: barandas, resguardos, líneas de vida, ventilación.', '4. Señalización y advertencias.', '5. Administrativos: procedimientos, permisos, AST, capacitación, pausas.', '6. EPP: la última barrera.'], tip: 'La matriz de PyV tiene una columna para cada tipo de control. Si una columna dice «No aplica», el control descansa en las siguientes.' },
+  { t: 'El riesgo residual', x: 'Es el riesgo que queda después de aplicar los controles. La matriz lo vuelve a evaluar con P × S.', l: ['Si el residual sigue Importante o Intolerable, los controles no bastan y se agregan medidas.', 'El residual solo es real si los controles se cumplen todos los días.', 'Por eso tú eres parte del control: si falta uno, la tarea no empieza.'] },
+  { t: 'Cuándo se actualiza la matriz', l: ['Cuando cambian las tareas, los equipos, los lugares o los productos.', 'Después de un accidente o incidente relevante.', 'Cuando cambia la normativa (por ejemplo, la guía de frío del ISP de 2026).', 'Cuando los trabajadores informan riesgos nuevos.', 'Cada cambio queda en la hoja «Control de cambios».'] }
+] };
+CONTENIDO.lecciones['iper.lp'] = function (cargo) {
+  var I = (window.PYV_IPER || {})[cargo] || { riesgos: [], procesos: [] }, d = [];
+  d.push({ t: 'Tu cargo en la matriz', x: 'La Matriz IPER 2026 tiene ' + I.riesgos.length + ' riesgos para ' + _nombreCargo(cargo) + ', distribuidos en estos procesos:', l: (I.procesos || []).length ? I.procesos : ['Gestión administrativa y preventiva'] });
+  (I.procesos || []).forEach(function (pr) {
+    var R = I.riesgos.filter(function (r) { return (r.procesos || []).indexOf(pr) >= 0; }).sort(function (a, b) { return b.nivel - a.nivel; });
+    var tareas = []; R.forEach(function (r) { (r.tareas || []).forEach(function (t) { if (tareas.indexOf(t) < 0) tareas.push(t); }); });
+    d.push({ t: 'Proceso: ' + pr, x: 'Tareas de tu cargo en este proceso:', l: tareas.slice(0, 8) });
+    d.push({ t: pr + ': riesgos principales', l: R.slice(0, 6).map(function (r) { return r.riesgo + ' · ' + r.nivelTxt + ' → ' + ([].concat(r.ingenieria, r.administrativo)[0] || 'ver controles'); }) });
+  });
+  d.push({ t: 'Cómo buscar tu tarea en la matriz', l: ['Filtra la columna «Puesto de trabajo» por tu cargo.', 'Busca tu tarea en la columna «Tarea».', 'Lee de izquierda a derecha: peligro, riesgo, consecuencias, evaluación, controles, EPP, procedimiento y riesgo residual.', 'Pide la matriz a Prevención de Riesgos: es un documento que tienes derecho a conocer.'] });
+  return { diapositivas: d };
+};
+CONTENIDO.talleres['iper.t2'] = function (cargo) {
+  var R = _riesgosCargo(cargo).filter(function (r) { return r.p && r.s; }); var r = R[0] || _riesgosCargo(cargo)[0] || { riesgo: '', peligros: [''], tareas: [''], consecuencias: [''], administrativo: [], eppItems: [] };
+  return { intro: 'Vas a leer una fila real de la Matriz IPER de tu cargo y analizarla como lo haría el equipo de prevención.', partes: [
+    { tipo: 'lectura', titulo: 'La fila', texto: 'Tarea: ' + (r.tareas[0] || '') + '\nPeligro: ' + (r.peligros[0] || '') + '\nRiesgo: ' + r.riesgo + '\nConsecuencias: ' + (r.consecuencias[0] || '') + (r.p ? '\nEvaluación: P ' + r.p + ' × S ' + r.s + ' = ' + (r.p * r.s) + ' (' + r.nivelTxt + ')' : '') + '\nControles: ' + [].concat(r.ingenieria, r.administrativo).slice(0, 3).join(' / ') + '\nEPP: ' + (r.eppItems || []).slice(0, 5).join(', ') },
+    { tipo: 'abierta', p: '¿Por qué crees que la probabilidad y la severidad quedaron así? ¿Estás de acuerdo con lo que ves en tu trabajo real?', min: 50, alApr: true, modelo: 'Lo importante es contrastar la matriz con la realidad: si la tarea se hace más seguido o con más peligro del registrado, la evaluación debe revisarse.' },
+    { tipo: 'abierta', p: '¿Qué control falta o no siempre se cumple en esta tarea? Propón una medida y di en qué nivel de la jerarquía está.', min: 50, alApr: true, modelo: 'Una buena propuesta prioriza eliminar o aislar el peligro (ingeniería) antes que depender solo de instrucciones o del EPP.' },
+    { tipo: 'vep', desdeIper: true, n: 2 }
+  ] };
+};
+
+CONTENIDO.lecciones['prrd.l2'] = { diapositivas: [
+  { t: 'Emergencia médica o accidente grave', l: ['Alerta: avisar de inmediato al Supervisor, Patrón o encargado de oficina; detener la actividad y pedir apoyo en primeros auxilios.', 'Comunicación: Operaciones y Gerencia; ACHS 1404; en zona aislada, Autoridad Marítima 137 para la evacuación; en oficina, SAMU 131.', 'Coordinación: el Supervisor controla la faena, el Patrón mantiene la embarcación lista y entrega coordenadas.', 'Evaluar: conciencia, respiración, hemorragias, hipotermia, posición GPS y clima.', 'Decidir: atención en sitio o evacuación; derivación al Hospital de Puerto Aysén o ACHS Aysén.'] },
+  { t: 'Hombre al agua', l: ['Quien ve la caída grita «¡Hombre al agua por babor/estribor!», no lo pierde de vista, lo señala y lanza un aro.', 'El Patrón activa el zafarrancho y marca la posición en el GPS; el Supervisor detiene los trabajos.', 'Nadie se lanza al agua sin chaleco y línea de vida.', 'Tras recuperarlo: conciencia, respiración, lesiones y tiempo en el agua (hipotermia).', 'Si no se recupera de inmediato: Autoridad Marítima por VHF canal 16 o 137 con la posición.'] },
+  { t: 'Incendio a bordo', l: ['Quien detecte humo, fuego, olor anormal o fuga de GLP alerta al Patrón y a la dotación.', 'Se activa el zafarrancho de incendio: cierre de combustible y GLP, corte eléctrico, combate con extintores.', 'Incendio incipiente: combate inicial sin exponerse innecesariamente.', 'Incendio no controlable: se prepara el abandono, que solo ordena el Patrón.'] },
+  { t: 'Incendio en faena (trabajo en caliente)', l: ['El soldador corta el equipo de inmediato; el vigía actúa con el extintor PQS.', 'Se retira a las personas del área y se avisa al Supervisor.', 'Se revisa el área al menos 30 minutos después de terminar el trabajo en caliente.'] },
+  { t: 'Vía de agua, colisión o varada', l: ['Quien detecte ingreso de agua, escora anormal o falla de achique avisa al Patrón.', 'El Patrón dirige, el motorista interviene dentro de sus competencias y el Supervisor controla a la cuadrilla.', 'Ante riesgo para las personas: Autoridad Marítima con posición GPS.', 'Se activan los planes asociados: emergencia médica, incendio, derrame o abandono.'] },
+  { t: 'Abandono de la embarcación', l: ['Es la última medida, cuando quedarse a bordo deja de ser seguro.', 'Señal: seis pitazos largos y seguidos. Solo la ordena el Patrón.', 'Todos con chaleco salvavidas al puesto de reunión; se prepara la balsa o el bote de servicio.', 'Llamada de socorro por VHF canal 16 o 137 con la posición.'] },
+  { t: 'Temporal, viento y marejada', l: ['La gestión es preventiva: Patrón y Supervisor revisan pronósticos y avisos de la Autoridad Marítima antes y durante la jornada.', 'El Supervisor tiene autoridad para suspender la faena; el Patrón decide sobre la navegación.', 'Puerto cerrado o aviso de mal tiempo: no se zarpa.'] },
+  { t: 'Sismo y tsunami', l: ['Si el sismo hace difícil mantenerse en pie: plan de tsunami de inmediato, sin esperar alerta.', 'En módulos: repliegue a la embarcación y salida a aguas profundas.', 'Navegando: alejarse de la costa a más de 150 m de profundidad; no entrar a puertos ni bahías.', 'En fiordos, un deslizamiento puede generar olas sin aviso.'] }
+] };
+CONTENIDO.lecciones['prrd.l3'] = function (cargo) {
+  return { diapositivas: [
+    { t: 'Tu rol como ' + _nombreCargo(cargo), l: CONTENIDO.rolEmergencia[cargo] || [] },
+    { t: 'El método ACCEDER', x: 'Todos los planes de respuesta siguen los mismos pasos:', l: ['A · Alerta y alarma', 'C · Comunicación', 'C · Coordinación', 'E · Evaluación preliminar', 'D · Decisiones', 'E · Evaluación complementaria', 'R · Readecuación del plan'] },
+    { t: 'Cómo se avisa', l: ['Quien detecta → Patrón, Supervisor o encargado → Operaciones y Gerencia → mandante.', 'Todo aviso dice: embarcación, posición GPS, tipo de emergencia, número de personas y lesionados, apoyo requerido.', 'Medios: VHF canal 16, celular y Starlink.', 'Solo alertas oficiales: SENAPRED, SHOA, Autoridad Marítima, SERNAGEOMIN.'] },
+    { t: 'Recursos a bordo', l: ['Chalecos salvavidas (8 a 9 por embarcación), aros con rabiza y balsa para 10 personas.', 'Extintores, botiquín y bombas de achique.', 'Checklist de inicio de turno antes de zarpar.', 'Al menos un zafarrancho por turno y embarcación.'] },
+    { t: 'Números de emergencia', l: (CONTENIDO.directorio || []).map(function (d) { return d.n + ': ' + d.t; }) }
+  ] };
+};
+CONTENIDO.talleres['prrd.t1'] = function (cargo) {
+  var ofi = PLAN.area(cargo) === 'oficina';
+  return { intro: 'Simulacro de escritorio: lee cada situación y responde qué harías tú, según tu rol en el PRRD. Tus respuestas quedan registradas para Prevención de Riesgos.', partes: ofi ? [
+    { tipo: 'lectura', titulo: 'Situación 1', texto: 'Son las 11:00 en la oficina de Las Rosas 121. Un sismo fuerte hace difícil mantenerse en pie y se corta la luz.' },
+    { tipo: 'abierta', p: '¿Qué haces durante el sismo y después? ¿Dónde está la zona segura y a quién avisas?', min: 60, alApr: true, modelo: 'Agacharse, cubrirse y afirmarse lejos de ventanas y estanterías; terminado el movimiento, evacuar a la zona segura exterior, recontar a las personas y seguir solo alertas oficiales (SENAPRED, SHOA).' },
+    { tipo: 'lectura', titulo: 'Situación 2', texto: 'Una embarcación llama por teléfono: un tripulante se lesionó en un centro alejado y necesitan apoyo.' },
+    { tipo: 'abierta', p: '¿Qué datos pides y a quién informas?', min: 50, alApr: true, modelo: 'Embarcación, posición GPS, tipo de lesión, estado del lesionado, número de personas y apoyo requerido; informar a Operaciones, Gerencia y Prevención (ACHS 1404, Autoridad Marítima 137 si hay que evacuar).' }
+  ] : [
+    { tipo: 'lectura', titulo: 'Situación 1', texto: 'Regresan navegando a las 16:00 con viento fuerte. Un compañero que soltaba un cabo en la borda cae al agua por estribor.' },
+    { tipo: 'abierta', p: 'Describe lo que haces en los primeros 2 minutos, según tu rol.', min: 70, alApr: true, modelo: 'Gritar «¡Hombre al agua por estribor!», no perderlo de vista y señalarlo, lanzar un aro; el Patrón activa el zafarrancho y marca el GPS; nadie se lanza sin chaleco y línea de vida; tras recuperarlo, abrigarlo y evaluar hipotermia.' },
+    { tipo: 'lectura', titulo: 'Situación 2', texto: 'Trabajan en un módulo y sienten un sismo que hace difícil mantenerse en pie. No hay alerta oficial todavía.' },
+    { tipo: 'abierta', p: '¿Qué hace la cuadrilla y hacia dónde va la embarcación?', min: 60, alApr: true, modelo: 'Se aplica el plan de tsunami de inmediato: repliegue a la embarcación, recuento y salida a aguas profundas (más de 150 m), sin entrar a puertos ni bahías; volver solo cuando la autoridad levante la alerta.' },
+    { tipo: 'registro', titulo: 'Recursos de emergencia de tu embarcación', opciones: ['Lo sé', 'No estoy seguro'], items: ['Dónde están los chalecos salvavidas', 'Dónde están los aros y la balsa', 'Dónde están los extintores y cuál usar', 'Dónde está el botiquín', 'Cuál es la señal de abandono', 'Cuál es el punto de reunión a bordo'] }
+  ] };
+};
+
+CONTENIDO.lecciones['epp.l2'] = function (cargo) {
+  var R = _riesgosCargo(cargo).filter(function (r) { return r.eppItems && r.eppItems.length; }).sort(function (a, b) { return b.nivel - a.nivel; }).slice(0, 14);
+  return { diapositivas: [{ t: 'Cada EPP tiene un porqué', x: 'Tu EPP sale de la Matriz IPER: cada elemento protege de un riesgo concreto de tu cargo de ' + _nombreCargo(cargo) + '.' }].concat(
+    R.map(function (r) { return { t: r.riesgo, x: 'Puede causar: ' + _lista(r.consecuencias, 1).join('') + '.', l: r.eppItems.slice(0, 7).map(function (e) { return 'EPP: ' + e; }) }; }),
+    [{ t: 'Recuerda', l: ['El EPP es la última barrera: no reemplaza los otros controles.', 'Usa el EPP certificado que entrega la empresa, no uno propio.', 'Si un EPP te incomoda o no te queda, avisa: hay otras tallas o modelos.'] }]) };
+};
+CONTENIDO.juegos['epp.j2'] = function (cargo) {
+  var usados = {}, pares = [];
+  _riesgosCargo(cargo).sort(function (a, b) { return b.nivel - a.nivel; }).forEach(function (r) {
+    var e = (r.eppItems || []).filter(function (x) { return !usados[x.toLowerCase()]; })[0];
+    if (e && pares.length < 6) { usados[e.toLowerCase()] = 1; pares.push({ a: r.riesgo, b: e }); }
+  });
+  return { intro: 'Une cada riesgo de tu cargo con un EPP que lo controla, según la Matriz IPER.', partes: [{ tipo: 'emparejar', pares: pares }] };
+};
+CONTENIDO.lecciones['epp.l3'] = { documento: 'pts/PTS-001.pdf', diapositivas: [
+  { t: 'Chaleco salvavidas', l: ['Siempre puesto y abrochado sobre cubierta, muelles y módulos.', 'Revisa cierres, correas, cámara o flotación, silbato y luz.', 'Los autoinflables se revisan según el fabricante (cartucho y fecha).', 'No se usa como cojín ni se deja al sol o la lluvia.'] },
+  { t: 'Casco, protección ocular y auditiva', l: ['Casco con barbiquejo ajustado; sin golpes, grietas ni decoloración.', 'Lentes o antiparras limpios y sin rayas que impidan ver.', 'Protector auditivo bien insertado o fonos bien sellados; se usa todo el tiempo de exposición.'] },
+  { t: 'Guantes, calzado y ropa', l: ['Guantes adecuados al riesgo: cabos, químicos, soldadura o frío.', 'Calzado de seguridad antideslizante e impermeable, con suela en buen estado.', 'Ropa térmica e impermeable en capas; ropa ignífuga para trabajo en caliente.'] },
+  { t: 'Protección respiratoria y química', l: ['Respirador con el filtro indicado por la HDS del producto o para humos metálicos.', 'Prueba de ajuste cada vez: sin barba en la zona de sellado.', 'Filtros reemplazados según el fabricante o cuando cuesta respirar.', 'EPP químico lavado y guardado separado de la ropa personal.'] },
+  { t: 'Arnés y equipos anticaída', l: ['Inspección antes de cada uso: correas, costuras, hebillas, mosquetones y absorbedor.', 'Un arnés que soportó una caída se retira de uso.', 'Siempre anclado a un punto o línea de vida resistente.'] },
+  { t: 'Cuidado y reposición', l: ['Limpiar y secar después de usar; guardar lejos del sol, combustibles y químicos.', 'Revisar antes de cada jornada.', 'Pedir reposición apenas se deteriora: es gratis y queda registrado.', 'El EPP dañado se entrega para su disposición final; no se repara de forma casera.'] }
+] };
+
+CONTENIDO.lecciones['acc.l2'] = { diapositivas: [
+  { t: 'La DIAT', x: 'La Denuncia Individual de Accidente del Trabajo informa el accidente a la ACHS.', l: ['La hace la jefatura directa o el supervisor dentro de 24 horas desde que se conoce el accidente.', 'Si la empresa no la hace, pueden hacerla el propio trabajador, un familiar, un compañero, el Comité Paritario o el médico tratante.', 'Sin denuncia, la atención puede no quedar cubierta por el seguro.'] },
+  { t: 'Accidente de trayecto', l: ['Es el que ocurre en el trayecto directo de ida o regreso entre la casa y el trabajo (Ley 16.744).', 'Se acredita con parte de Carabineros, testigos, certificado de atención u otros medios.', 'Avisa a tu jefatura y acude a la ACHS; la denuncia se hace igual que un accidente del trabajo.'] },
+  { t: 'Tus derechos en la ACHS', l: ['Atención médica gratuita hasta la recuperación completa: consultas, exámenes, hospitalización, medicamentos, rehabilitación.', 'Subsidio por incapacidad temporal mientras dura el reposo.', 'Indemnización o pensión si queda una incapacidad permanente.', 'Si la ACHS califica tu caso como no laboral y no estás de acuerdo, puedes reclamar ante la SUSESO.'] },
+  { t: 'Accidente grave y fatal: lo que hace la empresa', l: ['Suspende de inmediato la faena y acordona el área.', 'Notifica de inmediato a la Inspección del Trabajo y a la SEREMI de Salud, y avisa a la ACHS.', 'Envía la DIAT marcada como grave o fatal dentro de 24 horas.', 'Solo reanuda con autorización escrita de la autoridad.', 'Investiga con árbol de causas en un máximo de 30 días.'] }
+] };
+CONTENIDO.juegos['acc.j2'] = { intro: 'Ordena lo que se hace ante un accidente grave, del primer paso al último.', partes: [{ tipo: 'ordenar', enunciado: 'Accidente grave', items: ['Primeros auxilios y traslado del lesionado', 'Suspender la faena y acordonar el área', 'Notificar de inmediato a la Inspección del Trabajo y SEREMI de Salud', 'Enviar la DIAT marcada como grave dentro de 24 horas', 'Investigar con árbol de causas (máximo 30 días)', 'Reanudar solo con autorización escrita de la autoridad'], fb: 'Primero las personas; luego suspender, notificar, denunciar e investigar.' }] };
+CONTENIDO.lecciones['acc.l3'] = { diapositivas: [
+  { t: 'Para qué se investiga', x: 'La investigación busca causas, no culpables. Su objetivo es que el accidente no se repita.', l: ['Se investigan los accidentes y también los incidentes o casi accidentes relevantes.', 'Participan la jefatura, Prevención de Riesgos, el Delegado de SST y los involucrados.'] },
+  { t: 'Los hechos', l: ['Se reconstruye lo que pasó: quién, qué, dónde, cuándo, cómo.', 'Se entrevista al accidentado y a los testigos por separado.', 'Se toman fotos, se revisan equipos, EPP, permisos y AST.', 'Solo hechos comprobados, sin opiniones ni juicios.'] },
+  { t: 'El árbol de causas', x: 'Se parte del daño y se pregunta «¿qué fue necesario para que esto ocurriera?» hasta llegar a las causas de fondo.', l: ['Causas inmediatas: actos y condiciones (no usar línea de vida, baranda suelta).', 'Causas básicas: factores personales y del trabajo (falta de capacitación, mantención, supervisión, planificación).', 'Cada causa debe tener al menos una medida.'] },
+  { t: 'Medidas y seguimiento', l: ['Medidas inmediatas dentro de 24 horas.', 'Medidas correctivas con responsable y plazo.', 'Se revisa la Matriz IPER y el procedimiento afectado.', 'El informe se guarda al menos 5 años a disposición de la autoridad.', 'Se comparten las lecciones aprendidas con todo el personal.'] }
+] };
+CONTENIDO.talleres['acc.t1'] = { intro: 'Investiga un caso simulado como lo haría el equipo. Tus respuestas quedan registradas para Prevención de Riesgos.', partes: [
+  { tipo: 'lectura', titulo: 'El caso', texto: 'Durante el cierre de un centro, un tripulante pasaba un cabo desde el pasillo del módulo a la embarcación. El pasillo estaba mojado y sin baranda en ese tramo, porque ya se había retirado. Llevaba el chaleco puesto pero sin abrochar. Al tirar del cabo resbaló y cayó al agua. Fue recuperado en 3 minutos con hipotermia leve.\n\nEse día se había atrasado la faena por el clima y no se hizo la charla de inicio. Es un caso simulado.' },
+  { tipo: 'abierta', p: '¿Cuáles fueron las causas inmediatas (actos y condiciones)?', min: 50, alApr: true, modelo: 'Pasillo mojado sin baranda; chaleco sin abrochar; tirar del cabo desde el borde sin línea de vida.' },
+  { tipo: 'abierta', p: '¿Cuáles fueron las causas básicas (por qué existían esas condiciones)?', min: 50, alApr: true, modelo: 'Se retiraron las barandas sin reemplazar la protección; no se hizo la charla ni el AST por el atraso; presión por el clima y el plazo; falta de supervisión del uso correcto del chaleco.' },
+  { tipo: 'abierta', p: 'Propón tres medidas, una de ellas de ingeniería, con responsable.', min: 60, alApr: true, modelo: 'Línea de vida provisoria al retirar barandas (ingeniería, Supervisor); AST obligatorio aunque haya atraso (administrativo, Supervisor); verificación de chalecos abrochados antes de cada maniobra (Patrón).' },
+  { tipo: 'abierta', p: '¿Qué hubiera pasado sin chaleco? ¿Qué dice esto del valor del EPP?', min: 30, modelo: 'Sin chaleco la caída pudo ser fatal por el frío y el oleaje: el EPP salvó la vida, pero solo es la última barrera; las causas de fondo deben corregirse igual.' }
+] };
