@@ -161,7 +161,8 @@ var PLAN = {
     ['PTS-010', 'Cierre de centros de cultivo', ['supervisor', 'operario', 'tripulante', 'patron', 'motorista', 'soldador', 'prevencion', 'jefe_operaciones']],
     ['PTS-012', 'Trabajo en altura', ['supervisor', 'operario', 'soldador', 'tripulante', 'patron', 'buzo', 'prevencion', 'jefe_operaciones']],
     ['PTS-017', 'Izaje y movimiento de cargas', ['patron', 'motorista', 'tripulante', 'operario', 'supervisor', 'prevencion', 'jefe_operaciones']],
-    ['PTS-021', 'Instalación y retiro de pajareras', ['supervisor', 'operario', 'tripulante', 'prevencion']]
+    ['PTS-021', 'Instalación y retiro de pajareras', ['supervisor', 'operario', 'tripulante', 'prevencion']],
+    ['PTS-022', 'Navegación y apoyo con embarcaciones', ['patron', 'motorista', 'tripulante', 'supervisor', 'operario', 'operario_agua', 'soldador', 'buzo', 'buzo_supervisor', 'prevencion', 'jefe_operaciones']]
   ];
   P.forEach(function (p) {
     var id = p[0].toLowerCase();
