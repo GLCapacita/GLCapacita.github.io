@@ -262,6 +262,12 @@ CONTENIDO.juegos['irl.js'] = { intro: 'Une cada pictograma de peligro con lo que
   { a: 'Pez y árbol muerto', b: 'Peligroso para el medio ambiente acuático' }] }] };
 
 CONTENIDO.lecciones['irl.l4'] = function (cargo) {
+  if (PLAN.area(cargo) === 'oficina') return { diapositivas: [
+    { t: 'Emergencias en la oficina de Las Rosas 121', x: 'El PRRD 2026 identifica estas amenazas para la oficina:', l: ['Sismo.', 'Incendio.', 'Emergencia médica o accidente.', 'Corte de energía eléctrica o de agua.', 'Asalto o robo.', 'Erupción volcánica o caída de ceniza.', 'Temporal con corte de servicios.', 'Tsunami o inundación por crecida del río Aysén, según lo indique la autoridad.'] },
+    { t: 'Quién dirige y cómo se avisa', l: ['Dirige el encargado/a de oficina: da la alarma, ordena la evacuación y hace el recuento.', 'Quien detecta la emergencia avisa a viva voz y, si es necesario, llama directamente a Bomberos, SAMU o Carabineros.', 'Todo aviso dice: qué pasó, dónde (Las Rosas 121, Puerto Aysén), cuántas personas y si hay lesionados.', 'Solo alertas oficiales: SENAPRED, SHOA y SERNAGEOMIN.'] },
+    { t: 'Qué hacer en cada caso', l: ['Sismo: agacharse, cubrirse y afirmarse lejos de ventanas, estanterías y del aire acondicionado; luego evacuar a la zona segura exterior.', 'Incendio: alarma a viva voz y Bomberos (132); extintor solo si el fuego es incipiente y hay salida asegurada.', 'Emergencia médica: primeros auxilios con el botiquín y llamar a la ACHS (1404) o al SAMU (131).', 'Asalto: no oponer resistencia; luego Carabineros (133) sin alterar el lugar.', 'Ceniza: permanecer adentro con puertas y ventanas cerradas.', 'Tsunami o inundación: si la autoridad ordena evacuar, ir a la zona segura que indique.'] },
+    { t: 'Tu rol como ' + _nombreCargo(cargo), l: CONTENIDO.rolEmergencia[cargo] || [] },
+    { t: 'Números que debes conocer', l: ['ACHS urgencias: 1404.', 'SAMU: 131 · Bomberos: 132 · Carabineros: 133.', 'Prevención de Riesgos PyV: ' + (window.CONFIG && CONFIG.SOPORTE || '') + '.'] }] };
   var base = (CONTENIDO.lecciones['prrd.l1'] && CONTENIDO.lecciones['prrd.l1'].diapositivas) || [];
   return { diapositivas: base.concat([{ t: 'Tu rol como ' + _nombreCargo(cargo), l: CONTENIDO.rolEmergencia[cargo] || [] },
     { t: 'Números que debes conocer', l: ['ACHS urgencias: 1404.', 'Autoridad Marítima: 137.', 'SAMU: 131 · Bomberos: 132 · Carabineros: 133.', 'Prevención de Riesgos PyV: ' + (window.CONFIG && CONFIG.SOPORTE || '') + '.'] }]) };
