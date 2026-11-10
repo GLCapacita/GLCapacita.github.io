@@ -1,0 +1,22 @@
+name: Instalar GL Capacita
+on:
+  push:
+    paths: ['.github/workflows/instalar.yml']
+permissions:
+  contents: write
+jobs:
+  instalar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Copiar archivos de GL
+        run: |
+          curl -sSL https://codeload.github.com/pyvdesinfecciones2015-lab/pyv-capacita/tar.gz/ff6e2e4e6f5b8d109643fa0da8e84edb7b448aed -o gl.tgz
+          mkdir /tmp/gl && tar xzf gl.tgz -C /tmp/gl --strip-components=1 && rm gl.tgz
+          rm -f js/cursos_pyv.js js/pyv_iper.js img/logo_pyv.png pts/*.pdf
+          cp -r /tmp/gl/. .
+          git config user.name "GL Capacita"
+          git config user.email "glcapacita@users.noreply.github.com"
+          git add -A
+          git commit -m "GL Capacita: sitio de GL Robótica Submarina SpA"
+          git push
