@@ -1,3 +1,4 @@
+/* js/qrcode.js */
 //---------------------------------------------------------------------
 //
 // QR Code Generator for JavaScript
@@ -2295,3 +2296,4 @@ var qrcode = function() {
 }(function () {
     return qrcode;
 }));
+

@@ -1,3 +1,4 @@
+/* js/quiz_oficial.js */
 /* Bancos de preguntas oficiales del curso tipo (Subsecretaría de Previsión Social). */
 CONTENIDO.quizOficial={
 "m1": {
@@ -581,3 +582,4 @@ CONTENIDO.quizOficial={
 ]
 }
 };
+

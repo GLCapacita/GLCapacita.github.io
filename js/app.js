@@ -1,4 +1,5 @@
-/* PyV Capacita — aplicación del trabajador */
+/* js/app.js */
+/* GL Capacita — aplicación del trabajador */
 (function () {
   'use strict';
   var S = { token: null, perfil: null, vista: 'ruta', etapa: null, scormReal: {} };
@@ -33,7 +34,7 @@
   function ic(n, s) { return '<svg width="' + (s || 22) + '" height="' + (s || 22) + '" viewBox="0 0 24 24" aria-hidden="true">' + (ICONOS[n] || '') + '</svg>'; }
 
   /* ---------- estado local (avance sin conexión) ---------- */
-  function claveLocal() { return 'pyv_local_' + (S.perfil ? S.perfil.run : ''); }
+  function claveLocal() { return 'glc_local_' + (S.perfil ? S.perfil.run : ''); }
   function local() { return SRV.ls(claveLocal()) || {}; }
   function setLocal(item, datos) { var L = local(); L[item] = L[item] || {}; for (var k in datos) L[item][k] = datos[k]; SRV.ls(claveLocal(), L); }
   function prog(item) {
@@ -85,7 +86,7 @@
   setInterval(function () {
     if (!Tiempo.item) return;
     if (document.visibilityState === 'visible' && Date.now() - Tiempo.activo < Tiempo.limite) Tiempo.acc += 5;
-    if (Date.now() - ultVolcado > 150000) { ultVolcado = Date.now(); Tiempo.volcar(); SRV.enviar(S.token); }
+    if (Date.now() - ultVolcado > 60000) { ultVolcado = Date.now(); Tiempo.volcar(); SRV.enviar(S.token); }
     if (typeof Tiempo.onTick === 'function') Tiempo.onTick();
   }, 5000);
   document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'hidden') { Tiempo.volcar(); SRV.enviar(S.token); } });
@@ -112,9 +113,9 @@
   }
 
   /* ---------- sesión ---------- */
-  function guardarSesion() { SRV.ls('pyv_sesion', { token: S.token, perfil: S.perfil }); }
+  function guardarSesion() { SRV.ls('glc_sesion', { token: S.token, perfil: S.perfil }); }
   function salir(expirada) {
-    Tiempo.detener(); SRV.ls('pyv_sesion', null); S.token = null; S.perfil = null;
+    Tiempo.detener(); SRV.ls('glc_sesion', null); S.token = null; S.perfil = null;
     $('#btn-salir').classList.add('oculto'); red(); vistaIngreso(expirada ? 'Tu sesión expiró. Ingresa de nuevo con tu RUN y clave.' : '');
   }
   $('#btn-salir').addEventListener('click', function () { if (!SRV.demo && SRV.pendientes() && !confirm('Hay avances sin enviar todavía. Si sales ahora podrían perderse. ¿Salir igual?')) return; salir(); });
@@ -148,12 +149,12 @@
   function vistaIngreso(msg) {
     S.vista = 'ingreso';
     var grupo = function (areas, et) { return '<optgroup label="' + et + '">' + PLAN.cargos.filter(function (c) { return areas.indexOf(c.area) >= 0; }).map(function (c) { return '<option value="' + c.id + '">' + h(c.nombre) + '</option>'; }).join('') + '</optgroup>'; };
-    var opciones = grupo(['faena'], 'Embarcaciones y faena') + grupo(['mixto', 'oficina'], 'Gerencia y oficina');
+    var opciones = grupo(['faena'], 'Pilotos en faena') + grupo(['taller'], 'Taller de mantención ROV') + grupo(['mixto'], 'Gerencia');
     app.innerHTML =
-      '<section class="portada"><h1>Capacitación en prevención de riesgos</h1><p>Curso de 8 horas del D.S. 44 para el personal de ' + h(CONTENIDO.empresa.nombre) + '. Avanza desde tu celular, a tu ritmo, aunque se corte la señal.</p>' +
-      '<svg class="olas" viewBox="0 0 400 70" preserveAspectRatio="none" aria-hidden="true"><path d="M0 40 C 50 20, 100 60, 150 40 S 250 20, 300 40 S 380 55, 400 38 V70 H0z" fill="#E9EFF1"/><path d="M0 52 C 60 38, 110 66, 170 52 S 280 38, 340 52 S 390 60, 400 50" fill="none" stroke="#F26B1D" stroke-width="3"/></svg></section>' +
+      '<section class="portada"><h1>Capacitación en prevención de riesgos</h1><p>Curso del D.S. 44, riesgos de tu cargo y procedimientos de ' + h(CONTENIDO.empresa.nombre) + '. Avanza desde tu celular, a tu ritmo, aunque se corte la señal.</p>' +
+      '<svg class="olas" viewBox="0 0 400 70" preserveAspectRatio="none" aria-hidden="true"><path d="M0 40 C 50 20, 100 60, 150 40 S 250 20, 300 40 S 380 55, 400 38 V70 H0z" fill="#EAF1F6"/><path d="M0 52 C 60 38, 110 66, 170 52 S 280 38, 340 52 S 390 60, 400 50" fill="none" stroke="#EF9A3C" stroke-width="3"/></svg></section>' +
       '<section class="tarjeta">' +
-      '<img class="logo-ingreso" src="img/logo_pyv.png" alt="Servicios Acuícolas PyV">' +
+      '<img class="logo-ingreso" src="img/logo_gl.png" alt="GL Robótica Submarina">' +
       '<div class="pestanas" role="tablist"><button type="button" class="act" data-tab="ingresar">Ya me registré</button><button type="button" data-tab="registrar">Primera vez</button></div>' +
       (msg ? '<div class="aviso info">' + h(msg) + '</div>' : '') +
       '<form id="f-ingresar" autocomplete="on">' +
@@ -205,8 +206,7 @@
     var av = avanceCurso(cur.id), total = av.total, n = av.n;
     var seg = L.reduce(function (s, e) { return s + prog(e.id).segundos; }, 0);
     var actual = etapaActual(cur.id);
-    var rq = (P.cursos && P.cursos[cur.id] && P.cursos[cur.id].requisitos) || {}, durMin = rq.duracionMin || cur.duracionMin || 0;
-    var chips = '<span class="chip">Tiempo registrado <b>' + hTxt(seg) + '</b>' + (durMin ? ' de ' + h(PLAN.duracionTxt(durMin).replace(' cronológicas', '').replace(' cronológica', '')) : '') + '</span>';
+    var chips = '<span class="chip">Tiempo registrado <b>' + hTxt(seg) + '</b></span>';
     if (esDs && P.fechaLimite && !cert) {
       var dias = Math.ceil((new Date(P.fechaLimite + 'T23:59:59') - new Date()) / 86400000);
       chips += '<span class="chip' + (dias < 0 ? ' peligro' : dias <= 21 ? ' alerta' : '') + '">' + (dias < 0 ? 'Plazo vencido' : 'Plazo hasta <b>' + fechaTxt(P.fechaLimite) + '</b>') + '</span>';
@@ -242,8 +242,6 @@
     var fin = completo(cur.id), vig = cur.vigenciaMeses ? (cur.vigenciaMeses % 12 === 0 ? (cur.vigenciaMeses / 12) + (cur.vigenciaMeses === 12 ? ' año' : ' años') : cur.vigenciaMeses + ' meses') : '';
     html += '<div class="puerto"><h2>' + (cert && !cert.vencido ? 'Capacitación aprobada' : 'Certificado') + '</h2>' +
       (cert && !cert.vencido ? '<p>Código ' + h(cert.codigo) + (cert.vence ? ' · vigente hasta ' + fechaTxt(cert.vence) : '') + '.</p><button class="btn btn-pri" type="button" data-cert>Ver mi certificado</button>'
-        : cert && cert.vencido ? '<p>Tu certificado anterior (' + h(cert.codigo) + ') venció el ' + fechaTxt(cert.vence) + '. Pide a prevención de riesgos que reinicie esta capacitación para renovarlo.</p>'
-        : fin && durMin && seg < durMin * 60 ? '<p>Completaste todas las etapas. El programa dura <b>' + h(PLAN.duracionTxt(durMin)) + '</b> y llevas ' + hTxt(seg) + ' registrados: te faltan unos <b>' + Math.ceil((durMin * 60 - seg) / 60) + ' minutos</b>. Repasa las cápsulas, lecturas y talleres; el tiempo se suma solo mientras estás activo en la pantalla.</p>'
         : fin ? '<p>Completaste todas las etapas. Ya puedes emitir tu certificado.</p><button class="btn btn-pri" type="button" data-cert>Emitir mi certificado</button>'
           : '<p>Se emite al completar todas las etapas' + (esDs && reqDs44().requiereSesiones ? ' y las sesiones' : '') + '. Queda guardado con tu RUN' + (vig ? ' y vale ' + vig : '') + '.</p>') + '</div>';
     html += '</div><p class="pie">' + h(CONTENIDO.empresa.nombre) + ' · Facilitadora: ' + h(P.facilitador || CONTENIDO.empresa.apr) + '</p>';
@@ -272,7 +270,7 @@
     app.innerHTML = '<div class="encabezado"><div class="quien"><div class="suave peq">Hola,</div><h1>' + h(P.nombre.split(' ')[0]) + '</h1><div class="suave">' + h(cargo ? cargo.nombre : '') + ' · ' + h(P.run) + '</div>' +
       '<div class="chips"><span class="chip">Aprobadas <b>' + aprob + ' de ' + cursos.length + '</b></span></div></div></div>' +
       '<h2 class="seccion">Obligatorias</h2>' + oblig.map(tarjeta).join('') +
-      (otros.length ? '<h2 class="seccion">Capacitaciones de PyV</h2>' + otros.map(tarjeta).join('') : '') +
+      (otros.length ? '<h2 class="seccion">Capacitaciones de ' + h(CONTENIDO.empresa.corto) + '</h2>' + otros.map(tarjeta).join('') : '') +
       (pts.length ? '<h2 class="seccion">Procedimientos de tu cargo</h2>' + pts.map(tarjeta).join('') : '') +
       (extra.length ? '<h2 class="seccion">Nuevas capacitaciones</h2>' + extra.map(tarjeta).join('') : '') +
       '<p class="pie">' + h(CONTENIDO.empresa.nombre) + ' · Facilitadora: ' + h(P.facilitador || CONTENIDO.empresa.apr) + '</p>';
@@ -284,7 +282,7 @@
     var ok = hecho(e.id);
     app.innerHTML = encabezadoEtapa(e) + '<section class="tarjeta">' +
       '<p>Antes de empezar los módulos debes descargar el <b>Manual del participante</b>. Tiene todos los contenidos del curso para que los consultes cuando quieras, incluso sin señal.</p>' +
-      '<a class="btn btn-sec btn-bloque" href="' + h(CONFIG.MANUAL) + '" target="_blank" rel="noopener" download id="dl-manual">Descargar manual (PDF, 11 MB)</a>' +
+      '<a class="btn btn-sec btn-bloque" href="' + h(CONFIG.MANUAL) + '" target="_blank" rel="noopener" id="dl-manual">Descargar manual (PDF, 11 MB)</a>' +
       (ok ? '<div class="aviso ok">Ya registraste la descarga del manual.</div><button class="btn btn-pri btn-bloque" type="button" data-volver>Continuar</button>' :
         '<label class="check" id="ck-manual-l"><input type="checkbox" id="ck-manual" disabled><span>Descargué y recibí el Manual del participante.</span></label>' +
         '<button class="btn btn-pri btn-bloque" type="button" id="ok-manual" disabled>Confirmar y continuar</button>') + '</section>';
@@ -401,8 +399,7 @@
   /* ---------- actividades prácticas ---------- */
   function defJuego(e) {
     var area = PLAN.area(S.perfil.cargo), fuente = e.tipo === 'taller' ? CONTENIDO.talleres : CONTENIDO.juegos;
-    var d = (area === 'oficina' && fuente[e.id + '_oficina']) || fuente[e.id];
-    return typeof d === 'function' ? d(S.perfil.cargo) : d;
+    return fuente[e.id + '_' + area] || fuente[e.id];
   }
   function vistaJuego(e) {
     var area = PLAN.area(S.perfil.cargo), def = defJuego(e), esTaller = e.tipo === 'taller';
@@ -428,20 +425,16 @@
   }
   var vistaTaller = vistaJuego;
 
-  /* ---------- cápsulas de PyV (lecciones) ---------- */
+  /* ---------- cápsulas de la empresa (lecciones) ---------- */
   function vistaLeccion(e) {
     var def = CONTENIDO.lecciones[e.id]; if (typeof def === 'function') def = def(S.perfil.cargo);
     var D = (def && def.diapositivas) || [], k = 0, visto = {}, ok = hecho(e.id), voz = window.speechSynthesis;
-    /* retoma en la última diapositiva vista (por trabajador y cápsula) */
-    var claveMarca = 'pyv_marca_' + (S.perfil && S.perfil.run || '') + '_' + e.id, marca = SRV.ls(claveMarca) || {};
-    if (!ok && marca.k > 0 && marca.k < D.length) { k = marca.k; (marca.v || []).forEach(function (j) { if (j < D.length) visto[j] = 1; }); }
-    function guardarMarca() { if (!ok) SRV.ls(claveMarca, { k: k, v: Object.keys(visto).map(Number) }); }
     Tiempo.iniciar(e.id);
     function texto(d) { return [d.t, d.x || ''].concat(d.l || [], d.tip ? [d.tip] : []).join('. '); }
     function pintar() {
-      var d = D[k] || { t: 'Sin contenido' }; visto[k] = 1; guardarMarca();
+      var d = D[k] || { t: 'Sin contenido' }; visto[k] = 1;
       var falta = Math.max(0, e.minMin * 60 - prog(e.id).segundos), todas = Object.keys(visto).length >= D.length;
-      app.innerHTML = encabezadoEtapa(e) + '<section class="tarjeta diapo"><div class="contador">' + (k + 1) + ' de ' + D.length + (marca.k > 0 && !ok && k === marca.k ? ' · retomas donde quedaste' : '') + '</div><h2>' + h(d.t) + '</h2>' +
+      app.innerHTML = encabezadoEtapa(e) + '<section class="tarjeta diapo"><div class="contador">' + (k + 1) + ' de ' + D.length + '</div><h2>' + h(d.t) + '</h2>' +
         (d.x ? String(d.x).split(/\n\n+/).map(function (p) { return '<p>' + h(p).replace(/\n/g, '<br>') + '</p>'; }).join('') : '') +
         (d.l && d.l.length ? '<ul class="diapo-l">' + d.l.map(function (x) { return '<li>' + h(x) + '</li>'; }).join('') + '</ul>' : '') +
         (d.tip ? '<div class="aviso info">' + h(d.tip) + '</div>' : '') +
@@ -501,7 +494,7 @@
   function preguntasDe(e) {
     if (e.banco === 'pyv') {
       var Q = CONTENIDO.quizPyv, pc = (Q.porCargo[S.perfil.cargo] || []).slice(), area = PLAN.area(S.perfil.cargo);
-      var com = Q.comunes.filter(function (q) { return !q.area || q.area === area || (area === 'mixto' && q.area === 'faena'); });
+      var com = Q.comunes.filter(function (q) { return !q.area || q.area === area || (area === 'mixto' && (q.area === 'faena' || q.area === 'taller')); });
       return pc.concat(barajar(com).slice(0, Math.max(4, 7 - pc.length)));
     }
     var B = CONTENIDO.quizOficial[e.banco] || CONTENIDO.quiz[e.banco] || { preguntas: [] };
@@ -554,9 +547,9 @@
     pintar();
   }
 
-  /* ---------- A bordo con PyV ---------- */
+  /* ---------- Tu trabajo en la empresa ---------- */
   function vistaPyv(e) {
-    var cargo = S.perfil.cargo, C = PLAN.cargo(cargo), data = (window.PYV_IPER || {})[cargo] || { riesgos: [], procesos: [] };
+    var cargo = S.perfil.cargo, C = PLAN.cargo(cargo), data = (window.IPER_EMPRESA || {})[cargo] || { riesgos: [], procesos: [] };
     var R = data.riesgos, top = R.filter(function (r) { return r.nivel >= 2; }).slice(0, 8);
     var procs = CONTENIDO.procedimientosDe(cargo), ok = hecho(e.id), leidos = local()[e.id] && local()[e.id].leidos || {};
     function riesgoHtml(r) {
@@ -568,16 +561,16 @@
         (r.eppItems.length ? '<div class="epp">' + r.eppItems.slice(0, 7).map(function (x) { return '<span>' + h(x) + '</span>'; }).join('') + '</div>' : '') + '</div>';
     }
     app.innerHTML = encabezadoEtapa(e) +
-      '<p>Lo que aplica a tu trabajo como <b>' + h(C.nombre) + '</b>, según la Matriz IPER, el Plan de Reducción del Riesgo de Desastres y los procedimientos de ' + h(CONTENIDO.empresa.corto) + '.</p>' +
+      '<p>Lo que aplica a tu trabajo como <b>' + h(C.nombre) + '</b>, según la Matriz IPER v02, los planes de emergencia y los procedimientos de ' + h(CONTENIDO.empresa.corto) + '.</p>' +
       '<section class="tarjeta"><h2>Tu rol en una emergencia</h2><ul class="roles">' + (CONTENIDO.rolEmergencia[cargo] || []).map(function (x) { return '<li>' + h(x) + '</li>'; }).join('') + '</ul>' +
-      (PLAN.area(cargo) === 'oficina' ? '<p class="peq suave">Oficina Las Rosas 121, Puerto Aysén. Si la oficina queda en zona de inundación por tsunami, se evacúa a pie a la zona segura indicada por SENAPRED.</p></section>' : '<p class="peq suave">Señal de abandono: seis pitazos largos y seguidos, chaleco puesto y al punto de reunión de tu embarcación.</p></section>') +
-      '<section class="tarjeta"><h2>Los riesgos de tu cargo</h2><p class="peq suave">De la Matriz IPER 2026 (' + (data.procesos || []).length + ' procesos donde participas). Primero los de mayor nivel.</p>' +
+      (PLAN.area(cargo) === 'faena' ? '<p class="peq suave">En la faena manda el plan de emergencia de la mandante y de la embarcación: conócelo en la inducción del centro.</p></section>' : '<p class="peq suave">Taller: evacuación por la vía señalizada hasta la zona de seguridad, con recuento a cargo del encargado de taller (PDR-02).</p></section>') +
+      '<section class="tarjeta"><h2>Los riesgos de tu cargo</h2><p class="peq suave">De la Matriz IPER v02 (' + (data.procesos || []).length + ' tareas evaluadas para tu cargo). Primero los de mayor nivel.</p>' +
       top.map(riesgoHtml).join('') +
       (R.length > top.length ? '<details><summary class="btn btn-ter">Ver los ' + R.length + ' riesgos evaluados</summary>' + R.filter(function (r) { return top.indexOf(r) < 0; }).map(riesgoHtml).join('') + '</details>' : '') + '</section>' +
       '<section class="tarjeta"><h2>Tus procedimientos</h2><p class="peq suave">Lee los puntos clave de cada uno y márcalo. Puedes abrir el documento completo.</p>' +
       procs.map(function (p) {
         return '<div class="proc' + (leidos[p.id] || ok ? ' leido' : '') + '" data-proc="' + p.id + '"><h4>' + h(p.id) + ' · ' + h(p.titulo) + '</h4><ul>' + p.claves.map(function (c) { return '<li>' + h(c) + '</li>'; }).join('') + '</ul>' +
-          '<a href="' + h(p.archivo) + '" target="_blank" rel="noopener">Abrir el procedimiento completo</a>' +
+          (p.archivo ? '<a href="' + h(p.archivo) + '" target="_blank" rel="noopener">Abrir el documento completo</a>' : '') +
           '<label class="check"><input type="checkbox" data-leido="' + p.id + '"' + (leidos[p.id] || ok ? ' checked' : '') + (ok ? ' disabled' : '') + '><span>Leí los puntos clave</span></label></div>';
       }).join('') + '</section>' +
       '<section class="tarjeta"><h2>Números de emergencia</h2><div class="directorio">' + CONTENIDO.directorio.map(function (d) { return '<div>' + h(d.n) + '</div><div>' + (/^[+\d]/.test(d.t) ? '<a href="tel:' + h(d.t.replace(/\s/g, '')) + '">' + h(d.t) + '</a>' : '<b>' + h(d.t) + '</b>') + '</div>'; }).join('') + '</div></section>' +
@@ -605,7 +598,7 @@
   function vistaSesiones(e) {
     var P = S.perfil, R = reqDs44(), lista = P.sesiones || [];
     app.innerHTML = encabezadoEtapa(e) +
-      '<section class="tarjeta"><p>El curso incluye ' + R.sesionesRequeridas + ' sesiones prácticas con la facilitadora: casos de PyV, trabajo en grupo y práctica con extintores. Pueden ser presenciales o en línea con la tripulación reunida.</p>' +
+      '<section class="tarjeta"><p>El curso incluye ' + R.sesionesRequeridas + ' sesiones prácticas con la facilitadora: casos de GL, trabajo en grupo y práctica con extintores. Pueden ser presenciales en el taller o en línea con los pilotos en faena.</p>' +
       '<div class="chips"><span class="chip">Registradas <b>' + lista.length + ' de ' + R.sesionesRequeridas + '</b></span></div>' +
       (lista.length ? '<ul>' + lista.map(function (s) { return '<li>Sesión ' + h(s.sesionId) + ' · ' + h(s.fecha) + '</li>'; }).join('') + '</ul>' : '') + '</section>' +
       '<section class="tarjeta"><h2>Registrar mi asistencia</h2><p class="peq">La facilitadora te dará un código al inicio de la sesión.</p>' +
@@ -684,7 +677,7 @@
 
   /* ---------- arranque ---------- */
   if (SRV.demo) $('#demo-banda').classList.remove('oculto');
-  var ses = SRV.ls('pyv_sesion');
+  var ses = SRV.ls('glc_sesion');
   if (ses && ses.token) {
     S.token = ses.token; S.perfil = ses.perfil; aplicarExtras(); $('#btn-salir').classList.remove('oculto'); red(); ir('cursos');
     if (navigator.onLine || SRV.demo) SRV.llamar('estado', { token: S.token }).then(function (r) {
@@ -694,3 +687,4 @@
   } else vistaIngreso();
   SRV.onCambio(function (r) { if (r && r.perfil) { guardarSesion(); if (S.vista === 'ruta') vistaRuta(); else if (S.vista === 'cursos') vistaCursos(); } });
 })();
+

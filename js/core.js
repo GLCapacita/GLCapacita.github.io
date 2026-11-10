@@ -1,4 +1,5 @@
-/* PyV Capacita — lógica del servidor.
+/* js/core.js */
+/* GL Capacita — lógica del servidor.
    Este mismo archivo corre en Google Apps Script (Core.gs) y, en modo demostración, en el navegador.
    No usa servicios de Google directamente: todo pasa por "env" (ver Code.gs y api.js). */
 
@@ -11,15 +12,15 @@ var CORE = (function () {
     Evaluaciones: ['fecha', 'run', 'ciclo', 'evaluacion', 'intento', 'puntaje', 'aprobado', 'respuestas'],
     Sesiones: ['id', 'codigo', 'fecha', 'horaInicio', 'horaTermino', 'tema', 'modalidad', 'lugar', 'facilitador', 'estado', 'evidencias', 'creada'],
     Asistencia: ['sesionId', 'run', 'nombre', 'ciclo', 'fecha', 'metodo', 'firmaArchivo'],
-    Certificados: ['codigo', 'run', 'nombre', 'cargo', 'ciclo', 'fechaEmision', 'vence', 'horasProgramadas', 'segundosRegistrados', 'archivoId', 'archivoUrl', 'estado', 'curso', 'version'],
+    Certificados: ['codigo', 'run', 'nombre', 'cargo', 'ciclo', 'fechaEmision', 'vence', 'horasProgramadas', 'segundosRegistrados', 'archivoId', 'archivoUrl', 'estado', 'curso'],
     Encuestas: ['fecha', 'run', 'ciclo', 'respuestas'],
     Firmas: ['fecha', 'run', 'nombre', 'cargo', 'curso', 'item', 'declaracion', 'firmaUrl', 'constanciaUrl'],
     CursosExtra: ['id', 'titulo', 'sub', 'cargos', 'horas', 'vigenciaMeses', 'firma', 'declaracion', 'documentoUrl', 'contenido', 'estado', 'creado', 'actualizado']
   };
 
   var CONFIG_DEFAULT = {
-    EMPRESA: 'Servicios Acuícolas PyV Rain Vega SpA',
-    RUT_EMPRESA: '76.705.768-7',
+    EMPRESA: 'GL Robótica Submarina SpA',
+    RUT_EMPRESA: '77.016.015-4',
     ORGANISMO: 'ACHS',
     FACILITADOR_NOMBRE: 'Iza Sandoval Salgado',
     FACILITADOR_RUN: '',
@@ -29,11 +30,6 @@ var CORE = (function () {
     SESIONES_REQUERIDAS: '2',
     HORAS_CURSO: '8',
     MIN_MINUTOS_DS44: '0',
-    RL_NOMBRE: 'Pablo Rain Miranda',
-    RL_RUN: '',
-    RL_CARGO: 'Gerente General',
-    FIRMA_APR_ID: '',
-    FIRMA_RL_ID: '',
     URL_SITIO: ''
   };
 
@@ -80,7 +76,7 @@ var CORE = (function () {
     for (i = 0; i < 8; i++) for (j = 3; j + 1; j--) { var b = (hash[i] >> (j * 8)) & 255; result += ((b < 16) ? 0 : '') + b.toString(16); }
     return result;
   }
-  function hashPin(run, pin) { return sha256('pyv-capacita|' + limpiarRun(run) + '|' + String(pin)); }
+  function hashPin(run, pin) { return sha256('gl-capacita|' + limpiarRun(run) + '|' + String(pin)); }
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
   function num(v) { var n = Number(v); return isNaN(n) ? 0 : n; }
   function parse(s, def) { try { return s ? JSON.parse(s) : def; } catch (e) { return def; } }
@@ -89,7 +85,7 @@ var CORE = (function () {
   function codigoCorto(env) { return env.uuid().replace(/-/g, '').slice(0, 10).toUpperCase(); }
   function cursoDe(item) { return String(item || '').split('.')[0]; }
   function aplica(c, cargo) { return c.cargos === '*' || c.cargos.indexOf(cargo) >= 0; }
-  function logo() { return typeof LOGO_PYV !== 'undefined' ? LOGO_PYV : ''; }
+  function logo() { return typeof LOGO_EMPRESA !== 'undefined' ? LOGO_EMPRESA : ''; }
 
   /* ---------- acceso a datos ---------- */
   function cfg(env) { var c = env.config(), o = {}; for (var k in CONFIG_DEFAULT) o[k] = (c[k] != null && c[k] !== '') ? c[k] : CONFIG_DEFAULT[k]; for (k in c) if (!(k in o)) o[k] = c[k]; return o; }
@@ -127,7 +123,6 @@ var CORE = (function () {
   function vencido(env, c) { return !!(c && c.vence && env.parseFecha(c.vence) < env.now()); }
 
   /* ---------- reglas de cada curso ---------- */
-  function duracionCurso(C, cur) { return cur.id === 'ds44' ? Math.round(num(C.HORAS_CURSO) * 60) : num(cur.duracionMin || (num(cur.horas) * 60)); }
   function requisitos(env, t, cursoId) {
     var C = cfg(env), cur = PLAN.curso(cursoId), P = progreso(env, t), faltan = [], hechos = 0, total = 0, seg = 0;
     var reqSes = cursoId === 'ds44' && C.REQUIERE_SESIONES === 'SI';
@@ -138,12 +133,11 @@ var CORE = (function () {
       if (ok) hechos++; else faltan.push(e.id);
       if (P[e.id]) seg += num(P[e.id].segundos);
     });
-    /* El certificado declara la duración del programa: no se emite si el tiempo registrado es menor (evita contradicciones ante fiscalización). */
-    var minMin = duracionCurso(C, cur), faltaTiempo = 0;
-    if (minMin > 0 && seg < minMin * 60) faltaTiempo = Math.ceil((minMin * 60 - seg) / 60);
+    var minMin = cursoId === 'ds44' ? num(C.MIN_MINUTOS_DS44) : 0, faltaTiempo = 0;
+    if (minMin > 0 && seg < minMin * 60 * TOLERANCIA_TIEMPO) faltaTiempo = Math.ceil((minMin * 60 * TOLERANCIA_TIEMPO - seg) / 60);
     var plazoV = false;
     if (cursoId === 'ds44' && t.fechaLimite && !certDe(env, t, 'ds44')) plazoV = env.parseFecha(t.fechaLimite) < env.now();
-    return { curso: cursoId, total: total, hechos: hechos, faltan: faltan, segundos: seg, plazoVencido: plazoV, faltaTiempoMin: faltaTiempo, duracionMin: minMin,
+    return { curso: cursoId, total: total, hechos: hechos, faltan: faltan, segundos: seg, plazoVencido: plazoV, faltaTiempoMin: faltaTiempo,
       requiereSesiones: reqSes, sesionesRequeridas: num(C.SESIONES_REQUERIDAS), sesionesAsistidas: asistencias(env, t).length };
   }
   function perfil(env, t) {
@@ -178,7 +172,7 @@ var CORE = (function () {
     var cargo = PLAN.cargo(t.cargo); cargo = cargo ? cargo.nombre : t.cargo;
     var cur = PLAN.curso(cert.curso || 'ds44') || PLAN.cursos[0];
     var esCert = cur.doc === 'certificado';
-    var durTxt = PLAN.duracionTxt(duracionCurso(C, cur));
+    var horas = cur.id === 'ds44' ? C.HORAS_CURSO : cur.horas;
     var verif = (C.URL_SITIO ? C.URL_SITIO.replace(/\/$/, '') + '/verificar.html?c=' : 'Código: ') + cert.codigo;
     var texto = cur.id === 'ds44'
       ? 'aprobó el curso de Prevención de Riesgos Laborales conforme al artículo 16 del D.S. N° 44/2024 del Ministerio del Trabajo y Previsión Social y a la Guía Técnica aprobada por Resolución Exenta N° 1117/2026 de la Subsecretaría de Previsión Social.'
@@ -191,7 +185,7 @@ var CORE = (function () {
       'h1{font-size:30pt;color:#0f3b4c;margin:40px 0 6px;letter-spacing:1px}.sub{font-size:12pt;color:#555;margin-bottom:34px;max-width:75%}' +
       '.nombre{font-size:24pt;font-weight:bold;margin:8px 0 2px}.runc{font-size:12pt;color:#333;margin-bottom:22px}' +
       'p{font-size:11.5pt;line-height:1.55}table{border-collapse:collapse;margin:16px 0;font-size:10.5pt}td{padding:4px 14px 4px 0;vertical-align:top}td.k{color:#555}' +
-      'table.firmas{margin-top:30px;width:100%;border-collapse:separate;border-spacing:0}table.firmas td.firma{width:46%;vertical-align:top;font-size:9.5pt;padding:0}table.firmas td.sep{width:8%}.firma .img{height:64px;text-align:center}.firma .img img{max-height:62px;max-width:220px}.firma .linea{border-top:1px solid #1b2a31;padding-top:5px}' +
+      '.firmas{margin-top:60px}.firma{display:inline-block;vertical-align:top;width:46%;border-top:1px solid #1b2a31;padding-top:6px;font-size:10pt;margin-right:6%}' +
       '.qr{position:absolute;right:44px;bottom:40px;text-align:center;font-size:8pt;color:#555}.qr img{width:110px;height:110px}' +
       '.nota{font-size:8.5pt;color:#555;margin-top:30px;max-width:70%}' +
       '.logo{position:absolute;right:44px;top:44px;width:96px}' +
@@ -201,28 +195,20 @@ var CORE = (function () {
       '<h1>' + (esCert ? 'Certificado de capacitación' : 'Constancia de capacitación') + '</h1><div class="sub">' + esc(cur.titulo) + (cur.sub ? ' · ' + esc(cur.sub) : '') + '</div>' +
       '<p>Se certifica que</p><div class="nombre">' + esc(t.nombre) + '</div><div class="runc">RUN ' + esc(formatoRun(t.run)) + ' · ' + esc(cargo) + '</div>' +
       '<p>' + texto + '</p>' +
-      '<table><tr><td class="k">Duración del programa</td><td>' + esc(durTxt) + '</td></tr>' +
+      '<table><tr><td class="k">Duración del programa</td><td>' + esc(horas) + ' hora' + (num(horas) === 1 ? '' : 's') + ' cronológica' + (num(horas) === 1 ? '' : 's') + '</td></tr>' +
       '<tr><td class="k">Modalidad</td><td>E-learning asincrónico con cápsulas, actividades prácticas, talleres y evaluación</td></tr>' +
       '<tr><td class="k">Tiempo registrado en plataforma</td><td>' + horasTxt(seg) + '</td></tr>' +
-      '<tr><td class="k">Fecha de aprobación</td><td>' + esc(fechaCl(cert.fechaEmision)) + '</td></tr>' +
-      '<tr><td class="k">Vigencia</td><td>' + (cert.vence ? '12 meses, hasta el ' + esc(fechaCl(cert.vence)) + ', o antes si cambian el procedimiento o el cargo, o tras un accidente' : 'Hasta que cambien el procedimiento o el cargo, o tras un accidente') + '</td></tr>' +
+      '<tr><td class="k">Fecha de aprobación</td><td>' + esc(cert.fechaEmision) + '</td></tr>' +
+      '<tr><td class="k">Vigencia</td><td>' + (cert.vence ? 'Hasta ' + esc(cert.vence) : 'Sin vencimiento; se renueva ante cambios del cargo o del procedimiento') + '</td></tr>' +
       '<tr><td class="k">Contenidos</td><td>' + esc(cur.contenidos || '') + '</td></tr>' +
-      (cert.version ? '<tr><td class="k">Documento base</td><td>' + esc(cur.titulo) + ' · versión ' + esc(cert.version) + '</td></tr>' : '') +
       '<tr><td class="k">Código de verificación</td><td><b>' + esc(cert.codigo) + '</b></td></tr></table>' +
-      '<table class="firmas"><tr><td class="firma">' + firmaImg(C._firmaApr) + '<div class="linea"><b>' + esc(C.FACILITADOR_NOMBRE) + '</b><br>' + esc(C.FACILITADOR_TITULO) + (C.FACILITADOR_RUN ? '<br>RUN ' + esc(C.FACILITADOR_RUN) : '') + (C.FACILITADOR_REGISTRO ? '<br>Reg. SEREMI ' + esc(C.FACILITADOR_REGISTRO) : '') + '<br>Facilitadora · Prevención de Riesgos</div></td><td class="sep"></td>' +
-      '<td class="firma">' + firmaImg(C._firmaRl) + '<div class="linea"><b>' + esc(C.RL_NOMBRE || 'Representante legal') + '</b>' + (C.RL_RUN ? '<br>RUN ' + esc(C.RL_RUN) : '') + '<br>' + esc(C.RL_CARGO ? C.RL_CARGO + ' · Representante legal' : 'Representante legal') + '<br>' + esc(C.EMPRESA) + '</div></td></tr></table>' +
+      '<div class="firmas"><div class="firma">' + esc(C.FACILITADOR_NOMBRE) + '<br>' + esc(C.FACILITADOR_TITULO) + (C.FACILITADOR_RUN ? '<br>RUN ' + esc(C.FACILITADOR_RUN) : '') + (C.FACILITADOR_REGISTRO ? '<br>Reg. ' + esc(C.FACILITADOR_REGISTRO) : '') + '<br>Facilitadora</div>' +
+      '<div class="firma" style="margin-right:0">Representante legal<br>' + esc(C.EMPRESA) + '</div></div>' +
       '<div class="nota">Registro de acceso, permanencia, avance y evaluaciones disponible en el expediente de capacitación de la empresa. Verificación: ' + esc(verif) + '</div>' +
       (qrDataUrl ? '<div class="qr"><img src="' + qrDataUrl + '"><br>Verificar</div>' : '') +
       '</div></body></html>';
   }
 
-  function firmaImg(src) { return '<div class="img">' + (src && /^data:image\//.test(src) ? '<img src="' + src + '" alt="">' : '') + '</div>'; }
-  function fechaCl(f) { var m = String(f || '').match(/^(\d{4})-(\d{2})-(\d{2})/); return m ? m[3] + '-' + m[2] + '-' + m[1] : String(f || ''); }
-  /* Carga las imágenes de firma (guardadas en Drive) para incrustarlas en el PDF. */
-  function conFirmas(env, C) {
-    if (env.drive.leerImagen) { try { C._firmaApr = C.FIRMA_APR_ID ? env.drive.leerImagen(C.FIRMA_APR_ID) : ''; C._firmaRl = C.FIRMA_RL_ID ? env.drive.leerImagen(C.FIRMA_RL_ID) : ''; } catch (e) { } }
-    return C;
-  }
   function qr(texto) {
     try { var q = qrcode(0, 'M'); q.addData(texto); q.make(); return q.createDataURL(4, 2); } catch (e) { return ''; }
   }
@@ -376,14 +362,14 @@ var CORE = (function () {
   function constancia(env, t, titulo, cuerpo, archivo) {
     try {
       var C = cfg(env); if (!t.carpetaId) { t.carpetaId = env.drive.carpetaTrabajador(t.run, t.nombre); env.db.update('Trabajadores', t); }
-      return env.drive.guardarPdf(t.carpetaId, archivo + '_' + env.fmt(env.now(), 'archivo') + '.pdf', constanciaHtml(C, titulo, cuerpo, 'Registro generado automáticamente por PyV Capacita.')).url || '';
+      return env.drive.guardarPdf(t.carpetaId, archivo + '_' + env.fmt(env.now(), 'archivo') + '.pdf', constanciaHtml(C, titulo, cuerpo, 'Registro generado automáticamente por GL Capacita.')).url || '';
     } catch (e) { log(env, t, 'error', '', '', 'constancia: ' + e, ''); return ''; }
   }
   function constanciaPyv(env, t, d) {
     var filas = (d.riesgos || []).slice(0, 60).map(function (r) { return '<tr><td>' + esc(r.riesgo) + '</td><td>' + esc(r.nivel) + '</td><td>' + esc(r.controles) + '</td></tr>'; }).join('');
     var pts = (d.pts || []).map(esc).join(', ');
     constancia(env, t, 'Constancia de información de riesgos del cargo (art. 15 D.S. 44)',
-      '<p>El trabajador revisó en la plataforma la información de los riesgos de su cargo según la Matriz IPER vigente de la empresa, sus medidas de control, el plan de emergencia (PRRD) y los procedimientos de trabajo seguro aplicables.</p>' +
+      '<p>El trabajador revisó en la plataforma la información de los riesgos de su cargo según la Matriz IPER vigente de la empresa, sus medidas de control, los planes de emergencia (PDR-01 y PDR-02) y los procedimientos de trabajo seguro aplicables.</p>' +
       tablaTrabajador(t) + '<h2>Riesgos revisados</h2><table><tr><th>Riesgo</th><th>Nivel</th><th>Controles principales</th></tr>' + filas + '</table>' +
       '<h2>Procedimientos informados</h2><p>' + (pts || '—') + '</p><p>Fecha y hora: <b>' + esc(env.fmt(env.now(), 'fechahora')) + '</b></p>', 'Constancia_riesgos_cargo');
   }
@@ -402,21 +388,22 @@ var CORE = (function () {
     return { ok: true, mensaje: 'Asistencia registrada.', perfil: perfil(env, t) };
   };
 
-  function urlVerif(C, codigo) { return (C.URL_SITIO ? C.URL_SITIO.replace(/\/$/, '') + '/verificar.html?c=' : 'PYV:') + codigo; }
+  function urlVerif(C, codigo) { return (C.URL_SITIO ? C.URL_SITIO.replace(/\/$/, '') + '/verificar.html?c=' : 'GL:') + codigo; }
 
   A.certificado = function (env, b) {
     var t = porToken(env, b.token); if (!t) return SESION;
     var cursoId = b.curso || 'ds44', cur = PLAN.curso(cursoId);
     if (!cur || !aplica(cur, t.cargo)) return { ok: false, error: 'Curso no disponible para tu cargo.' };
-    var C = conFirmas(env, cfg(env)), R = requisitos(env, t, cursoId), c = certDe(env, t, cursoId);
+    var C = cfg(env), R = requisitos(env, t, cursoId), c = certDe(env, t, cursoId);
+    if (c && vencido(env, c) && !R.faltan.length) c = null;
     if (!c) {
       if (R.plazoVencido) return { ok: false, error: 'Se cumplió el plazo de ' + cur.plazoMeses + ' meses sin terminar el curso. Habla con la encargada de prevención para reiniciarlo.' };
       if (R.faltan.length) return { ok: false, error: 'Aún te faltan etapas por completar.', faltan: R.faltan };
-      if (R.faltaTiempoMin) return { ok: false, faltaTiempo: R.faltaTiempoMin, error: 'Completaste todas las etapas, pero el programa dura ' + PLAN.duracionTxt(R.duracionMin) + ' y llevas ' + horasTxt(R.segundos) + ' registrados. Te faltan unos ' + R.faltaTiempoMin + ' minutos: repasa las cápsulas, lecturas y talleres del curso y vuelve aquí.' };
-      var ahora = env.now(), prefijo = 'PYV-';
+      if (R.faltaTiempoMin) return { ok: false, error: 'Te faltan unos ' + R.faltaTiempoMin + ' minutos de permanencia en el curso. Repasa las cápsulas y talleres.' };
+      var ahora = env.now(), prefijo = 'GL-';
       c = { codigo: prefijo + codigoCorto(env), run: t.run, nombre: t.nombre, cargo: t.cargo, ciclo: 1, fechaEmision: env.fmt(ahora, 'fecha'),
         vence: cur.vigenciaMeses ? env.fmt(sumarMeses(ahora, cur.vigenciaMeses), 'fecha') : '', horasProgramadas: cursoId === 'ds44' ? C.HORAS_CURSO : cur.horas,
-        segundosRegistrados: R.segundos, archivoId: '', archivoUrl: '', estado: 'vigente', curso: cursoId, version: C['VERSION_' + cursoId] || '' };
+        segundosRegistrados: R.segundos, archivoId: '', archivoUrl: '', estado: 'vigente', curso: cursoId };
       var html = certificadoHtml(C, t, c, qr(urlVerif(C, c.codigo)), R.segundos);
       var f = env.drive.guardarPdf(t.carpetaId, (cur.doc === 'certificado' ? 'Certificado_' : 'Constancia_') + cursoId.toUpperCase() + '_' + c.codigo + '.pdf', html);
       c.archivoId = f.id || ''; c.archivoUrl = f.url || '';
@@ -457,7 +444,7 @@ var CORE = (function () {
   var NO_AUT = { ok: false, error: 'sesion', mensaje: 'Ingresa de nuevo al panel.' };
 
   A.adminIngresar = function (env, b) {
-    var h = sha256('pyv-admin|' + String(b.clave || '')), c = env.config(), rol = null;
+    var h = sha256('gl-admin|' + String(b.clave || '')), c = env.config(), rol = null;
     if (c.ADMIN_CLAVE_HASH && h === c.ADMIN_CLAVE_HASH) rol = 'admin';
     else if (c.SUPERVISOR_CLAVE_HASH && h === c.SUPERVISOR_CLAVE_HASH) rol = 'supervisor';
     if (!rol) return { ok: false, error: 'Clave incorrecta.' };
@@ -531,57 +518,24 @@ var CORE = (function () {
     t.pinHash = hashPin(t.run, b.pin); t.token = ''; env.db.update('Trabajadores', t); log(env, t, 'clave_restablecida', '', '', 'por administradora', ''); return { ok: true };
   };
   /* Reinicia un curso: archiva su avance (queda en el registro con otro nombre) y deja el certificado anterior como reemplazado. */
-  function reiniciarTrabajador(env, t, cursoId, motivo) {
-    var sello = '~archivado_' + env.fmt(env.now(), 'archivo'), hubo = false;
-    env.db.read('Progreso').forEach(function (p) { if (limpiarRun(p.run) === limpiarRun(t.run) && cursoDe(p.item) === cursoId && PLAN.etapa(p.item)) { p.item = p.item + sello; env.db.update('Progreso', p); hubo = true; } });
-    env.db.read('Certificados').forEach(function (c) { if (limpiarRun(c.run) === limpiarRun(t.run) && (c.curso || 'ds44') === cursoId && c.estado === 'vigente') { c.estado = 'reemplazado'; env.db.update('Certificados', c); hubo = true; } });
+  A.adminReiniciar = function (env, b) {
+    if (!admin(env, b, true)) return NO_AUT; var t = trabajador(env, b.run); if (!t) return { ok: false, error: 'Trabajador no encontrado.' };
+    var cursoId = b.curso || 'ds44', sello = '~archivado_' + env.fmt(env.now(), 'archivo');
+    env.db.read('Progreso').forEach(function (p) { if (limpiarRun(p.run) === limpiarRun(t.run) && cursoDe(p.item) === cursoId && PLAN.etapa(p.item)) { p.item = p.item + sello; env.db.update('Progreso', p); } });
+    env.db.read('Certificados').forEach(function (c) { if (limpiarRun(c.run) === limpiarRun(t.run) && (c.curso || 'ds44') === cursoId && c.estado === 'vigente') { c.estado = 'reemplazado'; env.db.update('Certificados', c); } });
     if (cursoId === 'ds44') {
       env.db.read('Asistencia').forEach(function (a) { if (limpiarRun(a.run) === limpiarRun(t.run) && a.ciclo !== 'archivado') { a.ciclo = 'archivado'; env.db.update('Asistencia', a); } });
       t.fechaInicio = ''; t.fechaLimite = ''; t.estado = 'registrado'; t.certCodigo = ''; t.certFecha = ''; t.certVence = ''; env.db.update('Trabajadores', t);
     }
-    log(env, t, 'curso_reiniciado', cursoId, '', motivo || '', '');
-    return hubo;
-  }
-  A.adminReiniciar = function (env, b) {
-    if (!admin(env, b, true)) return NO_AUT; var t = trabajador(env, b.run); if (!t) return { ok: false, error: 'Trabajador no encontrado.' };
-    reiniciarTrabajador(env, t, b.curso || 'ds44', b.motivo); return { ok: true };
-  };
-  /* Nueva versión de un documento: registra la versión vigente y pide la capacitación de nuevo a todos los que ya la habían iniciado o aprobado. */
-  A.adminReiniciarCurso = function (env, b) {
-    if (!admin(env, b, true)) return NO_AUT;
-    var cur = PLAN.curso(b.curso); if (!cur) return { ok: false, error: 'Capacitación no encontrada.' };
-    if (!String(b.motivo || '').trim()) return { ok: false, error: 'Indica el motivo (por ejemplo: nueva versión del PTS).' };
-    if (b.version) env.setConfig('VERSION_' + cur.id, String(b.version).trim());
-    var n = 0;
-    env.db.read('Trabajadores').forEach(function (t) {
-      if (t.estado === 'baja' || !aplica(cur, t.cargo)) return;
-      var tieneAlgo = env.db.read('Progreso').some(function (p) { return limpiarRun(p.run) === limpiarRun(t.run) && cursoDe(p.item) === cur.id && PLAN.etapa(p.item); }) || !!certDe(env, t, cur.id);
-      if (tieneAlgo && reiniciarTrabajador(env, t, cur.id, b.motivo + (b.version ? ' · versión ' + b.version : ''))) n++;
-    });
-    return { ok: true, reiniciados: n };
-  };
-  A.adminVersion = function (env, b) {
-    if (!admin(env, b, true)) return NO_AUT;
-    var cur = PLAN.curso(b.curso); if (!cur) return { ok: false, error: 'Capacitación no encontrada.' };
-    env.setConfig('VERSION_' + cur.id, String(b.version || '').trim()); return { ok: true };
+    log(env, t, 'curso_reiniciado', cursoId, '', b.motivo || '', ''); return { ok: true };
   };
   A.adminConfig = function (env, b) {
     if (!admin(env, b, true)) return NO_AUT;
-    var permitidas = ['FACILITADOR_NOMBRE', 'FACILITADOR_RUN', 'FACILITADOR_TITULO', 'FACILITADOR_REGISTRO', 'REQUIERE_SESIONES', 'SESIONES_REQUERIDAS', 'HORAS_CURSO', 'MIN_MINUTOS_DS44', 'URL_SITIO', 'ORGANISMO', 'EMPRESA', 'RUT_EMPRESA', 'RL_NOMBRE', 'RL_RUN', 'RL_CARGO'];
+    var permitidas = ['FACILITADOR_NOMBRE', 'FACILITADOR_RUN', 'FACILITADOR_TITULO', 'FACILITADOR_REGISTRO', 'REQUIERE_SESIONES', 'SESIONES_REQUERIDAS', 'HORAS_CURSO', 'MIN_MINUTOS_DS44', 'URL_SITIO', 'ORGANISMO', 'EMPRESA', 'RUT_EMPRESA'];
     for (var k in (b.valores || {})) if (permitidas.indexOf(k) >= 0) env.setConfig(k, String(b.valores[k]));
-    if (b.nuevaClaveAdmin) env.setConfig('ADMIN_CLAVE_HASH', sha256('pyv-admin|' + b.nuevaClaveAdmin));
-    if (b.nuevaClaveSupervisor) env.setConfig('SUPERVISOR_CLAVE_HASH', sha256('pyv-admin|' + b.nuevaClaveSupervisor));
+    if (b.nuevaClaveAdmin) env.setConfig('ADMIN_CLAVE_HASH', sha256('gl-admin|' + b.nuevaClaveAdmin));
+    if (b.nuevaClaveSupervisor) env.setConfig('SUPERVISOR_CLAVE_HASH', sha256('gl-admin|' + b.nuevaClaveSupervisor));
     return { ok: true };
-  };
-
-  A.adminFirma = function (env, b) {
-    if (!admin(env, b, true)) return NO_AUT;
-    var k = b.quien === 'rl' ? 'FIRMA_RL_ID' : 'FIRMA_APR_ID';
-    if (!b.imagen) { env.setConfig(k, ''); return { ok: true }; }
-    if (!/^data:image\/(png|jpeg);base64,/.test(String(b.imagen)) || String(b.imagen).length > 700000) return { ok: false, error: 'La firma debe ser una imagen PNG o JPG de menos de 500 KB.' };
-    var id = env.drive.guardarFirma(k === 'FIRMA_RL_ID' ? 'Firma_representante_legal.png' : 'Firma_prevencion.png', b.imagen);
-    env.setConfig(k, id);
-    return { ok: true, id: id };
   };
 
   A.adminExpediente = function (env, b) {
@@ -591,7 +545,7 @@ var CORE = (function () {
     var carpeta = env.drive.nuevaCarpetaExpediente(nombre), ds = PLAN.curso('ds44'), reqSes = C.REQUIERE_SESIONES === 'SI';
     var mods = ds.modulos.filter(function (m) { return m.n >= 1 && m.n <= 8; }).map(function (m) { return '<li>' + esc(m.titulo) + '</li>'; }).join('');
     var talleres = ds.etapas.filter(function (e) { return e.tipo === 'taller'; }).map(function (e) { return '<li>' + esc(e.titulo) + '</li>'; }).join('');
-    var filas = T.map(function (t) {
+    var filas = T.filter(function (t) { return PLAN.cursosDe(t.cargo).some(function (c) { return c.id === 'ds44'; }); }).map(function (t) {
       var R = requisitos(env, t, 'ds44'), c = certDe(env, t, 'ds44'), cg = PLAN.cargo(t.cargo);
       return '<tr><td>' + esc(formatoRun(t.run)) + '</td><td>' + esc(t.nombre) + '</td><td>' + esc(cg ? cg.nombre : t.cargo) + '</td><td>' + esc(t.fechaInicio) + '</td><td>' + esc(c ? c.fechaEmision : '') + '</td><td>' + horasTxt(R.segundos) + '</td><td>' + R.hechos + '/' + R.total + '</td><td>' + (c ? 'Aprobado · ' + esc(c.codigo) + ' · vence ' + esc(c.vence) : (R.plazoVencido ? 'Plazo vencido' : 'En curso')) + '</td></tr>';
     }).join('');
@@ -613,7 +567,7 @@ var CORE = (function () {
       '<p>Módulos:</p><ul>' + mods + '</ul><p>Talleres asincrónicos (casos y ejercicios con respuesta escrita y retroalimentación):</p><ul>' + talleres + '</ul>' +
       '<p>Facilitadora: ' + esc(C.FACILITADOR_NOMBRE) + (C.FACILITADOR_RUN ? ' · RUN ' + esc(C.FACILITADOR_RUN) : '') + ' · ' + esc(C.FACILITADOR_TITULO) + (C.FACILITADOR_REGISTRO ? ' · Registro ' + esc(C.FACILITADOR_REGISTRO) : '') + '</p>' +
       '<h2>2. Nómina del curso obligatorio</h2><table><tr><th>RUN</th><th>Nombre</th><th>Cargo</th><th>Inicio</th><th>Término</th><th>Tiempo registrado</th><th>Etapas</th><th>Resultado</th></tr>' + filas + '</table>' +
-      '<h2>3. Capacitaciones de la empresa (IRL, IPER, PRRD, EPP, accidentes y procedimientos)</h2><table><tr><th>Trabajador</th><th>Capacitación</th><th>Etapas</th><th>Tiempo</th><th>Resultado</th></tr>' + (otros || '<tr><td colspan="5">Sin registros</td></tr>') + '</table>' +
+      '<h2>3. Capacitaciones de la empresa (IRL, RIOHS y Ley Karin, IPER, emergencias, EPP, accidentes y procedimientos)</h2><table><tr><th>Trabajador</th><th>Capacitación</th><th>Etapas</th><th>Tiempo</th><th>Resultado</th></tr>' + (otros || '<tr><td colspan="5">Sin registros</td></tr>') + '</table>' +
       '<h2>4. Constancias firmadas (IRL, EPP, procedimientos)</h2><table><tr><th>Fecha</th><th>Trabajador</th><th>Capacitación</th><th>Archivo</th></tr>' + (firmas || '<tr><td colspan="4">Sin firmas registradas</td></tr>') + '</table>' +
       (ses ? '<h2>5. Sesiones sincrónicas</h2><table><tr><th>ID</th><th>Fecha</th><th>Tema</th><th>Modalidad</th><th>Asistentes</th></tr>' + ses + '</table>' : '') +
       '<h2>' + (ses ? '6' : '5') + '. Certificados y constancias emitidos</h2><table><tr><th>Código</th><th>Nombre</th><th>Capacitación</th><th>Emisión</th><th>Vence</th><th>Estado</th><th>Archivo</th></tr>' + (certs || '<tr><td colspan="7">Sin registros</td></tr>') + '</table>' +
@@ -671,3 +625,4 @@ var CORE = (function () {
   return { SCHEMA: SCHEMA, CONFIG_DEFAULT: CONFIG_DEFAULT, manejar: manejar, sha256: sha256, runValido: runValido, formatoRun: formatoRun, limpiarRun: limpiarRun, certificadoHtml: certificadoHtml };
 })();
 if (typeof module !== 'undefined') module.exports = CORE;
+

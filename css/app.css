@@ -1,15 +1,15 @@
-/* PyV Capacita — estilos */
+/* GL Capacita — estilos */
 :root {
-  --fiordo: #0F3B4C;
-  --fiordo-2: #1D5A6E;
-  --fiordo-3: #3E7C8F;
-  --bruma: #E9EFF1;
-  --bruma-2: #D6E1E5;
+  --fiordo: #1F4E6E;
+  --fiordo-2: #2F6B92;
+  --fiordo-3: #5F95BA;
+  --bruma: #EAF1F6;
+  --bruma-2: #D3E1EB;
   --papel: #FFFFFF;
   --tinta: #16262D;
   --roca: #55666D;
-  --chaleco: #F26B1D;
-  --chaleco-osc: #C9520E;
+  --chaleco: #E07F1F;
+  --chaleco-osc: #B8640F;
   --alga: #2F7D6D;
   --alga-claro: #DCEFEA;
   --boya: #F2C230;
@@ -17,7 +17,7 @@
   --error: #B3261E;
   --error-claro: #FBE4E2;
   --radio: 14px;
-  --sombra: 0 1px 2px rgba(15, 59, 76, .08), 0 4px 14px rgba(15, 59, 76, .06);
+  --sombra: 0 1px 2px rgba(31, 78, 110, .08), 0 4px 14px rgba(31, 78, 110, .06);
   --fuente: 'Barlow', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   --fuente-c: 'Barlow Condensed', 'Barlow', system-ui, sans-serif;
 }
@@ -197,7 +197,7 @@ input:focus, select:focus, textarea:focus { border-color: var(--fiordo-2); outli
 .chk-item.no { border-color: var(--error); background: var(--error-claro); }
 .chk-item .fb { display: block; font-size: 14px; color: var(--roca); }
 
-/* bloque PyV */
+/* bloque empresa */
 .riesgo { border-left: 5px solid var(--bruma-2); padding: 12px 14px; background: #fff; border-radius: 0 12px 12px 0; margin-bottom: 10px; }
 .riesgo.n3 { border-left-color: var(--error); }
 .riesgo.n2 { border-left-color: var(--boya); }
@@ -263,3 +263,8 @@ input:focus, select:focus, textarea:focus { border-color: var(--fiordo-2); outli
 .puntos i.vis { background: var(--fiordo-3); }
 .puntos i.act { background: var(--chaleco); }
 textarea { min-height: 120px; }
+
+/* ajustes de la vista publicada */
+.barra{top:env(safe-area-inset-top,0px)}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--fiordo)}
+

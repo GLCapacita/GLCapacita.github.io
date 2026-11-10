@@ -1,8 +1,9 @@
-/* PyV Capacita — conexión con el servidor (Google Apps Script) y cola sin conexión.
+/* js/api.js */
+/* GL Capacita — conexión con el servidor (Google Apps Script) y cola sin conexión.
    En modo demostración, el mismo core.js corre en el navegador con almacenamiento local. */
 var SRV = (function () {
   var DEMO = !CONFIG.API_URL;
-  var COLA = 'pyv_cola_v1';
+  var COLA = 'glc_cola_v1';
 
   function ls(k, v) {
     try { if (v === undefined) { var x = localStorage.getItem(k); return x ? JSON.parse(x) : null; } if (v === null) localStorage.removeItem(k); else localStorage.setItem(k, JSON.stringify(v)); } catch (e) { return null; }
@@ -12,11 +13,11 @@ var SRV = (function () {
   var demoEnv = null;
   function envDemo() {
     if (demoEnv) return demoEnv;
-    var KEY = 'pyv_demo_db', db = ls(KEY) || {}, conf = ls('pyv_demo_conf') || {}, cache = {};
-    if (!conf.ADMIN_CLAVE_HASH) { conf.ADMIN_CLAVE_HASH = CORE.sha256('pyv-admin|demo'); conf.SUPERVISOR_CLAVE_HASH = CORE.sha256('pyv-admin|supervisor'); }
-    function save() { ls(KEY, db); ls('pyv_demo_conf', conf); }
+    var KEY = 'glc_demo_db', db = ls(KEY) || {}, conf = ls('glc_demo_conf') || {}, cache = {};
+    if (!conf.ADMIN_CLAVE_HASH) { conf.ADMIN_CLAVE_HASH = CORE.sha256('gl-admin|demo'); conf.SUPERVISOR_CLAVE_HASH = CORE.sha256('gl-admin|supervisor'); }
+    function save() { ls(KEY, db); ls('glc_demo_conf', conf); }
     function p2(n) { return (n < 10 ? '0' : '') + n; }
-    var archivos = ls('pyv_demo_archivos') || {};
+    var archivos = ls('glc_demo_archivos') || {};
     demoEnv = {
       now: function () { return new Date(); },
       uuid: function () { return (crypto.randomUUID ? crypto.randomUUID() : String(Math.random()).slice(2) + Date.now()); },
@@ -24,7 +25,7 @@ var SRV = (function () {
       parseFecha: function (s) { var m = String(s).match(/^(\d{4})-(\d{2})-(\d{2})(?:[ T](\d{2}):(\d{2}):?(\d{2})?)?/); if (!m) return new Date(s); return new Date(+m[1], +m[2] - 1, +m[3], +(m[4] || 23), +(m[5] || 59), +(m[6] || 59)); },
       config: function () { var o = {}; for (var k in conf) o[k] = conf[k]; return o; },
       setConfig: function (k, v) { conf[k] = v; save(); },
-      cache: { get: function (k) { return cache[k] || ls('pyv_demo_c_' + k); }, put: function (k, v) { cache[k] = v; ls('pyv_demo_c_' + k, v); } },
+      cache: { get: function (k) { return cache[k] || ls('glc_demo_c_' + k); }, put: function (k, v) { cache[k] = v; ls('glc_demo_c_' + k, v); } },
       db: {
         read: function (t) { return (db[t] || []).map(function (r, i) { var o = { _row: i }; for (var k in r) o[k] = r[k]; return o; }); },
         append: function (t, o) { db[t] = db[t] || []; var c = {}; for (var k in o) if (k !== '_row') c[k] = o[k]; db[t].push(c); save(); var r = { _row: db[t].length - 1 }; for (k in c) r[k] = c[k]; return r; },
@@ -33,12 +34,10 @@ var SRV = (function () {
       },
       drive: {
         carpetaTrabajador: function (run, nombre) { return 'demo/' + run + ' ' + nombre; },
-        guardarPdf: function (carpeta, nombre, html) { var id = carpeta + '/' + nombre; archivos[id] = { html: html.length > 200000 ? '' : html, fecha: new Date().toISOString() }; ls('pyv_demo_archivos', archivos); return { id: id, url: '', base64: '' }; },
+        guardarPdf: function (carpeta, nombre, html) { var id = carpeta + '/' + nombre; archivos[id] = { html: html.length > 200000 ? '' : html, fecha: new Date().toISOString() }; ls('glc_demo_archivos', archivos); return { id: id, url: '', base64: '' }; },
         guardarImagen: function (carpeta, nombre) { return { id: carpeta + '/' + nombre, url: '' }; },
         guardarEvidencia: function (sid, nombre) { return { id: sid + '/' + nombre, url: '' }; },
         guardarDocumento: function (nombre, dataUrl) { return { id: nombre, url: String(dataUrl).length < 1500000 ? dataUrl : '' }; },
-        guardarFirma: function (nombre, dataUrl) { var id = 'firma_' + nombre; ls('pyv_demo_' + id, dataUrl); return id; },
-        leerImagen: function (id) { return ls('pyv_demo_' + id) || ''; },
         nuevaCarpetaExpediente: function (n) { return 'demo/Expedientes/' + n; },
         copiarRegistro: function () { return ''; },
         urlCarpeta: function () { return ''; },
@@ -55,17 +54,8 @@ var SRV = (function () {
     if (DEMO) {
       return new Promise(function (ok) { setTimeout(function () { ok(CORE.manejar(envDemo(), JSON.parse(JSON.stringify(b)))); }, 120); });
     }
-    var intento = 0;
-    function una() {
-      return fetch(CONFIG.API_URL, { method: 'POST', body: JSON.stringify(b), headers: { 'Content-Type': 'text/plain;charset=utf-8' }, redirect: 'follow' })
-        .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
-        .then(function (r) {
-          // servidor ocupado con otra solicitud: se reintenta solo, sin que la persona haga nada
-          if (r && r.ocupado && intento++ < 5) return new Promise(function (ok) { setTimeout(ok, 2500 * intento); }).then(una);
-          return r;
-        });
-    }
-    return una();
+    return fetch(CONFIG.API_URL, { method: 'POST', body: JSON.stringify(b), headers: { 'Content-Type': 'text/plain;charset=utf-8' }, redirect: 'follow' })
+      .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); });
   }
 
   /* ---------- cola de eventos ---------- */
@@ -99,3 +89,4 @@ var SRV = (function () {
 
   return { demo: DEMO, llamar: llamar, encolar: encolar, enviar: enviar, pendientes: pendientes, segundosPendientes: segundosPendientes, onCambio: onCambio, ls: ls, limpiarCola: limpiarCola, envDemo: envDemo };
 })();
+

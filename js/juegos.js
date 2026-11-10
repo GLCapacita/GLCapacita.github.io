@@ -1,4 +1,5 @@
-/* PyV Capacita — motores de actividades prácticas */
+/* js/juegos.js */
+/* GL Capacita — motores de actividades prácticas */
 var JUEGOS = (function () {
   function h(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
   function barajar(a) { a = a.slice(); for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)); var t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
@@ -41,9 +42,9 @@ var JUEGOS = (function () {
     pintar();
   };
   function itemsIper(cargo) {
-    var R = ((window.PYV_IPER || {})[cargo] || {}).riesgos || [], vistos = {}, porCat = { eliminacion: [], sustitucion: [], ingenieria: [], administrativo: [], epp: [] };
+    var R = ((window.IPER_EMPRESA || {})[cargo] || {}).riesgos || [], vistos = {}, porCat = { eliminacion: [], sustitucion: [], ingenieria: [], administrativo: [], epp: [] };
     R.forEach(function (r) {
-      function add(cat, txt) { txt = String(txt || '').trim(); if (!txt || txt.length < 6 || vistos[txt.toLowerCase()]) return; vistos[txt.toLowerCase()] = 1; porCat[cat].push({ t: txt.length > 150 ? txt.slice(0, 147) + '…' : txt, c: cat, fb: 'En la Matriz IPER de PyV es una medida para "' + r.riesgo.toLowerCase() + '".' }); }
+      function add(cat, txt) { txt = String(txt || '').trim(); if (!txt || txt.length < 6 || vistos[txt.toLowerCase()]) return; vistos[txt.toLowerCase()] = 1; porCat[cat].push({ t: txt.length > 150 ? txt.slice(0, 147) + '…' : txt, c: cat, fb: 'En la Matriz IPER de ' + CONTENIDO.empresa.corto + ' es una medida para "' + r.riesgo.toLowerCase() + '".' }); }
       r.eliminacion.forEach(function (x) { add('eliminacion', x); });
       r.sustitucion.forEach(function (x) { add('sustitucion', x); });
       r.ingenieria.forEach(function (x) { add('ingenieria', x); });
@@ -93,7 +94,7 @@ var JUEGOS = (function () {
   MOTORES.emparejar = function (caja, parte, ctx, fin) {
     if (parte.desdeIper) {
       var vistos = {}, pares = [];
-      (((window.PYV_IPER || {})[ctx.cargo] || {}).riesgos || []).forEach(function (r) {
+      (((window.IPER_EMPRESA || {})[ctx.cargo] || {}).riesgos || []).forEach(function (r) {
         var b = String(r.consecuencias[0] || '').split(/,\s*/).slice(0, 3).join(', ');
         if (b && !vistos[b] && pares.length < 6) { vistos[b] = 1; pares.push({ a: r.riesgo, b: b }); }
       });
@@ -123,7 +124,7 @@ var JUEGOS = (function () {
 
   /* ---- escenario con decisiones ---- */
   MOTORES.escenario = function (caja, parte, ctx, fin) {
-    var area = ctx.area || 'faena', permit = area === 'oficina' ? ['oficina'] : ['faena', 'todos'];
+    var area = ctx.area || 'faena', permit = area === 'taller' ? ['taller', 'todos'] : area === 'mixto' ? ['faena', 'taller', 'todos'] : area === 'oficina' ? ['oficina', 'todos'] : ['faena', 'todos'];
     parte = { casos: parte.casos.filter(function (k) { return !k.para || permit.indexOf(k.para) >= 0; }) };
     var c = 0, s = 0, pasos = 0, errores = 0, zona = el('<div></div>'); caja.appendChild(zona);
     function pintar() {
@@ -163,7 +164,7 @@ var JUEGOS = (function () {
         else if (!it.ok && it.fb) l.querySelector('.fb').textContent = it.fb;
       });
       btn._p = bien / items.length;
-      zona.querySelector('.res').innerHTML = '<div class="retro ' + (bien === items.length ? 'ok' : 'no') + '"><b>' + bien + ' de ' + items.length + ' decisiones correctas.</b>' + h(parte.cierre || 'El Patrón y el Supervisor firman este checklist en cada inicio de turno.') + '</div>';
+      zona.querySelector('.res').innerHTML = '<div class="retro ' + (bien === items.length ? 'ok' : 'no') + '"><b>' + bien + ' de ' + items.length + ' decisiones correctas.</b>' + h(parte.cierre || 'Este checklist se completa en cada inicio de jornada.') + '</div>';
       btn.textContent = 'Continuar'; btn.dataset.fin = '1';
     };
   };
@@ -209,10 +210,10 @@ var JUEGOS = (function () {
     };
   };
 
-  /* ---- evaluación P × S con la regla de la Matriz IPER de PyV ---- */
+  /* ---- evaluación P × S con la regla de la Matriz IPER de la empresa ---- */
   function nivelVep(v) { return v <= 2 ? 'Tolerable' : v <= 4 ? 'Moderado' : v <= 8 ? 'Importante' : 'Intolerable'; }
   MOTORES.vep = function (caja, parte, ctx, fin) {
-    var R = (((window.PYV_IPER || {})[ctx.cargo] || {}).riesgos || []).filter(function (r) { return r.p && r.s; });
+    var R = (((window.IPER_EMPRESA || {})[ctx.cargo] || {}).riesgos || []).filter(function (r) { return r.p && r.s; });
     var casos = barajar(R).slice(0, parte.n || 2);
     if (!casos.length) casos = [{ riesgo: 'Caídas al agua', tareaPS: 'Traslado de personal y materiales al centro', peligroPS: 'Trabajo sobre embarcación, muelle o estructura flotante', p: 2, s: 4, administrativo: ['Procedimiento de trabajo seguro y charla de seguridad'], ingenieria: ['Barandas y superficies antideslizantes'], eppItems: ['Chaleco salvavidas'] }];
     var k = 0, puntos = 0, z = el('<div></div>'); caja.appendChild(z);
@@ -240,7 +241,7 @@ var JUEGOS = (function () {
         puntos += dif === 0 ? 1 : dif === 1 ? 0.5 : 0;
         Array.prototype.forEach.call(z.querySelectorAll('[data-g] button'), function (x) { x.disabled = true; });
         var ctl = [].concat((c.ingenieria || []).slice(0, 1), (c.administrativo || []).slice(0, 1), (c.eppItems || []).length ? ['EPP: ' + c.eppItems.slice(0, 3).join(', ')] : []);
-        z.querySelector('.fb').innerHTML = '<div class="retro ' + (dif === 0 ? 'ok' : 'no') + '"><b>Tu evaluación: ' + sp + ' × ' + ss + ' = ' + mio + ' · ' + nm + '</b>La Matriz IPER de PyV la evaluó en ' + c.p + ' × ' + c.s + ' = ' + real + ' · ' + nr + '.' +
+        z.querySelector('.fb').innerHTML = '<div class="retro ' + (dif === 0 ? 'ok' : 'no') + '"><b>Tu evaluación: ' + sp + ' × ' + ss + ' = ' + mio + ' · ' + nm + '</b>La Matriz IPER de ' + CONTENIDO.empresa.corto + ' la evaluó en ' + c.p + ' × ' + c.s + ' = ' + real + ' · ' + nr + '.' +
           (dif === 0 ? ' ¡Coinciden!' : ' Revisa por qué hay diferencia: ¿cuántas veces te expones y qué es lo peor que podría pasar?') +
           (ctl.length ? '<br><br>Controles que define la matriz: ' + ctl.map(h).join(' · ') : '') + '</div>';
         btn.textContent = 'Siguiente'; btn.dataset.sig = '1';
@@ -250,73 +251,122 @@ var JUEGOS = (function () {
   };
 
   /* ---- buscar peligros en la escena ---- */
+  function persona(x, y, ropa, opt) {
+    opt = opt || {};
+    return '<g><circle cx="' + x + '" cy="' + y + '" r="10" fill="#f0c9a5"/>' +
+      (opt.casco ? '<path d="M' + (x - 11) + ' ' + (y - 3) + ' a11 9 0 0 1 22 0 z" fill="#fff" stroke="#999"/>' : '<path d="M' + (x - 10) + ' ' + (y - 4) + ' q10 -12 20 0" fill="#3b2a1e"/>') +
+      (opt.lentes ? '<rect x="' + (x - 7) + '" y="' + (y - 3) + '" width="14" height="5" rx="2" fill="#7fb3d5" stroke="#234E6B"/>' : '') +
+      '<rect x="' + (x - 11) + '" y="' + (y + 10) + '" width="22" height="32" rx="5" fill="' + ropa + '"/>' +
+      (opt.chaleco ? '<rect x="' + (x - 11) + '" y="' + (y + 12) + '" width="22" height="22" rx="4" fill="#F26B1D"/><path d="M' + (x - 11) + ' ' + (y + 26) + ' h22" stroke="#fff" stroke-width="2"/>' : '') +
+      '<rect x="' + (x - 9) + '" y="' + (y + 40) + '" width="7" height="20" fill="#3b4a52"/><rect x="' + (x + 2) + '" y="' + (y + 40) + '" width="7" height="20" fill="#3b4a52"/></g>';
+  }
   var ESCENAS = {
-    cubierta: {
+    ponton: {
+      bien: 'El aro salvavidas y el extintor en la caseta, y el operario con chaleco en el pasillo, están bien.',
       peligros: [
-        { x: 432, y: 300, r: 58, n: 'Persona bajo carga suspendida', fb: 'Nadie pasa ni se queda bajo una carga izada con el brazo hidráulico (PTS-017).' },
-        { x: 548, y: 286, r: 46, n: 'Trabajador sin chaleco salvavidas junto a la borda', fb: 'En cubierta y sobre módulos el chaleco salvavidas es obligatorio en todo momento.' },
-        { x: 285, y: 330, r: 52, n: 'Cabo suelto en la zona de tránsito', fb: 'Un cabo enredado en cubierta provoca tropiezos, caídas y atrapamientos. Orden y aseo permanente.' },
-        { x: 380, y: 334, r: 40, n: 'Escotilla abierta sin protección', fb: 'Una escotilla abierta sin barrera ni aviso es riesgo de caída a distinto nivel.' },
-        { x: 690, y: 296, r: 62, n: 'Bidón de combustible junto a la soldadura', fb: 'Los inflamables se retiran a 10 metros como mínimo del trabajo en caliente (PTS-003).' },
-        { x: 150, y: 330, r: 42, n: 'Cilindro de gas suelto y caído', fb: 'Los cilindros de GLP van sujetos y en posición vertical, sin fugas (checklist de zarpe).' }
-      ]
+        { x: 486, y: 150, r: 40, n: 'Piloto sin chaleco salvavidas en el borde del pontón', fb: 'En el pontón y en todo sector con riesgo de caída al agua el chaleco salvavidas es obligatorio (PTS-ROV-001).' },
+        { x: 300, y: 196, r: 44, n: 'Umbilical suelto cruzando el pasillo', fb: 'El umbilical se ordena y se asegura fuera de la zona de tránsito: provoca tropiezos y caídas al agua.' },
+        { x: 705, y: 262, r: 46, n: 'Buzo en el agua mientras opera el ROV', fb: 'Prohibido operar con buzos en el agua sin coordinación formal con la mandante.' },
+        { x: 168, y: 188, r: 40, n: 'Batería cargando junto al bidón de combustible', fb: 'Las baterías se cargan en un lugar seco, ventilado, autorizado y lejos de combustibles, siempre supervisadas.' },
+        { x: 548, y: 202, r: 30, n: 'Alargador enchufado dentro de una poza de agua', fb: 'Las conexiones eléctricas se mantienen secas y protegidas de la humedad: riesgo de contacto eléctrico.' },
+        { x: 600, y: 160, r: 36, n: 'Persona tomando el ROV con las hélices funcionando', fb: 'El ROV se manipula solo apagado: las hélices pueden cortar o atrapar los dedos.' }
+      ],
+      svg: function () {
+        return '<svg viewBox="0 0 800 320" role="img" aria-label="Escena: piloto operando el ROV desde el pontón de un centro de cultivo">' +
+          '<rect width="800" height="320" fill="#dbe8ee"/>' +
+          '<path d="M0 120 L90 60 L170 100 L260 40 L360 105 L450 55 L560 115 L650 65 L800 120 V200 H0z" fill="#9db6bf"/>' +
+          '<path d="M0 150 L120 105 L220 140 L330 100 L460 150 L600 110 L800 150 V200 H0z" fill="#7b9aa5"/>' +
+          '<rect y="196" width="800" height="124" fill="#2E5F7E"/>' +
+          '<path d="M0 290 q20 -8 40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0" fill="none" stroke="#5F95BA" stroke-width="3"/>' +
+          /* módulo de cultivo al fondo a la derecha */
+          '<rect x="640" y="190" width="160" height="10" fill="#8a969b"/><path d="M650 190 V130 M790 190 V130 M650 132 Q720 100 790 132" fill="none" stroke="#6d7a80" stroke-width="4"/>' +
+          /* pontón */
+          '<rect x="30" y="196" width="590" height="22" fill="#6f7c82"/><rect x="30" y="186" width="590" height="12" fill="#a9b4b8"/>' +
+          /* caseta */
+          '<rect x="50" y="96" width="150" height="90" fill="#ffffff" stroke="#234E6B" stroke-width="3"/><path d="M42 98 L125 70 L208 98z" fill="#234E6B"/>' +
+          '<rect x="66" y="114" width="36" height="26" fill="#9db6bf"/><rect x="146" y="120" width="34" height="66" fill="#c7d3d8" stroke="#234E6B"/>' +
+          /* aro salvavidas y extintor bien ubicados */
+          '<circle cx="122" cy="150" r="12" fill="none" stroke="#F26B1D" stroke-width="7"/><circle cx="122" cy="150" r="12" fill="none" stroke="#fff" stroke-width="7" stroke-dasharray="6 13"/>' +
+          '<g><rect x="186" y="150" width="11" height="26" rx="4" fill="#c0392b"/><rect x="189" y="145" width="5" height="6" fill="#333"/></g>' +
+          /* bidón y batería cargando */
+          '<g><rect x="138" y="166" width="22" height="22" rx="3" fill="#c0392b"/><rect x="148" y="160" width="7" height="7" fill="#8e2a1f"/></g>' +
+          '<g><rect x="164" y="172" width="26" height="16" rx="2" fill="#222"/><rect x="168" y="168" width="6" height="4" fill="#d33"/><rect x="180" y="168" width="6" height="4" fill="#333"/><path d="M190 178 q20 -2 26 -30" fill="none" stroke="#111" stroke-width="2"/><rect x="210" y="140" width="14" height="10" fill="#444"/><circle cx="217" cy="145" r="2" fill="#5f5"/></g>' +
+          /* operario con chaleco en el pasillo */
+          persona(240, 128, '#3b6ea8', { chaleco: true, casco: true }) +
+          /* umbilical suelto */
+          '<path d="M260 192 c15 -10 30 8 45 -2 s25 10 40 0 c10 -6 18 6 10 8 c-14 4 -30 -6 -40 2 s-28 -4 -36 4" fill="none" stroke="#F2C230" stroke-width="5" stroke-linecap="round"/>' +
+          /* mesa de consola */
+          '<rect x="390" y="150" width="80" height="8" fill="#5c4033"/><rect x="396" y="158" width="6" height="28" fill="#5c4033"/><rect x="458" y="158" width="6" height="28" fill="#5c4033"/>' +
+          '<rect x="402" y="122" width="44" height="28" rx="2" fill="#222"/><rect x="406" y="126" width="36" height="20" fill="#5F95BA"/>' +
+          /* piloto sin chaleco junto al borde */
+          persona(486, 128, '#3b6ea8') +
+          /* poza y alargador */
+          '<ellipse cx="548" cy="198" rx="30" ry="6" fill="#7fb3d5" opacity=".85"/><rect x="530" y="192" width="30" height="8" rx="2" fill="#f5f5f5" stroke="#555"/><path d="M560 196 q20 4 40 -6" fill="none" stroke="#222" stroke-width="2"/>' +
+          /* persona tomando el ROV con hélices girando */
+          persona(620, 128, '#7d5a3c') +
+          '<g><rect x="572" y="150" width="46" height="26" rx="4" fill="#F2C230" stroke="#7a5c00" stroke-width="2"/><circle cx="574" cy="162" r="9" fill="none" stroke="#333" stroke-width="2" stroke-dasharray="4 3"/><circle cx="616" cy="162" r="9" fill="none" stroke="#333" stroke-width="2" stroke-dasharray="4 3"/><path d="M566 150 l-6 -6 M566 174 l-6 6 M622 150 l6 -6" stroke="#333" stroke-width="2"/></g>' +
+          /* ROV y buzo en el agua */
+          '<g><rect x="610" y="250" width="40" height="22" rx="4" fill="#F2C230" stroke="#7a5c00" stroke-width="2"/><path d="M540 196 C560 230 590 250 612 258" fill="none" stroke="#F2C230" stroke-width="3"/></g>' +
+          '<g><ellipse cx="705" cy="262" rx="26" ry="9" fill="#111"/><circle cx="680" cy="258" r="8" fill="#111"/><rect x="694" y="250" width="16" height="7" rx="2" fill="#F2C230"/><path d="M730 262 l14 -6 M730 264 l14 6" stroke="#111" stroke-width="4"/><g fill="#cfe7f5"><circle cx="676" cy="242" r="3"/><circle cx="672" cy="230" r="4"/><circle cx="678" cy="218" r="3"/></g></g>' +
+          '</svg>';
+      }
+    },
+    taller: {
+      bien: 'El extintor en la pared, la señal de salida, el botiquín y el extractor de humos sobre el banco están bien.',
+      peligros: [
+        { x: 120, y: 206, r: 36, n: 'Estufa a parafina junto a la salida, con una bolsa detrás de la puerta', fb: 'La estufa va fuera de la vía de evacuación y lejos de combustibles; la salida siempre despejada (hallazgo H11).' },
+        { x: 246, y: 32, r: 34, n: 'Maleta pesada sobre la repisa más alta', fb: 'Las maletas pesadas van en las repisas bajas: en un sismo o al bajarlas pueden caer encima de alguien.' },
+        { x: 446, y: 132, r: 26, n: 'Aerosol inflamable junto al cautín encendido', fb: 'Ningún aerosol ni solvente junto al cautín: se guardan en el gabinete de inflamables (hallazgo H02).' },
+        { x: 612, y: 104, r: 28, n: 'Trabajador usando el taladro sin lentes de seguridad', fb: 'Con herramientas eléctricas se usan lentes de seguridad (PTS-TAL-001, punto 8.3).' },
+        { x: 706, y: 198, r: 40, n: 'Batería cargando sobre repisa de madera junto a papeles', fb: 'La carga se hace en la zona de carga, sobre superficie no combustible, lejos de papeles y supervisada.' },
+        { x: 378, y: 268, r: 42, n: 'Zapatillas eléctricas conectadas en cadena en el piso', fb: 'Las conexiones en cadena sobrecargan la instalación y quedan en la zona de tránsito: riesgo eléctrico, incendio y tropiezo.' }
+      ],
+      svg: function () {
+        return '<svg viewBox="0 0 800 320" role="img" aria-label="Escena: taller de mantención de equipos ROV">' +
+          '<rect width="800" height="320" fill="#efe7d8"/>' +
+          '<path d="M0 0 H800 V236 H0z" fill="#e6dcc8"/><path d="M0 40 H800 M0 80 H800 M0 120 H800 M0 160 H800 M0 200 H800" stroke="#d8ccb4" stroke-width="2"/>' +
+          '<rect y="236" width="800" height="84" fill="#b9a88c"/>' +
+          /* puerta de salida, señal y bolsa */
+          '<rect x="20" y="96" width="72" height="140" fill="#8c6a4a" stroke="#5c4033" stroke-width="3"/><circle cx="80" cy="170" r="4" fill="#333"/>' +
+          '<rect x="22" y="70" width="68" height="20" rx="2" fill="#2e8b57"/><path d="M34 80 h30 m-8 -6 l8 6 -8 6" stroke="#fff" stroke-width="3" fill="none"/>' +
+          '<path d="M90 236 q-8 -30 6 -36 q14 -4 12 36z" fill="#222"/>' +
+          /* estufa a parafina */
+          '<g><rect x="100" y="182" width="42" height="54" rx="4" fill="#b8bec2" stroke="#555" stroke-width="2"/><rect x="108" y="196" width="26" height="14" fill="#F2C230"/><rect x="100" y="178" width="42" height="6" fill="#333"/></g>' +
+          /* extintor en la pared */
+          '<g><rect x="150" y="150" width="14" height="34" rx="4" fill="#c0392b"/><rect x="154" y="143" width="7" height="8" fill="#333"/><rect x="146" y="120" width="22" height="22" fill="#c0392b"/></g>' +
+          /* repisa alta con maletas */
+          '<rect x="176" y="50" width="146" height="6" fill="#7a5c3c"/><rect x="176" y="100" width="146" height="6" fill="#7a5c3c"/><rect x="176" y="150" width="146" height="6" fill="#7a5c3c"/><rect x="176" y="50" width="6" height="186" fill="#7a5c3c"/><rect x="316" y="50" width="6" height="186" fill="#7a5c3c"/>' +
+          '<rect x="214" y="16" width="64" height="34" rx="4" fill="#1d1d1d"/><rect x="236" y="10" width="20" height="7" rx="2" fill="#1d1d1d"/>' +
+          '<rect x="190" y="118" width="40" height="32" fill="#c9a36b"/><rect x="240" y="124" width="56" height="26" fill="#5F95BA"/><rect x="196" y="72" width="30" height="28" fill="#c9a36b"/>' +
+          /* banco de trabajo */
+          '<rect x="336" y="150" width="310" height="10" fill="#6d5137"/><rect x="342" y="160" width="8" height="76" fill="#6d5137"/><rect x="630" y="160" width="8" height="76" fill="#6d5137"/>' +
+          /* extractor de humos */
+          '<path d="M392 60 V100 q0 10 10 12" fill="none" stroke="#666" stroke-width="6"/><rect x="398" y="104" width="22" height="14" rx="3" fill="#666"/>' +
+          /* estación de soldadura, cautín y aerosol */
+          '<rect x="364" y="126" width="40" height="24" rx="3" fill="#2b2f31"/><rect x="370" y="132" width="16" height="8" fill="#c0392b"/><path d="M404 140 L430 126" stroke="#444" stroke-width="4"/><circle cx="432" cy="125" r="3" fill="#f39c12"/>' +
+          '<g><rect x="438" y="116" width="16" height="34" rx="4" fill="#c0392b"/><rect x="442" y="110" width="8" height="7" fill="#eee"/><path d="M441 128 h10" stroke="#fff" stroke-width="2"/></g>' +
+          /* ROV abierto con batería */
+          '<rect x="480" y="128" width="78" height="22" rx="4" fill="#F2C230" stroke="#7a5c00" stroke-width="2"/><rect x="498" y="120" width="34" height="14" fill="#222"/><path d="M510 120 q-6 -10 -16 -6 M520 120 q6 -12 16 -6" stroke="#d33" stroke-width="2" fill="none"/>' +
+          /* botiquín */
+          '<g><rect x="660" y="44" width="40" height="30" rx="3" fill="#fff" stroke="#2e8b57" stroke-width="2"/><path d="M676 50 h8 v7 h7 v8 h-7 v7 h-8 v-7 h-7 v-8 h7z" fill="#2e8b57"/></g>' +
+          /* trabajador con taladro sin lentes */
+          persona(612, 104, '#3b6ea8') + '<path d="M600 124 L582 136" stroke="#f0c9a5" stroke-width="5"/><rect x="566" y="130" width="20" height="10" rx="2" fill="#F26B1D"/><rect x="560" y="133" width="7" height="3" fill="#888"/>' +
+          '<rect x="586" y="150" width="60" height="10" fill="#6d5137"/><rect x="630" y="160" width="8" height="76" fill="#6d5137"/>' +
+          /* repisa baja de madera con batería cargando y papeles */
+          '<rect x="662" y="176" width="100" height="6" fill="#a07a50"/><rect x="662" y="176" width="6" height="60" fill="#a07a50"/><rect x="756" y="176" width="6" height="60" fill="#a07a50"/>' +
+          '<rect x="676" y="156" width="40" height="20" rx="2" fill="#222"/><rect x="684" y="152" width="6" height="4" fill="#d33"/><path d="M716 168 q14 0 18 -12" fill="none" stroke="#111" stroke-width="2"/><rect x="728" y="146" width="16" height="10" fill="#444"/><circle cx="736" cy="151" r="2" fill="#f33"/>' +
+          '<path d="M718 176 l12 -14 l14 4 l-6 10z" fill="#f5f0e1" stroke="#aaa"/><rect x="740" y="164" width="16" height="12" fill="#d8c08f"/>' +
+          /* zapatillas en cadena en el piso */
+          '<g><rect x="336" y="258" width="34" height="9" rx="2" fill="#f5f5f5" stroke="#555"/><rect x="380" y="264" width="34" height="9" rx="2" fill="#f5f5f5" stroke="#555"/><path d="M370 262 q6 0 10 6 M414 268 q20 4 30 -10 M336 262 q-20 0 -30 -26" fill="none" stroke="#222" stroke-width="2"/><rect x="342" y="252" width="6" height="6" fill="#333"/><rect x="386" y="258" width="6" height="6" fill="#333"/></g>' +
+          /* carrete de umbilical ordenado en la zona de almacenamiento */
+          '<circle cx="230" cy="214" r="20" fill="#F2C230" stroke="#7a5c00" stroke-width="3"/><circle cx="230" cy="214" r="6" fill="#7a5c00"/>' +
+          '</svg>';
+      }
     }
   };
-  function escenaSvg() {
-    return '<svg viewBox="20 140 780 300" role="img" aria-label="Escena: embarcación de apoyo trabajando junto a un módulo de cultivo">' +
-      '<rect width="800" height="460" fill="#d9e6ea"/>' +
-      '<path d="M0 200 L90 120 L170 170 L260 90 L360 165 L450 110 L560 180 L650 120 L800 190 V260 H0z" fill="#9db6bf"/>' +
-      '<path d="M0 230 L120 170 L220 215 L330 160 L460 220 L600 175 L800 225 V270 H0z" fill="#7b9aa5"/>' +
-      '<rect y="262" width="800" height="198" fill="#1D5A6E"/>' +
-      '<path d="M0 400 q20 -8 40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0" fill="none" stroke="#3E7C8F" stroke-width="3"/>' +
-      '<path d="M0 430 q20 -8 40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0" fill="none" stroke="#3E7C8F" stroke-width="3"/>' +
-      /* módulo de cultivo */
-      '<rect x="610" y="318" width="190" height="14" fill="#8a969b"/><rect x="610" y="332" width="190" height="10" fill="#2b2f31"/>' +
-      '<line x1="625" y1="318" x2="625" y2="240" stroke="#6d7a80" stroke-width="5"/><line x1="790" y1="318" x2="790" y2="240" stroke="#6d7a80" stroke-width="5"/>' +
-      '<path d="M625 242 Q707 205 790 242" fill="none" stroke="#6d7a80" stroke-width="4"/>' +
-      '<path d="M625 250 L790 250 M640 245 L640 318 M660 240 L660 318 M680 236 L680 318 M700 234 L700 318 M720 234 L720 318 M740 236 L740 318 M760 240 L760 318" stroke="#9aa6ab" stroke-width="1" opacity=".7"/>' +
-      /* soldador en el módulo */
-      '<g><circle cx="730" cy="262" r="10" fill="#f0c9a5"/><rect x="722" y="250" width="16" height="10" rx="3" fill="#2b2f31"/><rect x="719" y="272" width="22" height="30" rx="5" fill="#F26B1D"/><rect x="721" y="300" width="7" height="18" fill="#3b4a52"/><rect x="733" y="300" width="7" height="18" fill="#3b4a52"/>' +
-      '<line x1="719" y1="282" x2="700" y2="300" stroke="#f0c9a5" stroke-width="5"/><line x1="700" y1="300" x2="706" y2="316" stroke="#333" stroke-width="3"/>' +
-      '<g fill="#ffd34d"><circle cx="704" cy="314" r="3"/><circle cx="696" cy="308" r="2"/><circle cx="712" cy="306" r="2"/><circle cx="690" cy="316" r="2"/><circle cx="716" cy="312" r="1.6"/></g></g>' +
-      /* bidón de combustible */
-      '<g><rect x="672" y="290" width="26" height="28" rx="3" fill="#c0392b"/><rect x="684" y="284" width="8" height="8" fill="#8e2a1f"/><path d="M676 298 h18" stroke="#ffd1c8" stroke-width="2"/></g>' +
-      /* casco de la embarcación */
-      '<path d="M40 330 L590 330 L560 392 Q300 410 80 392 Z" fill="#f3f5f6" stroke="#0F3B4C" stroke-width="3"/>' +
-      '<path d="M48 344 L583 344" stroke="#F26B1D" stroke-width="6"/>' +
-      '<text x="300" y="380" font-family="Barlow, sans-serif" font-size="20" fill="#0F3B4C" font-weight="700">L/M PYV</text>' +
-      '<rect x="40" y="318" width="550" height="12" fill="#c7d3d8"/>' +
-      /* baranda con brecha */
-      '<path d="M44 318 V298 M44 298 H500 M90 318 V298 M140 318 V298 M240 318 V298 M330 318 V298 M420 318 V298 M500 318 V298" stroke="#0F3B4C" stroke-width="3" fill="none"/>' +
-      /* cabina */
-      '<rect x="70" y="220" width="150" height="98" rx="6" fill="#ffffff" stroke="#0F3B4C" stroke-width="3"/>' +
-      '<rect x="84" y="236" width="36" height="26" fill="#9db6bf"/><rect x="130" y="236" width="36" height="26" fill="#9db6bf"/><rect x="176" y="236" width="30" height="26" fill="#9db6bf"/>' +
-      '<rect x="60" y="210" width="170" height="12" fill="#0F3B4C"/><line x1="120" y1="210" x2="120" y2="180" stroke="#0F3B4C" stroke-width="3"/>' +
-      /* aro salvavidas y extintor bien ubicados */
-      '<circle cx="196" cy="290" r="13" fill="none" stroke="#F26B1D" stroke-width="7"/><circle cx="196" cy="290" r="13" fill="none" stroke="#fff" stroke-width="7" stroke-dasharray="6 14"/>' +
-      '<g><rect x="90" y="276" width="13" height="30" rx="4" fill="#c0392b"/><rect x="93" y="270" width="7" height="7" fill="#333"/><path d="M100 272 q10 0 8 12" fill="none" stroke="#333" stroke-width="2"/></g>' +
-      /* cilindro caído */
-      '<g transform="rotate(-80 150 322)"><rect x="140" y="300" width="22" height="46" rx="10" fill="#e9a23b"/><rect x="146" y="294" width="10" height="8" fill="#666"/></g>' +
-      /* trabajador seguro con chaleco y casco */
-      '<g><circle cx="250" cy="262" r="10" fill="#f0c9a5"/><path d="M239 258 a11 9 0 0 1 22 0 z" fill="#fff" stroke="#999"/><rect x="240" y="272" width="22" height="32" rx="5" fill="#F26B1D"/><rect x="242" y="302" width="7" height="16" fill="#3b4a52"/><rect x="254" y="302" width="7" height="16" fill="#3b4a52"/></g>' +
-      /* cabo suelto en la cubierta */
-      '<path d="M240 322 c15 -10 30 8 45 -2 s25 10 40 0 c10 -6 18 6 10 8 c-14 4 -30 -6 -40 2 s-28 -4 -36 4" fill="none" stroke="#b5651d" stroke-width="5" stroke-linecap="round"/>' +
-      /* escotilla abierta */
-      '<rect x="360" y="319" width="40" height="11" fill="#111"/><rect x="398" y="300" width="6" height="22" fill="#7b8b92" transform="rotate(20 401 311)"/>' +
-      /* grúa / brazo hidráulico */
-      '<rect x="300" y="268" width="22" height="50" fill="#F2C230" stroke="#7a5c00" stroke-width="2"/>' +
-      '<path d="M311 270 L460 180" stroke="#F2C230" stroke-width="14" stroke-linecap="round"/><path d="M311 270 L460 180" stroke="#7a5c00" stroke-width="2" fill="none"/>' +
-      '<line x1="456" y1="184" x2="456" y2="240" stroke="#333" stroke-width="2"/>' +
-      '<rect x="432" y="240" width="48" height="34" fill="#8d6e4a" stroke="#4e3b24" stroke-width="2"/><path d="M432 257 H480 M456 240 V274" stroke="#4e3b24" stroke-width="1.5"/>' +
-      /* persona bajo la carga */
-      '<g><circle cx="440" cy="290" r="9" fill="#f0c9a5"/><path d="M430 286 a10 8 0 0 1 20 0z" fill="#fff" stroke="#999"/><rect x="431" y="299" width="19" height="20" rx="4" fill="#F26B1D"/></g>' +
-      /* trabajador sin chaleco junto a la borda, con la baranda abierta */
-      '<g><circle cx="548" cy="258" r="10" fill="#f0c9a5"/><rect x="538" y="268" width="20" height="32" rx="5" fill="#3b6ea8"/><rect x="539" y="298" width="7" height="20" fill="#3b4a52"/><rect x="551" y="298" width="7" height="20" fill="#3b4a52"/><line x1="558" y1="276" x2="576" y2="290" stroke="#f0c9a5" stroke-width="5"/></g>' +
-      '</svg>';
-  }
   MOTORES.hotspot = function (caja, parte, ctx, fin) {
-    var esc = ESCENAS[parte.escena], encontrados = {}, fallos = 0;
-    var zona = el('<div><div class="escena">' + escenaSvg() + '</div><p class="escena-ayuda">Desliza la imagen hacia el lado para verla completa.</p><div class="contador" style="margin-top:8px"><span data-n>0</span> de ' + esc.peligros.length + ' peligros encontrados · toques fuera: <span data-f>0</span></div><ol class="hallazgos"></ol><div class="fb"></div>' +
+    var esc = ESCENAS[parte.escena] || ESCENAS.ponton, encontrados = {}, fallos = 0;
+    var zona = el('<div><div class="escena">' + esc.svg() + '</div><p class="escena-ayuda">Desliza la imagen hacia el lado para verla completa.</p><div class="contador" style="margin-top:8px"><span data-n>0</span> de ' + esc.peligros.length + ' peligros encontrados · toques fuera: <span data-f>0</span></div><ol class="hallazgos"></ol><div class="fb"></div>' +
       '<button class="btn btn-ter" type="button" data-rinde>No encuentro más: mostrar los que faltan</button></div>');
     caja.appendChild(zona);
     var svg = zona.querySelector('svg'), ns = 'http://www.w3.org/2000/svg';
@@ -368,3 +418,4 @@ var JUEGOS = (function () {
 
   return { jugar: jugar, senal: senal };
 })();
+

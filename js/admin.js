@@ -1,4 +1,4 @@
-/* PyV Capacita — panel de la encargada de prevención y de supervisores */
+/* GL Capacita — panel de la encargada de prevención y de supervisores */
 (function () {
   'use strict';
   var A = { tok: null, rol: null, datos: null, tab: 'trabajadores', filtro: { q: '', cargo: '', estado: '', curso: 'ds44' } };
@@ -12,7 +12,7 @@
   function cargoN(id) { var c = PLAN.cargo(id); return c ? c.nombre : id; }
   function llamar(acc, b) { b = b || {}; b.adminToken = A.tok; return SRV.llamar(acc, b).then(function (r) { if (!r.ok && r.error === 'sesion') { salir(); throw new Error('sesion'); } return r; }); }
 
-  function salir() { A.tok = null; try { sessionStorage.removeItem('pyv_adm'); } catch (e) { } $('#btn-salir').classList.add('oculto'); ingreso(); }
+  function salir() { A.tok = null; try { sessionStorage.removeItem('glc_adm'); } catch (e) { } $('#btn-salir').classList.add('oculto'); ingreso(); }
   $('#btn-salir').addEventListener('click', salir);
 
   function ingreso(msg) {
@@ -23,7 +23,7 @@
       ev.preventDefault(); var b = $('button', ev.target); b.disabled = true;
       SRV.llamar('adminIngresar', { clave: ev.target.clave.value }).then(function (r) {
         b.disabled = false; if (!r.ok) return ingreso(r.error);
-        A.tok = r.adminToken; A.rol = r.rol; try { sessionStorage.setItem('pyv_adm', JSON.stringify({ tok: A.tok, rol: A.rol })); } catch (e) { }
+        A.tok = r.adminToken; A.rol = r.rol; try { sessionStorage.setItem('glc_adm', JSON.stringify({ tok: A.tok, rol: A.rol })); } catch (e) { }
         $('#btn-salir').classList.remove('oculto'); cargar();
       }).catch(function () { b.disabled = false; ingreso('No se pudo conectar con el servidor.'); });
     });
@@ -66,37 +66,12 @@
   }
 
   /* ---------- trabajadores ---------- */
-  /* ---------- versión vigente del documento y recapacitación masiva ---------- */
-  function afectados() { return A.datos.trabajadores.filter(function (t) { var c = cdc(t); return c && (c.certificado || c.iniciado || c.hechos > 0); }); }
-  function cajaVersion() {
-    var cur = PLAN.curso(A.filtro.curso), ver = (A.datos.config || {})['VERSION_' + A.filtro.curso] || '', n = afectados().length;
-    return '<section class="tarjeta"><h2>Documento vigente y actualización</h2>' +
-      '<p class="suave">Versión del documento en que se basa «' + h(cur ? cur.titulo : '') + '». Se imprime en cada certificado nuevo.</p>' +
-      '<div class="fila-btn"><input type="text" id="ver-v" placeholder="Ej.: 03 o Rev. 2026-11" value="' + h(ver) + '" style="max-width:220px"><button class="btn btn-sec" type="button" id="ver-g">Guardar versión</button></div>' +
-      '<h3>¿Cambió el documento?</h3><p class="suave">Pide esta capacitación de nuevo a todos los que ya la iniciaron o aprobaron (' + n + ' trabajador' + (n === 1 ? '' : 'es') + '). Su avance y certificado anterior quedan archivados en el historial; deberán hacerla otra vez con el documento nuevo.</p>' +
-      '<div class="grid2"><label class="campo">Nueva versión<input type="text" id="re-v" placeholder="Ej.: 04"></label><label class="campo">Motivo<input type="text" id="re-m" placeholder="Ej.: actualización del PTS por cambio de método"></label></div>' +
-      '<div class="fila-btn"><button class="btn btn-pri" type="button" id="re-1"' + (n ? '' : ' disabled') + '>Recapacitar a todos</button></div><div id="re-c"></div></section>';
-  }
-  function enlazarVersion() {
-    $('#ver-g').addEventListener('click', function () { llamar('adminVersion', { curso: A.filtro.curso, version: $('#ver-v').value }).then(function (r) { toast(r.ok ? 'Versión guardada.' : r.error); if (r.ok) cargar(); }); });
-    $('#re-1').addEventListener('click', function () {
-      var m = $('#re-m').value.trim(), v = $('#re-v').value.trim(), n = afectados().length;
-      if (!m) { toast('Escribe el motivo.'); $('#re-m').focus(); return; }
-      $('#re-c').innerHTML = '<div class="aviso alerta">Se pedirá de nuevo la capacitación a <b>' + n + '</b> trabajador' + (n === 1 ? '' : 'es') + (v ? ' con la versión <b>' + h(v) + '</b>' : '') + '. ¿Confirmas?</div><div class="fila-btn"><button class="btn btn-pri" type="button" id="re-si">Sí, recapacitar</button><button class="btn btn-sec" type="button" id="re-no">Cancelar</button></div>';
-      $('#re-no').onclick = function () { $('#re-c').innerHTML = ''; };
-      $('#re-si').onclick = function () {
-        this.disabled = true; this.textContent = 'Procesando…';
-        llamar('adminReiniciarCurso', { curso: A.filtro.curso, motivo: m, version: v }).then(function (r) { toast(r.ok ? 'Listo: ' + r.reiniciados + ' trabajador(es) deben hacer la capacitación de nuevo.' : r.error); if (r.ok) cargar(); });
-      };
-    });
-  }
   function vTrabajadores() {
     var v = $('#vista'), F = A.filtro;
     v.innerHTML = '<div class="filtros"><input type="text" id="q" placeholder="Buscar por nombre o RUN" value="' + h(F.q) + '">' +
       '<select id="fc"><option value="">Todos los cargos</option>' + PLAN.cargos.map(function (c) { return '<option value="' + c.id + '"' + (F.cargo === c.id ? ' selected' : '') + '>' + h(c.nombre) + '</option>'; }).join('') + '</select>' +
       '<select id="fe"><option value="">Todos los estados</option>' + Object.keys(ESTADOS).map(function (k) { return '<option value="' + k + '"' + (F.estado === k ? ' selected' : '') + '>' + ESTADOS[k] + '</option>'; }).join('') + '</select></div>' +
-      '<div class="tabla-scroll" id="tab"></div><div class="fila-btn"><button class="btn btn-sec" type="button" id="csv">Descargar nómina (CSV)</button><button class="btn btn-sec" type="button" id="rec">Actualizar</button></div>' +
-      (A.rol === 'admin' ? cajaVersion() : '');
+      '<div class="tabla-scroll" id="tab"></div><div class="fila-btn"><button class="btn btn-sec" type="button" id="csv">Descargar nómina (CSV)</button><button class="btn btn-sec" type="button" id="rec">Actualizar</button></div>';
     function filas() {
       var q = F.q.toLowerCase().replace(/[.\-]/g, '');
       return A.datos.trabajadores.filter(function (t) {
@@ -108,7 +83,7 @@
     function tabla() {
       var L = filas();
       $('#tab').innerHTML = L.length ? '<table class="tabla"><thead><tr><th>Trabajador</th><th>Avance</th><th>Tiempo</th><th>Plazo / certificado</th><th>Acciones</th></tr></thead><tbody>' + L.map(function (t) {
-        var c = cdc(t), est = estadoDe(t), wa = t.telefono ? 'https://wa.me/' + t.telefono.replace(/[^\d]/g, '') + '?text=' + encodeURIComponent('Hola ' + t.nombre.split(' ')[0] + ', te recuerdo avanzar en el curso de prevención de riesgos en PyV Capacita. ' + 'Te falta: ' + (PLAN.curso(A.filtro.curso) || {}).titulo + (c.etapaActual ? ' (vas en ' + c.etapaActual + ')' : '') + '.') : '';
+        var c = cdc(t), est = estadoDe(t), wa = t.telefono ? 'https://wa.me/' + t.telefono.replace(/[^\d]/g, '') + '?text=' + encodeURIComponent('Hola ' + t.nombre.split(' ')[0] + ', te recuerdo avanzar en el curso de prevención de riesgos en GL Capacita. ' + 'Te falta: ' + (PLAN.curso(A.filtro.curso) || {}).titulo + (c.etapaActual ? ' (vas en ' + c.etapaActual + ')' : '') + '.') : '';
         return '<tr><td><b>' + h(t.nombre) + '</b><br><span class="suave peq">' + h(t.run) + ' · ' + h(cargoN(t.cargo)) + '</span></td>' +
           '<td>' + c.hechos + ' de ' + c.total + '<div class="mini"><i style="width:' + Math.round(c.avance * 100) + '%"></i></div><span class="suave peq">' + h(c.etapaActual || (c.certificado ? 'Terminado' : '')) + '</span></td>' +
           '<td>' + hTxt(c.segundos) + '</td>' +
@@ -125,7 +100,6 @@
     $('#fc').addEventListener('change', function () { F.cargo = this.value; tabla(); });
     $('#fe').addEventListener('change', function () { F.estado = this.value; tabla(); });
     $('#rec').addEventListener('click', cargar);
-    if (A.rol === 'admin') enlazarVersion();
     $('#csv').addEventListener('click', function () {
       var cab = ['RUN', 'Nombre', 'Cargo', 'Teléfono', 'Registro', 'Inicio', 'Plazo', 'Etapas', 'Tiempo (min)', 'Sesiones', 'Estado', 'Certificado', 'Emisión', 'Vence'];
       var rows = filas().map(function (t) { var c = cdc(t); return [t.run, t.nombre, cargoN(t.cargo), t.telefono, t.fechaRegistro, t.fechaInicio, t.fechaLimite, c.hechos + '/' + c.total, Math.round(c.segundos / 60), t.sesiones, ESTADOS[estadoDe(t)], c.certificado ? c.certificado.codigo : '', c.certificado ? c.certificado.fecha : '', c.certificado ? c.certificado.vence : '']; });
@@ -301,60 +275,27 @@
   }
 
   /* ---------- configuración ---------- */
-  function cajaFirma(q, titulo, id) {
-    return '<div class="campo"><b>' + h(titulo) + '</b><span class="ayuda" style="display:block;margin-bottom:6px">' + (id ? 'Firma guardada ✓ (dibuja otra para reemplazarla)' : 'Aún sin firma') + '</span>' +
-      '<canvas id="fz-' + q + '" width="600" height="200" style="width:100%;max-width:420px;aspect-ratio:3/1;border:1px dashed #9fb3bb;border-radius:8px;background:#fff;touch-action:none"></canvas>' +
-      '<div class="fila-btn"><button class="btn btn-sec" type="button" id="fl-' + q + '">Borrar</button><label class="btn btn-sec">Subir imagen<input type="file" accept="image/png,image/jpeg" id="fa-' + q + '" hidden></label><button class="btn btn-pri" type="button" id="fg-' + q + '">Guardar firma</button>' +
-      (id ? '<button class="btn btn-sec" type="button" id="fq-' + q + '">Quitar</button>' : '') + '</div></div>';
-  }
   function vConfig() {
     var C = A.datos.config;
     function campo(k, et, ayuda) { return '<label class="campo">' + et + (ayuda ? '<span class="ayuda">' + ayuda + '</span>' : '') + '<input type="text" name="' + k + '" value="' + h(C[k] || '') + '"></label>'; }
     $('#vista').innerHTML = '<section class="tarjeta"><h2>Datos del curso y del certificado</h2><form id="fc"><div class="grid2">' +
       campo('FACILITADOR_NOMBRE', 'Nombre de la facilitadora') + campo('FACILITADOR_RUN', 'RUN de la facilitadora') +
       campo('FACILITADOR_TITULO', 'Título profesional') + campo('FACILITADOR_REGISTRO', 'N° de registro SEREMI', 'Opcional') +
-      campo('EMPRESA', 'Empresa') + campo('RUT_EMPRESA', 'RUT de la empresa') + campo('ORGANISMO', 'Organismo administrador') + campo('HORAS_CURSO', 'Horas del curso obligatorio', 'También es el tiempo mínimo que el trabajador debe tener registrado para certificar.') +
-      campo('RL_NOMBRE', 'Nombre del representante legal') + campo('RL_RUN', 'RUN del representante legal') + campo('RL_CARGO', 'Cargo del representante legal') +
+      campo('EMPRESA', 'Empresa') + campo('RUT_EMPRESA', 'RUT de la empresa') + campo('ORGANISMO', 'Organismo administrador') + campo('HORAS_CURSO', 'Horas del programa') +
       '<label class="campo">¿Exigir sesiones prácticas para certificar?<span class="ayuda">Por defecto el curso es 100% asincrónico (las actividades presenciales están adaptadas como talleres). Activa esto solo si quieres sumar sesiones en vivo.</span><select name="REQUIERE_SESIONES"><option value="SI"' + (C.REQUIERE_SESIONES === 'SI' ? ' selected' : '') + '>Sí</option><option value="NO"' + (C.REQUIERE_SESIONES === 'NO' ? ' selected' : '') + '>No</option></select></label>' +
       campo('SESIONES_REQUERIDAS', 'Número de sesiones requeridas') +
-      campo('URL_SITIO', 'Dirección del sitio', 'Se usa en el QR de verificación del certificado. Ej.: https://pyv-capacita.github.io') + '</div>' +
+      campo('MIN_MINUTOS_DS44', 'Minutos mínimos de permanencia para certificar el curso obligatorio', '0 = solo exige completar todas las etapas. Ej.: 360 exige 6 horas registradas.') +
+      campo('URL_SITIO', 'Dirección del sitio', 'Se usa en el QR de verificación del certificado. Ej.: https://glcapacita.github.io') + '</div>' +
       '<h3>Cambiar claves</h3><div class="grid2"><label class="campo">Nueva clave de administración<input type="password" name="adm" autocomplete="new-password"></label><label class="campo">Nueva clave de supervisores<input type="password" name="sup" autocomplete="new-password"></label></div>' +
-      '<button class="btn btn-pri" type="submit">Guardar configuración</button></form></section>' +
-      '<section class="tarjeta"><h2>Firmas del certificado</h2><p class="suave">Firma con el dedo o el mouse en el recuadro, o sube una foto de la firma sobre papel blanco. Se imprime sobre la línea de firma de todos los certificados que se emitan desde ahora.</p><div class="grid2">' +
-      cajaFirma('apr', 'Prevención de riesgos (' + (C.FACILITADOR_NOMBRE || 'facilitadora') + ')', C.FIRMA_APR_ID) +
-      cajaFirma('rl', 'Representante legal (' + (C.RL_NOMBRE || 'sin nombre') + ')', C.FIRMA_RL_ID) + '</div></section>';
-    ['apr', 'rl'].forEach(function (q) {
-      var cv = $('#fz-' + q), cx = cv.getContext('2d'), dib = false, hay = false;
-      cx.lineWidth = 2.6; cx.lineCap = 'round'; cx.lineJoin = 'round'; cx.strokeStyle = '#10243a';
-      function pos(e) { var r = cv.getBoundingClientRect(); return [(e.clientX - r.left) * cv.width / r.width, (e.clientY - r.top) * cv.height / r.height]; }
-      cv.addEventListener('pointerdown', function (e) { dib = true; hay = true; cv.setPointerCapture(e.pointerId); var p = pos(e); cx.beginPath(); cx.moveTo(p[0], p[1]); e.preventDefault(); });
-      cv.addEventListener('pointermove', function (e) { if (!dib) return; var p = pos(e); cx.lineTo(p[0], p[1]); cx.stroke(); e.preventDefault(); });
-      cv.addEventListener('pointerup', function () { dib = false; });
-      $('#fl-' + q).addEventListener('click', function () { cx.clearRect(0, 0, cv.width, cv.height); hay = false; });
-      $('#fa-' + q).addEventListener('change', function (e) {
-        var file = e.target.files[0]; if (!file) return;
-        var img = new Image(); img.onload = function () {
-          cx.clearRect(0, 0, cv.width, cv.height); var k = Math.min(cv.width / img.width, cv.height / img.height);
-          cx.drawImage(img, (cv.width - img.width * k) / 2, (cv.height - img.height * k) / 2, img.width * k, img.height * k);
-          // fondo blanco → transparente, para que no tape la línea
-          var d = cx.getImageData(0, 0, cv.width, cv.height); for (var i = 0; i < d.data.length; i += 4) { if (d.data[i] > 200 && d.data[i + 1] > 200 && d.data[i + 2] > 200) d.data[i + 3] = 0; } cx.putImageData(d, 0, 0);
-          hay = true;
-        }; img.src = URL.createObjectURL(file);
-      });
-      $('#fg-' + q).addEventListener('click', function () {
-        if (!hay) { toast('Primero firma o sube la imagen.'); return; }
-        llamar('adminFirma', { quien: q, imagen: cv.toDataURL('image/png') }).then(function (r) { toast(r.ok ? 'Firma guardada.' : r.error); if (r.ok) cargar(); });
-      });
-      var bq = $('#fq-' + q); if (bq) bq.addEventListener('click', function () { llamar('adminFirma', { quien: q, imagen: '' }).then(function (r) { toast(r.ok ? 'Firma quitada.' : r.error); if (r.ok) cargar(); }); });
-    });
+      '<button class="btn btn-pri" type="submit">Guardar configuración</button></form></section>';
     $('#fc').addEventListener('submit', function (ev) {
       ev.preventDefault(); var f = ev.target, val = {};
-      ['FACILITADOR_NOMBRE', 'FACILITADOR_RUN', 'FACILITADOR_TITULO', 'FACILITADOR_REGISTRO', 'EMPRESA', 'RUT_EMPRESA', 'ORGANISMO', 'HORAS_CURSO', 'REQUIERE_SESIONES', 'SESIONES_REQUERIDAS', 'URL_SITIO', 'RL_NOMBRE', 'RL_RUN', 'RL_CARGO'].forEach(function (k) { val[k] = f[k].value.trim(); });
+      ['FACILITADOR_NOMBRE', 'FACILITADOR_RUN', 'FACILITADOR_TITULO', 'FACILITADOR_REGISTRO', 'EMPRESA', 'RUT_EMPRESA', 'ORGANISMO', 'HORAS_CURSO', 'REQUIERE_SESIONES', 'SESIONES_REQUERIDAS', 'MIN_MINUTOS_DS44', 'URL_SITIO'].forEach(function (k) { val[k] = f[k].value.trim(); });
       llamar('adminConfig', { valores: val, nuevaClaveAdmin: f.adm.value || undefined, nuevaClaveSupervisor: f.sup.value || undefined }).then(function (r) { toast(r.ok ? 'Configuración guardada.' : r.error); if (r.ok) cargar(); });
     });
   }
 
   if (SRV.demo) $('#demo-banda').classList.remove('oculto');
-  var s = null; try { s = JSON.parse(sessionStorage.getItem('pyv_adm')); } catch (e) { }
+  var s = null; try { s = JSON.parse(sessionStorage.getItem('glc_adm')); } catch (e) { }
   if (s && s.tok) { A.tok = s.tok; A.rol = s.rol; $('#btn-salir').classList.remove('oculto'); cargar(); } else ingreso();
 })();
