@@ -272,3 +272,8 @@ textarea { min-height: 120px; }
 .barra{top:env(safe-area-inset-top,0px)}
 body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--fiordo)}
 
+
+table.rep { border-collapse: collapse; width: 100%; font-size: 13px; }
+table.rep th, table.rep td { border: 1px solid var(--bruma-2); padding: 5px 7px; vertical-align: top; }
+table.rep th { background: var(--bruma); text-align: left; }
+.rep-cab h2 { margin-bottom: 4px; }

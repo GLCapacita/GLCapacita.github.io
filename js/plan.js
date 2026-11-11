@@ -191,6 +191,19 @@ var PLAN = {
   });
 })();
 
+/* Difusión semestral Ley Karin (art. 211-A Código del Trabajo): un curso por semestre; al cambiar de semestre aparece el nuevo para todos. */
+(function () {
+  var d = new Date(), y = d.getFullYear(), sem = d.getMonth() < 6 ? 1 : 2, id = 'difkarin-' + y + 's' + sem;
+  PLAN.difusionKarin = id;
+  PLAN.cursos.push({ id: id, titulo: 'Difusión semestral Ley Karin · ' + (sem === 1 ? '1er' : '2º') + ' semestre ' + y, sub: 'Canales de denuncia, derecho a denunciar ante la Inspección del Trabajo y prestaciones de seguridad social', obligatorio: true, semestral: true,
+    horas: 0.25, doc: 'constancia', vigenciaMeses: 0, venceFin: y + (sem === 1 ? '-06-30' : '-12-31'), plazoMeses: 0, cargos: '*',
+    contenidos: 'Canales internos de denuncia de GL · Canal alternativo · Derecho a denunciar ante la Inspección del Trabajo · Medidas de resguardo · Atención psicológica temprana en la ACHS · Plazos · Prohibición de represalias',
+    etapas: [
+      { id: 'l1', tipo: 'leccion', titulo: 'Lo que debes saber este semestre', minMin: 5 },
+      { id: 'f1', tipo: 'firma', titulo: 'Firma: recibí la difusión semestral' }
+    ] });
+})();
+
 /* índices y ayudas */
 PLAN.etapas = [];
 PLAN.cursos.forEach(function (c) {

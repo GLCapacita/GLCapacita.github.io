@@ -213,7 +213,7 @@ var CORE = (function () {
       '<tr><td class="k">Modalidad</td><td>E-learning asincrónico con cápsulas, actividades prácticas, talleres y evaluación</td></tr>' +
       '<tr><td class="k">Tiempo registrado en plataforma</td><td>' + horasTxt(seg) + '</td></tr>' +
       '<tr><td class="k">Fecha de aprobación</td><td>' + esc(fechaCl(cert.fechaEmision)) + '</td></tr>' +
-      '<tr><td class="k">Vigencia</td><td>' + (cert.vence ? '12 meses, hasta el ' + esc(fechaCl(cert.vence)) + ', o antes si cambian el procedimiento o el cargo, o tras un accidente' : 'Hasta que cambien el procedimiento o el cargo, o tras un accidente') + '</td></tr>' +
+      '<tr><td class="k">Vigencia</td><td>' + (cert.vence && cur.semestral ? 'Semestre en curso, hasta el ' + esc(fechaCl(cert.vence)) + '. Se repite cada semestre.' : cert.vence ? '12 meses, hasta el ' + esc(fechaCl(cert.vence)) + ', o antes si cambian el procedimiento o el cargo, o tras un accidente' : 'Hasta que cambien el procedimiento o el cargo, o tras un accidente') + '</td></tr>' +
       '<tr><td class="k">Contenidos</td><td>' + esc(cur.contenidos || '') + '</td></tr>' +
       (cert.version ? '<tr><td class="k">Documento base</td><td>' + esc(cur.titulo) + ' · versión ' + esc(cert.version) + '</td></tr>' : '') +
       '<tr><td class="k">Código de verificación</td><td><b>' + esc(cert.codigo) + '</b></td></tr></table>' +
@@ -416,7 +416,7 @@ var CORE = (function () {
       if (R.faltaTiempoMin) return { ok: false, faltaTiempo: R.faltaTiempoMin, error: 'Completaste todas las etapas, pero el programa dura ' + PLAN.duracionTxt(R.duracionMin) + ' y llevas ' + horasTxt(R.segundos) + ' registrados. Te faltan unos ' + R.faltaTiempoMin + ' minutos: repasa las cápsulas, lecturas y talleres del curso.' };
       var ahora = env.now(), prefijo = 'GL-';
       c = { codigo: prefijo + codigoCorto(env), run: t.run, nombre: t.nombre, cargo: t.cargo, ciclo: 1, fechaEmision: env.fmt(ahora, 'fecha'),
-        vence: cur.vigenciaMeses ? env.fmt(sumarMeses(ahora, cur.vigenciaMeses), 'fecha') : '', horasProgramadas: cursoId === 'ds44' ? C.HORAS_CURSO : cur.horas,
+        vence: cur.venceFin ? cur.venceFin : cur.vigenciaMeses ? env.fmt(sumarMeses(ahora, cur.vigenciaMeses), 'fecha') : '', horasProgramadas: cursoId === 'ds44' ? C.HORAS_CURSO : cur.horas,
         segundosRegistrados: R.segundos, archivoId: '', archivoUrl: '', estado: 'vigente', curso: cursoId, version: C['VERSION_' + cursoId] || '' };
       var html = certificadoHtml(conFirmas(env, C), t, c, qr(urlVerif(C, c.codigo)), R.segundos);
       var f = env.drive.guardarPdf(t.carpetaId, (cur.doc === 'certificado' ? 'Certificado_' : 'Constancia_') + cursoId.toUpperCase() + '_' + c.codigo + '.pdf', html);

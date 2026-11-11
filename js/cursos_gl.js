@@ -874,3 +874,16 @@ Object.keys(_PTS).forEach(function (cod) {
     ] };
   };
 });
+
+/* =====================================================================
+   DIFUSIÓN SEMESTRAL LEY KARIN
+   ===================================================================== */
+CONTENIDO.lecciones[PLAN.difusionKarin + '.l1'] = { documento: 'pts/LEY-KARIN.pdf', diapositivas: [
+  { t: 'Difusión semestral de la Ley Karin', x: 'La ley obliga a ' + CONTENIDO.empresa.nombre + ' a informarte dos veces al año los canales para denunciar el acoso sexual, el acoso laboral y la violencia en el trabajo, tu derecho a denunciar ante la Inspección del Trabajo y las prestaciones de seguridad social a las que puedes acceder.', l: ['Esta difusión dura unos minutos y termina con tu firma de recepción.', 'Si quieres el detalle, revisa el protocolo completo con el botón del documento.'] },
+  { t: 'Canales internos de denuncia', l: ['Por escrito al correo glroboticasubmarina@gmail.com (recomendado, deja registro).', 'En forma verbal ante la responsable del protocolo, ' + CONTENIDO.empresa.encargada + ', Jefa de Operaciones: se levanta un acta y recibes copia.', 'Teléfono de orientación: +56 9 7828 1635.', 'Canal alternativo, si la denuncia involucra a la Gerencia o a la Jefatura de Operaciones: la Asesora externa en Prevención de Riesgos, ' + CONTENIDO.empresa.apr + '.'] },
+  { t: 'Tu derecho a denunciar ante la Inspección del Trabajo', l: ['Puedes denunciar directamente en la Inspección del Trabajo, en cualquier momento, sin pasar por la empresa.', 'Si denuncias en la empresa, en 3 días se decide si se investiga internamente o se envían los antecedentes a la Inspección.', 'La investigación es reservada, ambas partes son oídas y termina en un máximo de 30 días.'] },
+  { t: 'Medidas de resguardo y apoyo', l: ['Al recibir la denuncia se adoptan medidas inmediatas para protegerte: separar espacios o turnos, instrucción de no contacto o cambio temporal de funciones, sin bajar tu sueldo.', 'Tienes derecho a atención psicológica temprana en la ACHS.', 'Si el acoso o la violencia te provoca una enfermedad, la cubre el seguro de la Ley 16.744 en la ACHS.'] },
+  { t: 'Sin represalias', l: ['Nadie puede ser castigado por denunciar, por ser víctima o por declarar como testigo.', 'Cualquier represalia se investiga con prioridad.', 'La empresa aplica las medidas o sanciones dentro de 15 días desde que recibe el informe.'] }
+] };
+CONTENIDO.firmas[PLAN.difusionKarin + '.f1'] = function () { return { texto: 'Declaro que recibí de ' + CONTENIDO.empresa.nombre + ' la difusión semestral de la Ley 21.643: los canales internos para denunciar el acoso sexual, el acoso laboral y la violencia en el trabajo, mi derecho a denunciar ante la Inspección del Trabajo, las medidas de resguardo y las prestaciones de seguridad social disponibles.' }; };
+
