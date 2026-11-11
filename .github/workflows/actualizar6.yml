@@ -1,0 +1,25 @@
+name: Corregir panel GL Capacita
+on:
+  push:
+    paths: ['.github/workflows/actualizar6.yml']
+permissions:
+  contents: write
+jobs:
+  corregir:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Corregir carga del panel
+        run: |
+          python3 - <<'PY'
+          p = 'js/admin.js'; s = open(p, encoding='utf-8').read()
+          a = "llamar('adminResumen').then(function (r) { A.datos = r;"
+          b = "llamar('adminResumen').then(function (r) { (r.trabajadores || []).forEach(function (t) { ['run','nombre','cargo','telefono','correo','fechaRegistro','fechaInicio','fechaLimite'].forEach(function (k) { if (t[k] != null && typeof t[k] !== 'string') t[k] = String(t[k]); }); }); A.datos = r;"
+          assert s.count(a) == 1
+          open(p, 'w', encoding='utf-8').write(s.replace(a, b))
+          PY
+          git config user.name "GL Capacita"
+          git config user.email "glcapacita@users.noreply.github.com"
+          git add -A
+          git commit -m "GL Capacita: el panel carga aunque el teléfono venga como número"
+          git push
