@@ -432,20 +432,26 @@ var PLAN = {
       ] },
 
     { id: 'prrd', titulo: 'Emergencias en faena y en el taller', sub: 'PDR-01 faenas · PDR-02 taller de mantención ROV',
-      horas: 1, doc: 'certificado', vigenciaMeses: 12, plazoMeses: 0, cargos: '*',
-      contenidos: 'Amenazas en faena y en el taller · Organización y roles · Hombre al agua · Incendio y baterías de litio · Calefacción y monóxido de carbono · Sismo y tsunami · Teléfonos de emergencia',
+      horas: 1, duracionMin: 60, doc: 'certificado', vigenciaMeses: 12, plazoMeses: 0, cargos: '*',
+      contenidos: 'Amenazas en faena y en el taller · Organización y roles (LRC, encargado de evacuación) · Método ACCEDER · Hombre al agua · Accidente en zona aislada · Temporal · Sismo y tsunami · Pérdida de comunicación · Incendio y baterías de litio · Monóxido de carbono · Derrames y emergencia eléctrica · Evacuación · Recursos y teléfonos · Simulacro de escritorio',
       etapas: [
-        { id: 'l1', tipo: 'leccion', titulo: 'Cápsula: los planes de emergencia de GL', minMin: 8 },
+        { id: 'l1', tipo: 'leccion', titulo: 'Cápsula 1: los planes de emergencia de GL', minMin: 10 },
+        { id: 'l2', tipo: 'leccion', titulo: 'Cápsula 2: los planes de respuesta paso a paso', minMin: 15 },
         { id: 'j1', tipo: 'juego', titulo: '¿Qué haces? Situaciones de emergencia' },
-        { id: 'j2', tipo: 'juego', titulo: 'Recursos de emergencia del taller' },
+        { id: 'l3', tipo: 'leccion', titulo: 'Cápsula 3: tu rol, recursos y comunicaciones', minMin: 10 },
+        { id: 'j2', tipo: 'juego', titulo: 'Recursos de emergencia', tituloTaller: 'Recursos de emergencia del taller' },
+        { id: 't1', tipo: 'taller', titulo: 'Taller: simulacro de escritorio', minMin: 15 },
         { id: 'q1', tipo: 'quiz', titulo: 'Evaluación', banco: 'prrd' }
       ] },
 
     { id: 'epp', titulo: 'EPP: uso, cuidado y reposición', sub: 'Procedimiento de EPP v02 · capacitación de 1 hora',
-      horas: 1, doc: 'certificado', vigenciaMeses: 12, plazoMeses: 0, cargos: '*',
-      contenidos: 'Selección y certificación del EPP · Entrega gratuita y registro · Uso y ajuste correcto · Mantención · Criterios de reposición',
+      horas: 1, duracionMin: 60, doc: 'certificado', vigenciaMeses: 12, plazoMeses: 0, cargos: '*',
+      contenidos: 'Selección y certificación del EPP · EPP según los riesgos del cargo (Matriz IPER) · Entrega gratuita y registro · Uso y ajuste correcto · Mantención · Criterios de reposición · Autoinspección',
       etapas: [
-        { id: 'l1', tipo: 'leccion', titulo: 'Cápsula: tu EPP de principio a fin', minMin: 10 },
+        { id: 'l1', tipo: 'leccion', titulo: 'Cápsula 1: tu EPP de principio a fin', minMin: 10 },
+        { id: 'l2', tipo: 'leccion', titulo: 'Cápsula 2: el EPP de cada riesgo de tu cargo', minMin: 10 },
+        { id: 'j2', tipo: 'juego', titulo: '¿Qué EPP para cada riesgo?' },
+        { id: 'l3', tipo: 'leccion', titulo: 'Cápsula 3: cómo se usa, ajusta y cuida', minMin: 10 },
         { id: 'j1', tipo: 'juego', titulo: '¿Sirve o se repone?' },
         { id: 't1', tipo: 'taller', titulo: 'Taller: inspecciona tu propio EPP', minMin: 15 },
         { id: 'q1', tipo: 'quiz', titulo: 'Evaluación', banco: 'epp' },
@@ -453,11 +459,15 @@ var PLAN = {
       ] },
 
     { id: 'acc', titulo: 'Qué hacer ante un accidente', sub: 'PRO-ACC-01 · notificación e investigación',
-      horas: 1, doc: 'certificado', vigenciaMeses: 12, plazoMeses: 0, cargos: '*',
-      contenidos: 'Accidente del trabajo, de trayecto, grave y fatal · Denuncia DIAT · Suspensión y notificación · Investigación · Estudiantes y seguro escolar',
+      horas: 1, duracionMin: 60, doc: 'certificado', vigenciaMeses: 12, plazoMeses: 0, cargos: '*',
+      contenidos: 'Accidente del trabajo, de trayecto, grave y fatal · Primeros pasos · Denuncia DIAT · Suspensión y notificación · Derechos en la ACHS · Estudiantes y seguro escolar · Investigación y árbol de causas · Taller de investigación',
       etapas: [
-        { id: 'l1', tipo: 'leccion', titulo: 'Cápsula: paso a paso ante un accidente', minMin: 8 },
+        { id: 'l1', tipo: 'leccion', titulo: 'Cápsula 1: paso a paso ante un accidente', minMin: 10 },
         { id: 'j1', tipo: 'juego', titulo: '¿Leve, grave o fatal?' },
+        { id: 'l2', tipo: 'leccion', titulo: 'Cápsula 2: la DIAT, el trayecto y tus derechos', minMin: 10 },
+        { id: 'j2', tipo: 'juego', titulo: 'Ordena el accidente grave' },
+        { id: 'l3', tipo: 'leccion', titulo: 'Cápsula 3: investigar para que no se repita', minMin: 10 },
+        { id: 't1', tipo: 'taller', titulo: 'Taller: investiga un accidente', minMin: 15 },
         { id: 'q1', tipo: 'quiz', titulo: 'Evaluación', banco: 'acc' }
       ] }
   ]
@@ -473,11 +483,15 @@ var PLAN = {
   P.forEach(function (p) {
     var id = p[0].toLowerCase();
     PLAN.cursos.push({ id: id, titulo: p[0] + ' · ' + p[1], sub: p[0].indexOf('PRT') === 0 ? 'Protocolo de la empresa' : 'Procedimiento de trabajo seguro', pts: p[0],
-      horas: 1, doc: 'certificado', vigenciaMeses: 12, plazoMeses: 0, cargos: p[2],
-      contenidos: 'Objetivo y alcance · Responsabilidades · EPP · Secuencia de trabajo · Criterios de detención · Puntos clave del ' + p[0],
+      horas: 1, duracionMin: 60, doc: 'certificado', vigenciaMeses: 12, plazoMeses: 0, cargos: p[2],
+      contenidos: 'Objetivo y alcance · Responsabilidades por cargo · EPP · Secuencia de trabajo · Riesgos de la tarea según la Matriz IPER · Criterios de detención · Taller de casos · Puntos clave del ' + p[0],
       etapas: [
-        { id: 'l1', tipo: 'leccion', titulo: 'Cápsula: el procedimiento paso a paso', minMin: 8 },
+        { id: 'l1', tipo: 'leccion', titulo: 'Cápsula 1: el procedimiento paso a paso', minMin: 10 },
+        { id: 'ld', tipo: 'leccion', titulo: 'Cápsula 2: quién hace qué y el documento completo', minMin: 12 },
         { id: 'j1', tipo: 'juego', titulo: 'Ordena la secuencia' },
+        { id: 'lr', tipo: 'leccion', titulo: 'Cápsula 3: los riesgos de esta tarea (Matriz IPER)', minMin: 12 },
+        { id: 'j2', tipo: 'juego', titulo: '¿Detengo o continúo?' },
+        { id: 't1', tipo: 'taller', titulo: 'Taller: casos del procedimiento', minMin: 12 },
         { id: 'q1', tipo: 'quiz', titulo: 'Evaluación', banco: id },
         { id: 'f1', tipo: 'firma', titulo: 'Firma: recibí y comprendí el ' + p[0] }
       ] });
@@ -5104,6 +5118,157 @@ Object.keys(_PTS).forEach(function (cod) {
   CONTENIDO.firmas[id + '.f1'] = function (cargo) {
     return { texto: 'Declaro que recibí, leí y comprendí el ' + cod + ' de ' + CONTENIDO.empresa.nombre + ', su secuencia de trabajo, EPP y criterios de detención, y que me comprometo a cumplirlo en mi cargo de ' + _nombreCargo(cargo) + '.',
       lista: P.detener.map(function (d) { return ['Detener si', d]; }) };
+  };
+});
+
+/* =====================================================================
+   AMPLIACIÓN A 1 HORA: EMERGENCIAS, EPP, ACCIDENTES Y PROCEDIMIENTOS
+   ===================================================================== */
+
+/* ---------- Emergencias (PDR-01 y PDR-02) ---------- */
+CONTENIDO.lecciones['prrd.l2'] = function (cargo) {
+  var area = PLAN.area(cargo);
+  var faena = [
+    { t: 'Hombre al agua (PDR-01)', l: ['Grita «¡Hombre al agua!» indicando el lado, no pierdas de vista a la persona y señálala con el brazo.', 'Lanza un aro o elemento flotante.', 'Detén el ROV y déjalo quieto, lejos de la persona, para no golpearla ni enredarla con el umbilical.', 'Nadie se lanza al agua: el rescate lo dirige el patrón o el jefe de centro.', 'Recuperada la persona: abrigarla y evaluar hipotermia. Si es de GL, es accidente grave (rescate): PRO-ACC-01.'] },
+    { t: 'Accidente grave en zona aislada', l: ['Detén la operación, asegura el lugar y da primeros auxilios.', 'Avisa al jefe de centro y a la Jefa de Operaciones.', 'Pide apoyo a la ACHS (1404), al SAMU (131) o a la Autoridad Marítima (137) para la evacuación.', 'La Jefa de Operaciones coordina el traslado y la recepción en puerto.', 'Si es grave o fatal: se suspende la faena, se notifica al 600 42 000 22 y no se altera el lugar.'] },
+    { t: 'Temporal, viento y marejada', l: ['La Jefa de Operaciones revisa los avisos de mal tiempo y cierre de puertos y avisa a los pilotos.', 'Suspende la operación cuando el viento, el oleaje o la visibilidad no permiten trabajar seguro, aunque la faena no esté terminada.', 'Asegura el ROV, el umbilical y los equipos y repliégate a un lugar protegido.', 'Con puerto cerrado no se navega.'] },
+    { t: 'Sismo y tsunami en faena', l: ['Suspende la operación y afírmate; no corras por pasillos ni pontones.', 'Si el sismo impide mantenerse en pie: plan de tsunami de inmediato, sin esperar alerta oficial.', 'Repliegue a la embarcación y salida a aguas profundas según el plan de la mandante; en tierra, a zona alta.', 'En fiordos, un deslizamiento puede generar olas sin aviso.', 'Se vuelve solo cuando la autoridad cancela la alerta.'] },
+    { t: 'Pérdida de comunicación con el piloto', l: ['El piloto avisa a la Jefa de Operaciones el inicio, los cambios y el término de cada jornada.', 'Si no reporta, la Jefa de Operaciones lo llama, le escribe y luego contacta al jefe de centro o al patrón.', 'Si no se confirma que está bien, pide a la mandante que lo ubique y, si se teme un accidente en el mar, avisa a la Autoridad Marítima (137).', 'Si te quedas sin señal, usa la radio del centro o de la embarcación para avisar.'] }
+  ];
+  var taller = [
+    { t: 'Incendio en el taller (PDR-02)', l: ['Da la alarma a viva voz: «¡Emergencia, evacuar!».', 'El encargado de taller corta la energía si es seguro.', 'Extintor solo si el fuego es incipiente y tienes la salida a tu espalda.', 'Si el fuego crece: todos a la zona de seguridad, llamar a Bomberos (132) y no volver a entrar.'] },
+    { t: 'Incendio de baterías de litio', l: ['Batería que se calienta, se hincha, humea o huele a quemado: aleja a las personas y, si es seguro, los combustibles.', 'No uses agua sin instrucción ni la tomes con las manos.', 'Ventila y evacúa si hay humo: los gases son tóxicos.', 'Toda batería dañada se rotula y se retira de uso.'] },
+    { t: 'Monóxido de carbono y calefacción', l: ['Mareo, dolor de cabeza, náuseas o alarma del detector de CO: apaga la estufa, ventila y salgan todos al aire libre.', 'Si alguien está confuso o inconsciente: SAMU (131) o ACHS (1404).', 'Fuego en el cañón de la combustión lenta: cerrar el tiraje, evacuar y llamar a Bomberos (132).'] },
+    { t: 'Derrame químico y emergencia eléctrica', l: ['Derrame: ventila, aleja fuentes de ignición, usa el kit de derrames con guantes y avisa al encargado.', 'Salpicadura en los ojos: lavaojos o agua corriente por 15 minutos y atención en la ACHS.', 'Contacto eléctrico: corta la energía antes de tocar a la persona; nunca la toques si sigue en contacto.', 'Llama a la ACHS (1404) o al SAMU (131).'] },
+    { t: 'Evacuación del taller', l: ['El encargado de taller es el líder de respuesta: activa la alarma y decide la evacuación.', 'El asistente es el encargado de evacuación: abre la salida, revisa baños, cocina, bodega y el comedor del segundo piso, y guía a las personas.', 'Nadie vuelve a buscar sus cosas.', 'En la zona de seguridad se cuenta a todos, incluidos estudiantes y visitas, y se informa si falta alguien.', 'Sismo: alejarse de las repisas altas, agacharse, cubrirse y afirmarse; luego evacuar.'] }
+  ];
+  var d = area === 'faena' ? faena : area === 'taller' ? taller : faena.slice(0, 2).concat(taller.slice(0, 1), faena.slice(4), taller.slice(4));
+  return { documento: area === 'faena' ? 'pts/PDR-01.pdf' : 'pts/PDR-02.pdf', diapositivas: [{ t: 'Los planes de respuesta, paso a paso', x: 'Cada emergencia tiene su forma de actuar. Estas son las que más importan en tu trabajo como ' + _nombreCargo(cargo) + '.' }].concat(d) };
+};
+CONTENIDO.lecciones['prrd.l3'] = function (cargo) {
+  var area = PLAN.area(cargo);
+  return { diapositivas: [
+    { t: 'Tu rol como ' + _nombreCargo(cargo), l: CONTENIDO.rolEmergencia[cargo] || [] },
+    { t: 'Cómo se da el aviso', l: ['Quién informa y desde dónde (centro, embarcación o taller).', 'Qué pasó: tipo de emergencia.', 'Cuántas personas afectadas y cuántos lesionados.', 'Qué apoyo se necesita.', area === 'faena' ? 'Medios: celular, WhatsApp, radio del centro o VHF canal 16.' : 'Medios: celular; los teléfonos de emergencia están publicados en el taller.'] },
+    { t: area === 'faena' ? 'Recursos de emergencia en la faena' : 'Recursos de emergencia del taller', l: area === 'faena' ? ['Del centro o la embarcación: aros salvavidas, balsa, extintores, botiquín, radio VHF y zona de seguridad. Los conoces en la inducción de la mandante.', 'Tuyos (los entrega GL): chaleco salvavidas certificado, ropa térmica e impermeable, celular con cargador, linterna y botiquín personal básico.'] : ['Extintores vigentes, señalizados y accesibles.', 'Botiquín sin medicamentos, lavaojos y kit de derrames.', 'Detector de monóxido de carbono.', 'Teléfonos de emergencia publicados y salida siempre despejada.'] },
+    { t: 'Simulacros', l: ['GL hace al menos un ejercicio al año en el taller y otro en faena (de escritorio o práctico, coordinado con una mandante).', 'En cada simulacro se registran los participantes y se evalúa qué mejorar.', 'Participar es obligatorio: es la forma de saber que el plan funciona.'] },
+    { t: 'Números de emergencia', l: CONTENIDO.directorio.map(function (x) { return x.n + ': ' + x.t; }) }
+  ] };
+};
+CONTENIDO.talleres['prrd.t1'] = function (cargo) {
+  var area = PLAN.area(cargo);
+  var P = area === 'faena' ? [
+    { tipo: 'lectura', titulo: 'Situación 1', texto: 'Estás operando el ROV desde el pontón. Un operario del centro que recogía cabos cae al agua por el lado del umbilical.' },
+    { tipo: 'abierta', p: '¿Qué haces en los primeros 2 minutos?', min: 70, alApr: true, modelo: 'Gritar «¡Hombre al agua!» e indicar el lado, no perderlo de vista y señalarlo, lanzar un aro, detener el ROV lejos de la persona, no lanzarse al agua y avisar al jefe de centro, que dirige el rescate. Luego, abrigarlo y evaluar hipotermia.' },
+    { tipo: 'lectura', titulo: 'Situación 2', texto: 'Estás en un centro alejado y se produce un sismo que hace difícil mantenerse en pie. No hay alerta oficial y no tienes señal de celular.' },
+    { tipo: 'abierta', p: '¿Qué haces y cómo avisas a GL?', min: 60, alApr: true, modelo: 'Plan de tsunami de inmediato: suspender, seguir al jefe de centro o patrón, repliegue a la embarcación y salida a aguas profundas o a zona alta. Avisar por la radio del centro o de la embarcación para que informen a GL. Volver solo cuando la autoridad cancele la alerta.' },
+    { tipo: 'registro', titulo: 'Recursos de emergencia que conoces en tu faena actual', opciones: ['Lo sé', 'No estoy seguro'], items: ['Dónde están los aros salvavidas y la balsa', 'Dónde está el extintor más cercano al pontón', 'Cuál es la zona de seguridad del centro', 'Cómo te comunicas con el jefe de centro', 'Dónde está el botiquín', 'Qué hacer si pierdes la señal de celular'] }
+  ] : area === 'taller' ? [
+    { tipo: 'lectura', titulo: 'Situación 1', texto: 'Son las 16:30. Una batería de litio que está cargando en el banco empieza a humear y se hincha. En el taller están tú, otra persona y un estudiante en práctica.' },
+    { tipo: 'abierta', p: '¿Qué haces, en qué orden y quién hace qué?', min: 70, alApr: true, modelo: 'Dar la alarma, alejar a las personas, no tomar la batería ni echar agua, cortar la energía si es seguro, evacuar si hay humo y llamar a Bomberos (132) si el fuego crece. El encargado lidera; el asistente guía la evacuación y cuenta a las personas en la zona de seguridad.' },
+    { tipo: 'lectura', titulo: 'Situación 2', texto: 'En la mañana, con las estufas encendidas, el estudiante dice que le duele la cabeza y está mareado.' },
+    { tipo: 'abierta', p: '¿Qué puede estar pasando y qué hacen?', min: 50, alApr: true, modelo: 'Puede ser monóxido de carbono. Apagar la estufa, ventilar y salir todos al aire libre; si no mejora o está confuso, llamar al SAMU (131) o a la ACHS (1404); avisar al encargado y revisar la estufa y el detector.' },
+    { tipo: 'registro', titulo: 'Recursos de emergencia del taller', opciones: ['Lo sé', 'No estoy seguro'], items: ['Dónde están los extintores y cuál usar', 'Dónde está el botiquín', 'Dónde está el lavaojos y el kit de derrames', 'Dónde está la zona de seguridad', 'Quién es el líder de respuesta y quién el encargado de evacuación', 'Dónde cortar la energía'] }
+  ] : [
+    { tipo: 'lectura', titulo: 'Situación 1', texto: 'Son las 20:45. Un piloto que trabaja solo en un centro alejado no ha avisado el término de su jornada y no contesta el celular.' },
+    { tipo: 'abierta', p: '¿Qué pasos sigues para ubicarlo y cuándo das aviso a la autoridad?', min: 60, alApr: true, modelo: 'Intentar contacto por celular y WhatsApp, luego con el jefe de centro o el patrón; si no se confirma que está bien, pedir a la mandante que lo ubique y, si se teme un accidente en el mar, avisar a la Autoridad Marítima (137) con la última posición conocida.' },
+    { tipo: 'lectura', titulo: 'Situación 2', texto: 'Te avisan que un piloto se cayó en el pontón y no puede mover la pierna. Está a 3 horas de navegación del puerto.' },
+    { tipo: 'abierta', p: '¿A quién llamas y qué coordinas?', min: 50, alApr: true, modelo: 'Con la mandante y la ACHS (1404) se coordina la evacuación y la recepción en puerto. Si es grave, se suspende la faena, se notifica al 600 42 000 22 y se presenta la DIAT en 24 horas (PRO-ACC-01).' }
+  ];
+  return { intro: 'Simulacro de escritorio: lee cada situación y responde qué harías tú, según tu rol en el plan de emergencia. Tus respuestas quedan registradas para la Asesora en Prevención de Riesgos.', partes: P };
+};
+
+/* ---------- EPP ---------- */
+CONTENIDO.lecciones['epp.l2'] = function (cargo) {
+  var R = _riesgosCargo(cargo).filter(function (r) { return r.eppItems && r.eppItems.length; }).sort(function (a, b) { return b.nivel - a.nivel; }).slice(0, 14);
+  return { diapositivas: [{ t: 'Cada EPP tiene un porqué', x: 'Tu EPP sale de la Matriz IPER: cada elemento protege de un riesgo concreto de tu cargo de ' + _nombreCargo(cargo) + '.' }].concat(
+    R.map(function (r) { return { t: r.riesgo, x: 'Puede causar: ' + _lista(r.consecuencias, 1).join('') + '.', l: r.eppItems.slice(0, 7).map(function (e) { return 'EPP: ' + e; }) }; }),
+    [{ t: 'Recuerda', l: ['El EPP es la última barrera: no reemplaza los otros controles.', 'Usa el EPP certificado que entrega GL, no uno propio.', 'Si un EPP te incomoda o no te queda, avisa: hay otras tallas o modelos.'] }]) };
+};
+CONTENIDO.juegos['epp.j2'] = function (cargo) {
+  var usados = {}, pares = [];
+  _riesgosCargo(cargo).slice().sort(function (a, b) { return b.nivel - a.nivel; }).forEach(function (r) {
+    var e = (r.eppItems || []).filter(function (x) { return !usados[x.toLowerCase()]; })[0];
+    if (e && pares.length < 6) { usados[e.toLowerCase()] = 1; pares.push({ a: r.riesgo, b: e }); }
+  });
+  return { intro: 'Une cada riesgo de tu cargo con un EPP que lo controla, según la Matriz IPER.', partes: [{ tipo: 'emparejar', pares: pares }] };
+};
+CONTENIDO.lecciones['epp.l3'] = { documento: 'pts/EPP.pdf', diapositivas: [
+  { t: 'Chaleco salvavidas', l: ['Siempre puesto y abrochado en pontones, embarcaciones y muelles.', 'Revisa cierres, correas, flotación, silbato y luz.', 'Los autoinflables se revisan según el fabricante (cartucho y fecha).', 'Se enjuaga con agua dulce y se seca a la sombra; no se usa como cojín.'] },
+  { t: 'Protección de ojos y cara', l: ['Lentes de seguridad en el banco, con herramientas eléctricas, al cortar tensores y al desarmar equipos.', 'Lentes con filtro UV en faena.', 'Limpios y sin rayas que impidan ver; se reponen si están dañados.'] },
+  { t: 'Guantes: uno para cada riesgo', l: ['Nitrilo: solventes, limpiacontactos, resinas, masillas y desinfectantes.', 'Anticorte: hélices, herramientas cortantes y corte de tensores.', 'De seguridad: maniobras con el umbilical y maletas.', 'Térmicos: frío en faena.', 'Nunca guantes sueltos cerca de piezas que giran.'] },
+  { t: 'Calzado, ropa y protección solar', l: ['Calzado de seguridad antideslizante, con puntera y suela en buen estado.', 'Traje de agua y ropa térmica en capas en faena.', 'Protector solar, gorro legionario y ropa manga larga ante la radiación UV.'] },
+  { t: 'Protección respiratoria y auditiva', l: ['Mascarilla o respirador con el filtro que indica la HDS del producto o para humos de soldadura.', 'Sin barba en la zona de sellado; se prueba el ajuste cada vez.', 'Protector auditivo donde esté indicado, todo el tiempo de exposición.'] },
+  { t: 'Entrega, cuidado y reposición', l: ['El EPP se entrega gratis y queda registrado con tu firma.', 'Límpialo, sécalo y guárdalo lejos del sol, del calor y de químicos.', 'Revísalo antes de cada jornada y pide reposición apenas se deteriora.', 'El EPP dañado se entrega para su eliminación; no se repara de forma casera.'] }
+] };
+
+/* ---------- Accidentes (PRO-ACC-01) ---------- */
+CONTENIDO.lecciones['acc.l2'] = { documento: 'pts/PRO-ACC-01.pdf', diapositivas: [
+  { t: 'La DIAT', x: 'La Denuncia Individual de Accidente del Trabajo informa el accidente a la ACHS.', l: ['La presenta la empresa dentro de 24 horas.', 'Si la empresa no la hace, puede hacerla el trabajador, un familiar, el médico tratante o cualquier persona que conozca los hechos.', 'Sin denuncia, la atención puede no quedar cubierta por el seguro.'] },
+  { t: 'Accidente de trayecto', l: ['Es el que ocurre en el trayecto directo de ida o regreso entre tu casa y el trabajo (Ley 16.744).', 'Se acredita con parte de Carabineros, testigos, certificado de atención u otros medios.', 'Avisa a la Jefa de Operaciones y acude a la ACHS.', 'En los traslados a faenas por cuenta de la empresa, el accidente es del trabajo.'] },
+  { t: 'Tus derechos en la ACHS', l: ['Atención médica gratuita hasta tu recuperación: consultas, exámenes, hospitalización, medicamentos y rehabilitación.', 'Subsidio mientras dura el reposo.', 'Indemnización o pensión si queda una incapacidad permanente.', 'Si la ACHS dice que tu caso no es laboral y no estás de acuerdo, puedes reclamar ante la SUSESO.'] },
+  { t: 'Estudiantes en práctica', l: ['Los cubre el seguro escolar (Ley 16.744, art. 3, y D.S. 313).', 'Se atienden en un servicio de salud público: SAPU, SAR, CESFAM u hospital.', 'Se completa la declaración del accidente escolar y se avisa al CFT.', 'El encargado de taller avisa de inmediato a la Jefa de Operaciones.'] },
+  { t: 'Accidente grave o fatal: lo que hace la empresa', l: ['Suspende de inmediato la faena y aísla el lugar.', 'Notifica de inmediato a la Inspección del Trabajo y a la SEREMI de Salud: 600 42 000 22.', 'Avisa a la ACHS y presenta la DIAT dentro de 24 horas.', 'Solo reanuda con autorización de la autoridad.', 'Investiga junto a la ACHS.'] }
+] };
+CONTENIDO.juegos['acc.j2'] = { intro: 'Ordena lo que se hace ante un accidente grave, del primer paso al último.', partes: [{ tipo: 'ordenar', enunciado: 'Accidente grave', items: ['Primeros auxilios y traslado del lesionado', 'Suspender la faena y aislar el lugar', 'Notificar de inmediato a la Inspección del Trabajo y a la SEREMI de Salud', 'Presentar la DIAT dentro de 24 horas', 'Investigar las causas con la ACHS', 'Reanudar solo con autorización de la autoridad'], fb: 'Primero las personas; luego suspender, notificar, denunciar e investigar.' }] };
+CONTENIDO.lecciones['acc.l3'] = { documento: 'pts/PRO-ACC-01.pdf', diapositivas: [
+  { t: 'Para qué se investiga', x: 'La investigación busca causas, no culpables. Su objetivo es que el accidente no se repita.', l: ['Se investigan los accidentes y también los incidentes o casi accidentes.', 'Se inicia dentro de 24 horas y participan la Asesora, el Delegado de SST, la jefatura directa y los involucrados.'] },
+  { t: 'Los hechos', l: ['Se reconstruye lo que pasó: quién, qué, dónde, cuándo y cómo.', 'Se entrevista al accidentado y a los testigos por separado.', 'Se revisan fotos, equipos, EPP, el checklist y el procedimiento.', 'Solo hechos comprobados, sin opiniones ni juicios.'] },
+  { t: 'El árbol de causas', x: 'Se parte del daño y se pregunta «¿qué fue necesario para que esto ocurriera?» hasta llegar a las causas de fondo.', l: ['Causas inmediatas: actos y condiciones (batería conectada, lentes sin usar, aerosol junto al cautín).', 'Causas básicas: factores personales y del trabajo (falta de capacitación, mantención, supervisión o planificación).', 'Cada causa debe tener al menos una medida.'] },
+  { t: 'Medidas y seguimiento', l: ['Medidas inmediatas para que no vuelva a pasar mientras se investiga.', 'Medidas correctivas con responsable y plazo.', 'Se revisan la Matriz IPER y el procedimiento afectado.', 'Se comparten las lecciones aprendidas con todo el personal.'] }
+] };
+CONTENIDO.talleres['acc.t1'] = function (cargo) {
+  var taller = PLAN.area(cargo) === 'taller';
+  return { intro: 'Investiga un caso simulado como lo haría el equipo. Tus respuestas quedan registradas para la Asesora en Prevención de Riesgos.', partes: [
+    { tipo: 'lectura', titulo: 'El caso (simulado)', texto: taller ? 'Un viernes en la tarde, con apuro por entregar un ROV, un trabajador empezó a desarmarlo con la batería conectada y sin lentes. Al soltar un conector saltó una chispa y una esquirla le golpeó el ojo. El aerosol limpiacontactos estaba abierto junto al banco.\n\nNo se había hecho la revisión de inicio y el encargado estaba fuera del taller.' : 'Al terminar la jornada con viento fuerte, un piloto recuperaba el ROV desde el borde del pontón. El pasillo estaba mojado y él llevaba el chaleco sin abrochar. Al tirar del umbilical resbaló y cayó al agua. Lo recuperaron en 3 minutos con hipotermia leve.\n\nEse día no avisó a la Jefa de Operaciones el cambio de tarea y el jefe de centro no sabía que estaba operando.' },
+    { tipo: 'abierta', p: '¿Cuáles fueron las causas inmediatas (actos y condiciones)?', min: 50, alApr: true, modelo: taller ? 'Batería conectada, sin lentes, aerosol inflamable abierto junto al banco.' : 'Pasillo mojado, chaleco sin abrochar, tirar del umbilical desde el borde con viento fuerte.' },
+    { tipo: 'abierta', p: '¿Cuáles fueron las causas básicas (por qué existían esas condiciones)?', min: 50, alApr: true, modelo: taller ? 'Apuro por la entrega, falta de supervisión, no se hizo la revisión de inicio, inflamables fuera del gabinete.' : 'Presión por terminar con mal clima, falta de coordinación con el centro y con la Jefa de Operaciones, sin verificación del chaleco.' },
+    { tipo: 'abierta', p: 'Propón tres medidas, una de ellas de ingeniería, con su responsable.', min: 60, alApr: true, modelo: taller ? 'Gabinete para inflamables junto al banco (ingeniería, encargado de taller); checklist de inicio con batería desconectada (administrativo, encargado); lentes obligatorios en el banco (EPP, cada trabajador).' : 'Punto de recuperación con baranda o línea de vida provisoria (ingeniería, mandante y GL); aviso obligatorio de cambios de tarea (administrativo, piloto y Jefa de Operaciones); chaleco abrochado antes de cada maniobra (EPP, piloto).' },
+    { tipo: 'abierta', p: '¿Qué hubiera pasado sin ese EPP o sin ayuda cerca? ¿Qué te dice esto?', min: 30, modelo: 'El EPP o la ayuda cercana evitó un daño mayor, pero es la última barrera: las causas de fondo se corrigen igual.' }
+  ] };
+};
+
+/* ---------- Procedimientos (PTS-ROV-001, PTS-TAL-001, PRT-EST-01): cápsulas extra ---------- */
+Object.keys(_PTS).forEach(function (cod) {
+  var P = _PTS[cod], id = cod.toLowerCase(), proc = CONTENIDO.procedimientos.filter(function (x) { return x.id === cod; })[0] || { claves: [], archivo: '' };
+  CONTENIDO.lecciones[id + '.ld'] = function (cargo) {
+    var area = PLAN.area(cargo);
+    var d = [{ t: 'Quién participa en el ' + cod, x: 'Un procedimiento funciona cuando cada persona sabe qué le toca. Estas son las responsabilidades de cada cargo:' }];
+    Object.keys(P.roles).forEach(function (k) {
+      d.push({ t: (k === cargo ? 'Tú: ' : '') + _nombreCargo(k), l: P.roles[k], tip: k === cargo ? 'Esta es tu parte. Si no puedes cumplir alguno de estos puntos, avisa antes de empezar.' : undefined });
+    });
+    d.push({ t: 'Antes de empezar', l: area === 'faena' ? ['Inducción de la mandante y conocer su plan de emergencia.', 'Aviso de inicio a la Jefa de Operaciones.', 'Revisión del clima, del estado del mar y de la coordinación con buzos y embarcaciones.', 'Checklist preoperacional del equipo (anexo A) y EPP completo.'] : ['Orden del banco e inflamables guardados.', 'Revisión de herramientas, cargadores y EPP.', 'Asignación de tareas: el estudiante solo hace las que su plan de práctica permite, siempre supervisado.', 'Registro en el libro del taller (REG-TAL-01).'] });
+    if (proc.archivo) d.push({ t: 'Lee el documento completo', x: 'Abre el ' + cod + ' con el botón «Ver documento completo» y revísalo con calma: alcance, responsabilidades, desarrollo de cada actividad y registros.', l: ['Fíjate en los pasos que te tocan a ti.', 'Busca los criterios para detener el trabajo.', 'Anota tus dudas para consultarlas a la Jefa de Operaciones, al encargado de taller o a la Asesora.'], tip: 'El tiempo que pasas leyendo el documento cuenta para la duración de la capacitación.' });
+    d.push({ t: 'Registros del procedimiento', l: area === 'faena' ? ['Checklist preoperacional del ROV.', 'Avisos de inicio y término de jornada.', 'Registro de entrega de EPP y de capacitación.', 'Reporte de incidentes y condiciones inseguras.'] : ['Libro de registros del taller (REG-TAL-01): mantenciones, carga de baterías, inducciones.', 'Registro de entrega de EPP y de capacitación.', 'Reporte de incidentes y condiciones inseguras.'] });
+    return { documento: proc.archivo, diapositivas: d };
+  };
+  CONTENIDO.lecciones[id + '.lr'] = function (cargo) {
+    var todos = _riesgosCargo(cargo), R = todos.filter(function (r) { return (r.pts || []).some(function (x) { return String(x).toUpperCase().indexOf(cod) >= 0; }); });
+    if (R.length < 3) R = todos.filter(function (r) { return r.nivel >= 2; });
+    R = R.slice().sort(function (a, b) { return b.nivel - a.nivel; }).slice(0, 14);
+    var d = [{ t: 'Los riesgos de esta tarea', x: 'Según la Matriz IPER v02 de GL, al trabajar con el ' + cod + ' como ' + _nombreCargo(cargo) + ' te expones a estos riesgos. Para cada uno verás qué lo provoca, qué puede causar y cómo se controla.' }];
+    R.forEach(function (r, i) {
+      d.push({ t: (i + 1) + '. ' + r.riesgo + ' · ' + r.nivelTxt, x: 'Peligro: ' + _lista(r.peligros, 2).join(' / ') + '.\nPuede causar: ' + _lista(r.consecuencias, 1).join('') + '.',
+        l: [].concat(_lista(r.ingenieria, 1).map(function (c) { return 'Ingeniería: ' + c; }), _lista(r.administrativo, 2).map(function (c) { return 'Administrativo: ' + c; }), r.eppItems && r.eppItems.length ? ['EPP: ' + r.eppItems.slice(0, 6).join(', ')] : []) });
+    });
+    d.push({ t: 'Recuerda', l: ['Los controles funcionan solo si están todos: si falta uno, la tarea no empieza.', 'Si ves un riesgo que no está en esta lista, avísalo: la Matriz se actualiza con lo que informan los trabajadores.'] });
+    return { diapositivas: d };
+  };
+  CONTENIDO.juegos[id + '.j2'] = { intro: 'Durante el trabajo pasan cosas. Decide en cada caso si detienes el trabajo y avisas, o si puedes continuar según el ' + cod + '.', partes: [{ tipo: 'clasificar',
+    categorias: [{ id: 'det', nombre: 'Detengo y aviso' }, { id: 'sig', nombre: 'Puedo continuar' }],
+    items: P.detener.slice(0, 5).map(function (x) { return { t: x.charAt(0).toUpperCase() + x.slice(1), c: 'det', fb: 'Es un criterio de detención del ' + cod + ': se detiene, se avisa y solo se reanuda cuando se corrige.' }; }).concat(
+      [].concat.apply([], P.pasos.map(function (st) { return st.l.slice(0, 2); })).slice(0, 4).map(function (x) { return { t: 'Se cumple: ' + x.charAt(0).toLowerCase() + x.slice(1), c: 'sig', fb: 'Es parte normal del procedimiento: si se cumple, la tarea sigue.' }; })) }] };
+  CONTENIDO.talleres[id + '.t1'] = function (cargo) {
+    var paso = P.pasos[Math.min(1, P.pasos.length - 1)], det = P.detener[0] || 'falta un control crítico', faena = PLAN.area(cargo) === 'faena';
+    return { intro: 'Aplica el ' + cod + ' a situaciones reales. Tus respuestas quedan registradas para la Asesora en Prevención de Riesgos.', partes: [
+      { tipo: 'abierta', p: 'En la etapa «' + paso.t + '», ¿qué podría salir mal y qué haces tú para evitarlo, en tu rol de ' + _nombreCargo(cargo) + '?', min: 60, alApr: true,
+        modelo: 'Una buena respuesta nombra un paso concreto (por ejemplo: ' + (paso.l[0] || '') + '), el riesgo si no se cumple y la acción que te corresponde: verificar, avisar o detener.' },
+      { tipo: 'abierta', p: 'Ocurre esto: «' + det + '». ¿Qué haces, a quién avisas y cuándo se puede reanudar el trabajo?', min: 50, alApr: true,
+        modelo: faena ? 'Se detiene la operación de inmediato, se avisa al jefe de centro y a la Jefa de Operaciones, se corrige la condición y solo se reanuda cuando los controles están en su lugar.' : 'Se detiene la tarea de inmediato, se avisa al encargado de taller, se corrige la condición y solo se reanuda cuando los controles están en su lugar.' },
+      { tipo: 'vep', desdeIper: true, n: 2 },
+      { tipo: 'abierta', p: '¿Qué parte del ' + cod + ' cuesta más cumplir en la práctica y qué propondrías para mejorarla?', min: 30, alApr: true,
+        modelo: 'Gracias. La Asesora revisa estas respuestas al actualizar el procedimiento.' }
+    ] };
   };
 });
 

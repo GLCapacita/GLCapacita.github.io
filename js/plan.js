@@ -125,20 +125,26 @@ var PLAN = {
       ] },
 
     { id: 'prrd', titulo: 'Emergencias en faena y en el taller', sub: 'PDR-01 faenas · PDR-02 taller de mantención ROV',
-      horas: 1, doc: 'certificado', vigenciaMeses: 12, plazoMeses: 0, cargos: '*',
-      contenidos: 'Amenazas en faena y en el taller · Organización y roles · Hombre al agua · Incendio y baterías de litio · Calefacción y monóxido de carbono · Sismo y tsunami · Teléfonos de emergencia',
+      horas: 1, duracionMin: 60, doc: 'certificado', vigenciaMeses: 12, plazoMeses: 0, cargos: '*',
+      contenidos: 'Amenazas en faena y en el taller · Organización y roles (LRC, encargado de evacuación) · Método ACCEDER · Hombre al agua · Accidente en zona aislada · Temporal · Sismo y tsunami · Pérdida de comunicación · Incendio y baterías de litio · Monóxido de carbono · Derrames y emergencia eléctrica · Evacuación · Recursos y teléfonos · Simulacro de escritorio',
       etapas: [
-        { id: 'l1', tipo: 'leccion', titulo: 'Cápsula: los planes de emergencia de GL', minMin: 8 },
+        { id: 'l1', tipo: 'leccion', titulo: 'Cápsula 1: los planes de emergencia de GL', minMin: 10 },
+        { id: 'l2', tipo: 'leccion', titulo: 'Cápsula 2: los planes de respuesta paso a paso', minMin: 15 },
         { id: 'j1', tipo: 'juego', titulo: '¿Qué haces? Situaciones de emergencia' },
-        { id: 'j2', tipo: 'juego', titulo: 'Recursos de emergencia del taller' },
+        { id: 'l3', tipo: 'leccion', titulo: 'Cápsula 3: tu rol, recursos y comunicaciones', minMin: 10 },
+        { id: 'j2', tipo: 'juego', titulo: 'Recursos de emergencia', tituloTaller: 'Recursos de emergencia del taller' },
+        { id: 't1', tipo: 'taller', titulo: 'Taller: simulacro de escritorio', minMin: 15 },
         { id: 'q1', tipo: 'quiz', titulo: 'Evaluación', banco: 'prrd' }
       ] },
 
     { id: 'epp', titulo: 'EPP: uso, cuidado y reposición', sub: 'Procedimiento de EPP v02 · capacitación de 1 hora',
-      horas: 1, doc: 'certificado', vigenciaMeses: 12, plazoMeses: 0, cargos: '*',
-      contenidos: 'Selección y certificación del EPP · Entrega gratuita y registro · Uso y ajuste correcto · Mantención · Criterios de reposición',
+      horas: 1, duracionMin: 60, doc: 'certificado', vigenciaMeses: 12, plazoMeses: 0, cargos: '*',
+      contenidos: 'Selección y certificación del EPP · EPP según los riesgos del cargo (Matriz IPER) · Entrega gratuita y registro · Uso y ajuste correcto · Mantención · Criterios de reposición · Autoinspección',
       etapas: [
-        { id: 'l1', tipo: 'leccion', titulo: 'Cápsula: tu EPP de principio a fin', minMin: 10 },
+        { id: 'l1', tipo: 'leccion', titulo: 'Cápsula 1: tu EPP de principio a fin', minMin: 10 },
+        { id: 'l2', tipo: 'leccion', titulo: 'Cápsula 2: el EPP de cada riesgo de tu cargo', minMin: 10 },
+        { id: 'j2', tipo: 'juego', titulo: '¿Qué EPP para cada riesgo?' },
+        { id: 'l3', tipo: 'leccion', titulo: 'Cápsula 3: cómo se usa, ajusta y cuida', minMin: 10 },
         { id: 'j1', tipo: 'juego', titulo: '¿Sirve o se repone?' },
         { id: 't1', tipo: 'taller', titulo: 'Taller: inspecciona tu propio EPP', minMin: 15 },
         { id: 'q1', tipo: 'quiz', titulo: 'Evaluación', banco: 'epp' },
@@ -146,11 +152,15 @@ var PLAN = {
       ] },
 
     { id: 'acc', titulo: 'Qué hacer ante un accidente', sub: 'PRO-ACC-01 · notificación e investigación',
-      horas: 1, doc: 'certificado', vigenciaMeses: 12, plazoMeses: 0, cargos: '*',
-      contenidos: 'Accidente del trabajo, de trayecto, grave y fatal · Denuncia DIAT · Suspensión y notificación · Investigación · Estudiantes y seguro escolar',
+      horas: 1, duracionMin: 60, doc: 'certificado', vigenciaMeses: 12, plazoMeses: 0, cargos: '*',
+      contenidos: 'Accidente del trabajo, de trayecto, grave y fatal · Primeros pasos · Denuncia DIAT · Suspensión y notificación · Derechos en la ACHS · Estudiantes y seguro escolar · Investigación y árbol de causas · Taller de investigación',
       etapas: [
-        { id: 'l1', tipo: 'leccion', titulo: 'Cápsula: paso a paso ante un accidente', minMin: 8 },
+        { id: 'l1', tipo: 'leccion', titulo: 'Cápsula 1: paso a paso ante un accidente', minMin: 10 },
         { id: 'j1', tipo: 'juego', titulo: '¿Leve, grave o fatal?' },
+        { id: 'l2', tipo: 'leccion', titulo: 'Cápsula 2: la DIAT, el trayecto y tus derechos', minMin: 10 },
+        { id: 'j2', tipo: 'juego', titulo: 'Ordena el accidente grave' },
+        { id: 'l3', tipo: 'leccion', titulo: 'Cápsula 3: investigar para que no se repita', minMin: 10 },
+        { id: 't1', tipo: 'taller', titulo: 'Taller: investiga un accidente', minMin: 15 },
         { id: 'q1', tipo: 'quiz', titulo: 'Evaluación', banco: 'acc' }
       ] }
   ]
@@ -166,11 +176,15 @@ var PLAN = {
   P.forEach(function (p) {
     var id = p[0].toLowerCase();
     PLAN.cursos.push({ id: id, titulo: p[0] + ' · ' + p[1], sub: p[0].indexOf('PRT') === 0 ? 'Protocolo de la empresa' : 'Procedimiento de trabajo seguro', pts: p[0],
-      horas: 1, doc: 'certificado', vigenciaMeses: 12, plazoMeses: 0, cargos: p[2],
-      contenidos: 'Objetivo y alcance · Responsabilidades · EPP · Secuencia de trabajo · Criterios de detención · Puntos clave del ' + p[0],
+      horas: 1, duracionMin: 60, doc: 'certificado', vigenciaMeses: 12, plazoMeses: 0, cargos: p[2],
+      contenidos: 'Objetivo y alcance · Responsabilidades por cargo · EPP · Secuencia de trabajo · Riesgos de la tarea según la Matriz IPER · Criterios de detención · Taller de casos · Puntos clave del ' + p[0],
       etapas: [
-        { id: 'l1', tipo: 'leccion', titulo: 'Cápsula: el procedimiento paso a paso', minMin: 8 },
+        { id: 'l1', tipo: 'leccion', titulo: 'Cápsula 1: el procedimiento paso a paso', minMin: 10 },
+        { id: 'ld', tipo: 'leccion', titulo: 'Cápsula 2: quién hace qué y el documento completo', minMin: 12 },
         { id: 'j1', tipo: 'juego', titulo: 'Ordena la secuencia' },
+        { id: 'lr', tipo: 'leccion', titulo: 'Cápsula 3: los riesgos de esta tarea (Matriz IPER)', minMin: 12 },
+        { id: 'j2', tipo: 'juego', titulo: '¿Detengo o continúo?' },
+        { id: 't1', tipo: 'taller', titulo: 'Taller: casos del procedimiento', minMin: 12 },
         { id: 'q1', tipo: 'quiz', titulo: 'Evaluación', banco: id },
         { id: 'f1', tipo: 'firma', titulo: 'Firma: recibí y comprendí el ' + p[0] }
       ] });
