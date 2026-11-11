@@ -87,7 +87,7 @@
   setInterval(function () {
     if (!Tiempo.item) return;
     if (document.visibilityState === 'visible' && Date.now() - Tiempo.activo < Tiempo.limite) Tiempo.acc += 5;
-    if (Date.now() - ultVolcado > 60000) { ultVolcado = Date.now(); Tiempo.volcar(); SRV.enviar(S.token); }
+    if (Date.now() - ultVolcado > 150000) { ultVolcado = Date.now(); Tiempo.volcar(); SRV.enviar(S.token); }
     if (typeof Tiempo.onTick === 'function') Tiempo.onTick();
   }, 5000);
   document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'hidden') { Tiempo.volcar(); SRV.enviar(S.token); } });
@@ -278,6 +278,7 @@
     var fin = completo(cur.id), vig = cur.vigenciaMeses ? (cur.vigenciaMeses % 12 === 0 ? (cur.vigenciaMeses / 12) + (cur.vigenciaMeses === 12 ? ' año' : ' años') : cur.vigenciaMeses + ' meses') : '';
     html += '<div class="puerto"><h2>' + (cert && !cert.vencido ? 'Capacitación aprobada' : 'Certificado') + '</h2>' +
       (cert && !cert.vencido ? '<p>Código ' + h(cert.codigo) + (cert.vence ? ' · vigente hasta ' + fechaTxt(cert.vence) : '') + '.</p><button class="btn btn-pri" type="button" data-cert>Ver mi certificado</button>'
+        : cert && cert.vencido ? '<p>Tu certificado anterior (' + h(cert.codigo) + ') venció el ' + fechaTxt(cert.vence) + '. Pide a la Jefa de Operaciones o a la Asesora que reinicie esta capacitación para renovarlo.</p>'
         : fin && durMin && seg < durMin * 60 ? '<p>Completaste todas las etapas. El programa dura <b>' + h(PLAN.duracionTxt(durMin)) + '</b> y llevas ' + hTxt(seg) + ' registrados: te faltan unos <b>' + Math.ceil((durMin * 60 - seg) / 60) + ' minutos</b>. Repasa las cápsulas, los documentos y los talleres del curso; el tiempo se suma solo mientras estás activo en la plataforma.</p>'
         : fin ? '<p>Completaste todas las etapas. Ya puedes emitir tu certificado.</p><button class="btn btn-pri" type="button" data-cert>Emitir mi certificado</button>'
           : '<p>Se emite al completar todas las etapas' + (esDs && reqDs44().requiereSesiones ? ' y las sesiones' : '') + '. Queda guardado con tu RUN' + (vig ? ' y vale ' + vig : '') + '.</p>') + '</div>';
@@ -467,10 +468,14 @@
   function vistaLeccion(e) {
     var def = CONTENIDO.lecciones[e.id]; if (typeof def === 'function') def = def(S.perfil.cargo);
     var D = (def && def.diapositivas) || [], k = 0, visto = {}, ok = hecho(e.id), voz = window.speechSynthesis;
+    /* retoma en la última diapositiva vista (por trabajador y cápsula) */
+    var claveMarca = 'glc_marca_' + (S.perfil && S.perfil.run || '') + '_' + e.id, marca = SRV.ls(claveMarca) || {};
+    if (!ok && marca.k > 0 && marca.k < D.length) { k = marca.k; (marca.v || []).forEach(function (j) { if (j < D.length) visto[j] = 1; }); }
+    function guardarMarca() { if (!ok) SRV.ls(claveMarca, { k: k, v: Object.keys(visto).map(Number) }); }
     Tiempo.iniciar(e.id);
     function texto(d) { return [d.t, d.x || ''].concat(d.l || [], d.tip ? [d.tip] : []).join('. '); }
     function pintar() {
-      var d = D[k] || { t: 'Sin contenido' }; visto[k] = 1;
+      var d = D[k] || { t: 'Sin contenido' }; visto[k] = 1; guardarMarca();
       var falta = Math.max(0, e.minMin * 60 - prog(e.id).segundos), todas = Object.keys(visto).length >= D.length;
       app.innerHTML = encabezadoEtapa(e) + '<section class="tarjeta diapo"><div class="contador">' + (k + 1) + ' de ' + D.length + '</div><h2>' + h(d.t) + '</h2>' +
         (d.x ? String(d.x).split(/\n\n+/).map(function (p) { return '<p>' + h(p).replace(/\n/g, '<br>') + '</p>'; }).join('') : '') +
