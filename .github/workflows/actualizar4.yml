@@ -1,0 +1,22 @@
+name: Instalar GL Capacita
+on:
+  push:
+    paths: ['.github/workflows/actualizar4.yml']
+permissions:
+  contents: write
+jobs:
+  instalar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Copiar archivos de GL
+        run: |
+          curl -sSL https://codeload.github.com/pyvdesinfecciones2015-lab/pyv-capacita/tar.gz/1f968fbe7578dd646424926162391f4d0c41bc4a -o gl.tgz
+          mkdir /tmp/gl && tar xzf gl.tgz -C /tmp/gl --strip-components=1 && rm gl.tgz
+          rm -f /tmp/gl/servidor_gl.gs
+          cp -r /tmp/gl/. .
+          git config user.name "GL Capacita"
+          git config user.email "glcapacita@users.noreply.github.com"
+          git add -A
+          git commit -m "GL Capacita: versiones de documentos y recapacitación masiva"
+          git push
