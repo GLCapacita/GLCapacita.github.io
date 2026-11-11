@@ -1,3 +1,7 @@
+.rev-q { border-top: 1px solid var(--bruma-2); padding: 10px 0; }
+.rev-q ol { margin: 6px 0 8px 20px; padding: 0; }
+.rev-ok { color: var(--alga); font-weight: 600; }
+#demo-banda a { color: inherit; font-weight: 600; }
 /* GL Capacita — estilos */
 :root {
   --fiordo: #1F4E6E;

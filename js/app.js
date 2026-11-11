@@ -55,6 +55,7 @@
     return cur.etapas.filter(function (e) { return e.tipo !== 'sesiones' || req; });
   }
   function disponible(e) {
+    if (SRV.rev) return true;
     var L = etapasVisibles(e.curso);
     if (L[0] && L[0].id === e.id) return true;
     if (e.tipo === 'sesiones') return hecho('ds44.manual');
@@ -116,7 +117,7 @@
   function guardarSesion() { SRV.ls('glc_sesion', { token: S.token, perfil: S.perfil }); }
   function salir(expirada) {
     Tiempo.detener(); SRV.ls('glc_sesion', null); S.token = null; S.perfil = null;
-    $('#btn-salir').classList.add('oculto'); red(); vistaIngreso(expirada ? 'Tu sesión expiró. Ingresa de nuevo con tu RUN y clave.' : '');
+    $('#btn-salir').classList.add('oculto'); red(); if (SRV.rev) return vistaRevision(); vistaIngreso(expirada ? 'Tu sesión expiró. Ingresa de nuevo con tu RUN y clave.' : '');
   }
   $('#btn-salir').addEventListener('click', function () { if (!SRV.demo && SRV.pendientes() && !confirm('Hay avances sin enviar todavía. Si sales ahora podrían perderse. ¿Salir igual?')) return; salir(); });
 
@@ -144,6 +145,40 @@
       '<div class="etiqueta-mod">' + h(m ? m.titulo : cur.titulo) + '</div><h1>' + h(PLAN.tituloEtapa(e, S.perfil.cargo)) + '</h1>';
   }
   function enlazarVolver() { $$('[data-volver]').forEach(function (b) { b.addEventListener('click', function () { ir('ruta', S.curso); }); }); }
+
+  /* ---------- modo revisión (asesora / administración) ---------- */
+  function runRevision(cargo) {
+    var n = 77000000 + PLAN.cargos.map(function (c) { return c.id; }).indexOf(cargo) + 1, s = 0, m = 2, x = n;
+    while (x > 0) { s += (x % 10) * m; x = Math.floor(x / 10); m = m === 7 ? 2 : m + 1; }
+    var d = 11 - (s % 11); return n + '-' + (d === 11 ? '0' : d === 10 ? 'K' : String(d));
+  }
+  function entrarRevision(cargo, msg) {
+    var run = runRevision(cargo), nom = 'Revisión · ' + PLAN.cargo(cargo).nombre;
+    return SRV.llamar('ingresar', { run: run, pin: '0000' }).then(function (r) {
+      if (r.ok) return r;
+      return SRV.llamar('registrar', { nombre: nom, run: run, cargo: cargo, telefono: '', pin: '0000', consentimiento: true });
+    }).then(function (r) { if (r.ok) iniciarSesion(r); else if (msg) msg.innerHTML = '<div class="aviso error">' + h(r.error || r.mensaje) + '</div>'; });
+  }
+  function vistaRevision() {
+    S.vista = 'revision';
+    var okAdmin = (SRV.ls('admin_ok') || 0) > Date.now();
+    var grupo = function (areas, et) { return '<optgroup label="' + et + '">' + PLAN.cargos.filter(function (c) { return areas.indexOf(c.area) >= 0; }).map(function (c) { return '<option value="' + c.id + '">' + h(c.nombre) + '</option>'; }).join('') + '</optgroup>'; };
+    app.innerHTML = '<section class="tarjeta" style="margin-top:18px"><h1>Modo revisión</h1>' +
+      '<p>Recorre la plataforma como la vería un trabajador del cargo que elijas, sin tiempos mínimos y con todas las etapas abiertas. Nada de lo que hagas aquí se registra como capacitación ni llega a la planilla.</p>' +
+      '<form id="f-rev">' + (okAdmin ? '' : '<label class="campo">Clave de administración<input type="password" name="clave" autocomplete="current-password" required></label>') +
+      '<label class="campo">Ver como<select name="cargo" required>' + grupo(['faena'], 'Pilotos en faena') + grupo(['taller'], 'Taller de mantención ROV') + grupo(['mixto'], 'Gerencia') + '</select></label>' +
+      '<div class="msg"></div><button class="btn btn-pri btn-bloque" type="submit">Entrar a revisar</button></form></section>';
+    $('#f-rev').addEventListener('submit', function (ev) {
+      ev.preventDefault(); var f = ev.target, msg = $('.msg', f), btn = $('button[type=submit]', f), cargo = f.cargo.value;
+      btn.disabled = true; msg.innerHTML = '';
+      var paso = okAdmin ? Promise.resolve({ ok: true }) : SRV.llamarReal('adminIngresar', { clave: f.clave.value });
+      paso.then(function (r) {
+        if (!r.ok || r.rol !== undefined && r.rol !== 'admin') { btn.disabled = false; msg.innerHTML = '<div class="aviso error">' + h(r.error || 'Clave incorrecta.') + '</div>'; return; }
+        SRV.ls('admin_ok', Date.now() + 8 * 3600 * 1000);
+        return entrarRevision(cargo, msg).then(function () { btn.disabled = false; });
+      }).catch(function () { btn.disabled = false; msg.innerHTML = '<div class="aviso error">No se pudo conectar con el servidor.</div>'; });
+    });
+  }
 
   /* ---------- ingreso y registro ---------- */
   function vistaIngreso(msg) {
@@ -504,9 +539,18 @@
     var p = prog(e.id), ok = p.estado === 'completado';
     app.innerHTML = encabezadoEtapa(e) + '<section class="tarjeta"><p>Evaluación formativa: al responder verás si acertaste y por qué. Necesitas ' + Math.round(PLAN.notaAprobacion * 100) + '% para avanzar y puedes repetirla las veces que necesites.</p>' +
       (ok ? '<div class="aviso ok">Ya la aprobaste. Puedes practicarla de nuevo si quieres.</div>' : p.intentos ? '<div class="aviso info">Llevas ' + p.intentos + ' intento(s). Repasa la retroalimentación y vuelve a intentarlo.</div>' : '') +
-      '<button class="btn btn-pri btn-bloque" type="button" id="comenzar">' + (p.intentos ? 'Intentar de nuevo' : 'Comenzar') + '</button></section>';
+      '<button class="btn btn-pri btn-bloque" type="button" id="comenzar">' + (p.intentos ? 'Intentar de nuevo' : 'Comenzar') + '</button>' +
+      (SRV.rev ? '<button class="btn btn-sec btn-bloque" type="button" id="ver-banco" style="margin-top:10px">Ver todas las preguntas con sus respuestas</button>' : '') + '</section><section id="banco"></section>';
     enlazarVolver();
     $('#comenzar').addEventListener('click', function () { correrQuiz(e); });
+    if ($('#ver-banco')) $('#ver-banco').addEventListener('click', function () {
+      var Q = preguntasDe(e);
+      $('#banco').innerHTML = '<section class="tarjeta"><h2>Banco de preguntas (' + Q.length + ')</h2><p class="peq suave">Vista de revisión: el trabajador las ve en orden aleatorio, una a la vez.</p>' + Q.map(function (q, n) {
+        return '<div class="rev-q"><p><b>' + (n + 1) + '. ' + h(q.p) + '</b></p><ol>' + q.op.map(function (t, j) { return '<li' + ((j + 1) === q.ok ? ' class="rev-ok"' : '') + '>' + h(t) + ((j + 1) === q.ok ? ' ✓' : '') + '</li>'; }).join('') + '</ol>' +
+          (q.fbOk ? '<p class="peq"><b>Si acierta:</b> ' + h(q.fbOk) + '</p>' : '') + (q.fbNo ? '<p class="peq"><b>Si se equivoca:</b> ' + h(q.fbNo) + '</p>' : '') + '</div>';
+      }).join('') + '</section>';
+      $('#ver-banco').remove();
+    });
   }
   function correrQuiz(e) {
     var preguntas = preguntasDe(e).map(function (q) {
@@ -676,9 +720,15 @@
   }
 
   /* ---------- arranque ---------- */
-  if (SRV.demo) $('#demo-banda').classList.remove('oculto');
+  if (SRV.rev) {
+    PLAN.etapas.forEach(function (e) { if (e.minMin) e.minMin = 0; });
+    PLAN.cursos.forEach(function (c) { (c.etapas || []).forEach(function (e) { if (e.minMin) e.minMin = 0; }); });
+    var bd = $('#demo-banda'); bd.innerHTML = '<b>Modo revisión</b> · sin tiempos y sin registro · <a href="#" id="rev-cargo">Cambiar de cargo</a>'; bd.classList.remove('oculto');
+    $('#rev-cargo').addEventListener('click', function (ev) { ev.preventDefault(); salir(); });
+  } else if (SRV.demo) $('#demo-banda').classList.remove('oculto');
   var ses = SRV.ls('glc_sesion');
-  if (ses && ses.token) {
+  if (!ses && SRV.rev) vistaRevision();
+  else if (ses && ses.token) {
     S.token = ses.token; S.perfil = ses.perfil; aplicarExtras(); $('#btn-salir').classList.remove('oculto'); red(); ir('cursos');
     if (navigator.onLine || SRV.demo) SRV.llamar('estado', { token: S.token }).then(function (r) {
       if (r.ok) { S.perfil = r.perfil; aplicarExtras(); limpiarLocalConfirmado(); guardarSesion(); if (S.vista === 'ruta') vistaRuta(); else if (S.vista === 'cursos') vistaCursos(); SRV.enviar(S.token); }

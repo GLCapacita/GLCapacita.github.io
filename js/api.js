@@ -2,10 +2,12 @@
 /* GL Capacita — conexión con el servidor (Google Apps Script) y cola sin conexión.
    En modo demostración, el mismo core.js corre en el navegador con almacenamiento local. */
 var SRV = (function () {
-  var DEMO = !CONFIG.API_URL;
+  var REV = /[?&]revisar(=|&|$)/.test(location.search);
+  var DEMO = !CONFIG.API_URL || REV;
   var COLA = 'glc_cola_v1';
 
   function ls(k, v) {
+    if (REV) k = 'rev_' + k;
     try { if (v === undefined) { var x = localStorage.getItem(k); return x ? JSON.parse(x) : null; } if (v === null) localStorage.removeItem(k); else localStorage.setItem(k, JSON.stringify(v)); } catch (e) { return null; }
   }
 
@@ -87,6 +89,12 @@ var SRV = (function () {
   function avisar(r) { oyentes.forEach(function (f) { try { f(r); } catch (e) { } }); }
   function limpiarCola() { ls(COLA, null); }
 
-  return { demo: DEMO, llamar: llamar, encolar: encolar, enviar: enviar, pendientes: pendientes, segundosPendientes: segundosPendientes, onCambio: onCambio, ls: ls, limpiarCola: limpiarCola, envDemo: envDemo };
+  /* Modo revisión: solo la verificación de la clave de administración va al servidor real. */
+  function llamarReal(accion, cuerpo) {
+    var b = {}; for (var k in (cuerpo || {})) b[k] = cuerpo[k]; b.accion = accion;
+    if (!CONFIG.API_URL) return Promise.resolve(CORE.manejar(envDemo(), b));
+    return fetch(CONFIG.API_URL, { method: 'POST', body: JSON.stringify(b), headers: { 'Content-Type': 'text/plain;charset=utf-8' }, redirect: 'follow' }).then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); });
+  }
+  return { rev: REV, llamarReal: llamarReal, demo: DEMO, llamar: llamar, encolar: encolar, enviar: enviar, pendientes: pendientes, segundosPendientes: segundosPendientes, onCambio: onCambio, ls: ls, limpiarCola: limpiarCola, envDemo: envDemo };
 })();
 
