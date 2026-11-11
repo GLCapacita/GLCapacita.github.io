@@ -43,7 +43,9 @@ var SRV = (function () {
         nuevaCarpetaExpediente: function (n) { return 'demo/Expedientes/' + n; },
         copiarRegistro: function () { return ''; },
         urlCarpeta: function () { return ''; },
-        urlRaiz: function () { return ''; }
+        urlRaiz: function () { return ''; },
+        guardarFirma: function (nombre, dataUrl) { return dataUrl; },
+        leerImagen: function (id) { return id; }
       },
       archivos: function () { return archivos; }
     };

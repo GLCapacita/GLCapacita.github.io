@@ -26,6 +26,11 @@ var CORE = (function () {
     FACILITADOR_RUN: '',
     FACILITADOR_TITULO: 'Experta en Prevención de Riesgos',
     FACILITADOR_REGISTRO: '',
+    RL_NOMBRE: 'Omar Guajardo Calbucan',
+    RL_RUN: '',
+    RL_CARGO: 'Gerente General',
+    FIRMA_APR_ID: '',
+    FIRMA_RL_ID: '',
     REQUIERE_SESIONES: 'NO',
     SESIONES_REQUERIDAS: '2',
     HORAS_CURSO: '8',
@@ -86,6 +91,12 @@ var CORE = (function () {
   function cursoDe(item) { return String(item || '').split('.')[0]; }
   function aplica(c, cargo) { return c.cargos === '*' || c.cargos.indexOf(cargo) >= 0; }
   function logo() { return typeof LOGO_EMPRESA !== 'undefined' ? LOGO_EMPRESA : ''; }
+  function firmaImg(src) { return src && /^data:image\//.test(src) ? '<img class="fimg" src="' + src + '" alt="">' : '<div class="fesp"></div>'; }
+  /* Carga las imágenes de firma (guardadas en Drive, carpeta Firmas) para incrustarlas en el PDF. */
+  function conFirmas(env, C) {
+    if (env.drive.leerImagen) { try { C._firmaApr = C.FIRMA_APR_ID ? env.drive.leerImagen(C.FIRMA_APR_ID) : ''; C._firmaRl = C.FIRMA_RL_ID ? env.drive.leerImagen(C.FIRMA_RL_ID) : ''; } catch (e) { } }
+    return C;
+  }
 
   /* ---------- acceso a datos ---------- */
   function cfg(env) { var c = env.config(), o = {}; for (var k in CONFIG_DEFAULT) o[k] = (c[k] != null && c[k] !== '') ? c[k] : CONFIG_DEFAULT[k]; for (k in c) if (!(k in o)) o[k] = c[k]; return o; }
@@ -160,7 +171,7 @@ var CORE = (function () {
 
   function constanciaHtml(C, titulo, cuerpo, pie) {
     return '<html><head><meta charset="utf-8"><style>body{font-family:Arial,Helvetica,sans-serif;color:#1b2a31;font-size:11pt;margin:36px}' +
-      'h1{font-size:16pt;color:#0f3b4c;margin:0 0 4px}h2{font-size:12pt;color:#0f3b4c;margin:18px 0 6px}.emp{color:#555;font-size:9pt;margin-bottom:18px}' +
+      'h1{font-size:16pt;color:#1F4E6E;margin:0 0 4px}h2{font-size:12pt;color:#1F4E6E;margin:18px 0 6px}.emp{color:#555;font-size:9pt;margin-bottom:18px}' +
       'table{border-collapse:collapse;width:100%;font-size:9pt}td,th{border:1px solid #c9d3d7;padding:4px 6px;text-align:left;vertical-align:top}th{background:#e8eef0}' +
       '.pie{margin-top:24px;font-size:8.5pt;color:#555}.logo{float:right;width:64px;margin:0 0 8px 12px}.firma{height:90px;border-bottom:1px solid #333;margin-top:10px}</style></head><body>' +
       (logo() ? '<img class="logo" src="' + logo() + '" alt="">' : '') +
@@ -179,13 +190,13 @@ var CORE = (function () {
       : 'completó y aprobó la capacitación <b>' + esc(cur.titulo) + '</b> impartida por la empresa en modalidad e-learning asincrónica, con evaluación de aprendizaje.';
     return '<html><head><meta charset="utf-8"><style>' +
       '@page{size:A4 portrait;margin:0}body{margin:0;font-family:Arial,Helvetica,sans-serif;color:#1b2a31}' +
-      '.hoja{border:10px solid #0f3b4c;margin:28px;padding:38px 44px;min-height:900px;position:relative}' +
-      '.banda{height:8px;background:#f26b1d;margin:-38px -44px 30px}' +
-      '.emp{font-size:10pt;color:#0f3b4c;font-weight:bold}.rut{font-size:9pt;color:#555}' +
-      'h1{font-size:30pt;color:#0f3b4c;margin:40px 0 6px;letter-spacing:1px}.sub{font-size:12pt;color:#555;margin-bottom:34px;max-width:75%}' +
+      '.hoja{border:10px solid #1F4E6E;margin:28px;padding:38px 44px;min-height:900px;position:relative}' +
+      '.banda{height:8px;background:#E07F1F;margin:-38px -44px 30px}' +
+      '.emp{font-size:10pt;color:#1F4E6E;font-weight:bold}.rut{font-size:9pt;color:#555}' +
+      'h1{font-size:26pt;color:#1F4E6E;margin:40px 120px 6px 0;letter-spacing:.5px}.sub{font-size:12pt;color:#555;margin-bottom:30px;max-width:75%}' +
       '.nombre{font-size:24pt;font-weight:bold;margin:8px 0 2px}.runc{font-size:12pt;color:#333;margin-bottom:22px}' +
-      'p{font-size:11.5pt;line-height:1.55}table{border-collapse:collapse;margin:16px 0;font-size:10.5pt}td{padding:4px 14px 4px 0;vertical-align:top}td.k{color:#555}' +
-      '.firmas{margin-top:60px}.firma{display:inline-block;vertical-align:top;width:46%;border-top:1px solid #1b2a31;padding-top:6px;font-size:10pt;margin-right:6%}' +
+      'p{font-size:11.5pt;line-height:1.55}table{border-collapse:collapse;margin:16px 0;font-size:10.5pt}td{padding:4px 14px 4px 0;vertical-align:top}td.k{color:#555;width:150px}' +
+      '.firmas{margin:34px 140px 0 0}.firma{display:inline-block;vertical-align:bottom;width:46%;font-size:9.5pt;margin-right:7%;text-align:center}.fimg{display:block;height:72px;max-width:100%;margin:0 auto 2px;object-fit:contain}.fesp{height:74px}.flinea{border-top:1px solid #1b2a31;padding-top:6px}' +
       '.qr{position:absolute;right:44px;bottom:40px;text-align:center;font-size:8pt;color:#555}.qr img{width:110px;height:110px}' +
       '.nota{font-size:8.5pt;color:#555;margin-top:30px;max-width:70%}' +
       '.logo{position:absolute;right:44px;top:44px;width:96px}' +
@@ -202,8 +213,8 @@ var CORE = (function () {
       '<tr><td class="k">Vigencia</td><td>' + (cert.vence ? 'Hasta ' + esc(cert.vence) : 'Sin vencimiento; se renueva ante cambios del cargo o del procedimiento') + '</td></tr>' +
       '<tr><td class="k">Contenidos</td><td>' + esc(cur.contenidos || '') + '</td></tr>' +
       '<tr><td class="k">Código de verificación</td><td><b>' + esc(cert.codigo) + '</b></td></tr></table>' +
-      '<div class="firmas"><div class="firma">' + esc(C.FACILITADOR_NOMBRE) + '<br>' + esc(C.FACILITADOR_TITULO) + (C.FACILITADOR_RUN ? '<br>RUN ' + esc(C.FACILITADOR_RUN) : '') + (C.FACILITADOR_REGISTRO ? '<br>Reg. ' + esc(C.FACILITADOR_REGISTRO) : '') + '<br>Facilitadora</div>' +
-      '<div class="firma" style="margin-right:0">Representante legal<br>' + esc(C.EMPRESA) + '</div></div>' +
+      '<div class="firmas"><div class="firma">' + firmaImg(C._firmaApr) + '<div class="flinea"><b>' + esc(C.FACILITADOR_NOMBRE) + '</b><br>' + esc(C.FACILITADOR_TITULO) + (C.FACILITADOR_RUN ? '<br>RUN ' + esc(C.FACILITADOR_RUN) : '') + (C.FACILITADOR_REGISTRO ? '<br>Reg. SEREMI ' + esc(C.FACILITADOR_REGISTRO) : '') + '<br>Facilitadora · Prevención de Riesgos</div></div>' +
+      '<div class="firma" style="margin-right:0">' + firmaImg(C._firmaRl) + '<div class="flinea"><b>' + esc(C.RL_NOMBRE || 'Representante legal') + '</b>' + (C.RL_RUN ? '<br>RUN ' + esc(C.RL_RUN) : '') + '<br>' + esc(C.RL_CARGO ? C.RL_CARGO + ' y Representante Legal' : 'Representante Legal') + '<br>' + esc(C.EMPRESA) + '</div></div></div>' +
       '<div class="nota">Registro de acceso, permanencia, avance y evaluaciones disponible en el expediente de capacitación de la empresa. Verificación: ' + esc(verif) + '</div>' +
       (qrDataUrl ? '<div class="qr"><img src="' + qrDataUrl + '"><br>Verificar</div>' : '') +
       '</div></body></html>';
@@ -404,7 +415,7 @@ var CORE = (function () {
       c = { codigo: prefijo + codigoCorto(env), run: t.run, nombre: t.nombre, cargo: t.cargo, ciclo: 1, fechaEmision: env.fmt(ahora, 'fecha'),
         vence: cur.vigenciaMeses ? env.fmt(sumarMeses(ahora, cur.vigenciaMeses), 'fecha') : '', horasProgramadas: cursoId === 'ds44' ? C.HORAS_CURSO : cur.horas,
         segundosRegistrados: R.segundos, archivoId: '', archivoUrl: '', estado: 'vigente', curso: cursoId };
-      var html = certificadoHtml(C, t, c, qr(urlVerif(C, c.codigo)), R.segundos);
+      var html = certificadoHtml(conFirmas(env, C), t, c, qr(urlVerif(C, c.codigo)), R.segundos);
       var f = env.drive.guardarPdf(t.carpetaId, (cur.doc === 'certificado' ? 'Certificado_' : 'Constancia_') + cursoId.toUpperCase() + '_' + c.codigo + '.pdf', html);
       c.archivoId = f.id || ''; c.archivoUrl = f.url || '';
       env.db.append('Certificados', c);
@@ -420,7 +431,7 @@ var CORE = (function () {
       log(env, t, 'certificado', cursoId, '', c.codigo, b.dispositivo);
       c._html = html; c._base64 = f.base64 || '';
     } else {
-      c._html = certificadoHtml(C, t, c, qr(urlVerif(C, c.codigo)), num(c.segundosRegistrados));
+      c._html = certificadoHtml(conFirmas(env, C), t, c, qr(urlVerif(C, c.codigo)), num(c.segundosRegistrados));
       c._base64 = env.drive.pdfBase64 ? env.drive.pdfBase64(c.archivoId) : '';
     }
     return { ok: true, certificado: { codigo: c.codigo, curso: cursoId, fechaEmision: c.fechaEmision, vence: c.vence, url: c.archivoUrl, html: c._html, pdf: c._base64 }, perfil: perfil(env, t) };
@@ -529,9 +540,19 @@ var CORE = (function () {
     }
     log(env, t, 'curso_reiniciado', cursoId, '', b.motivo || '', ''); return { ok: true };
   };
+  A.adminFirma = function (env, b) {
+    if (!admin(env, b, true)) return NO_AUT;
+    var k = b.quien === 'rl' ? 'FIRMA_RL_ID' : 'FIRMA_APR_ID';
+    if (!b.imagen) { env.setConfig(k, ''); return { ok: true }; }
+    if (!/^data:image\/(png|jpeg);base64,/.test(String(b.imagen)) || String(b.imagen).length > 700000) return { ok: false, error: 'La firma debe ser una imagen PNG o JPG de menos de 500 KB.' };
+    var id = env.drive.guardarFirma(k === 'FIRMA_RL_ID' ? 'Firma_representante_legal.png' : 'Firma_prevencion.png', b.imagen);
+    env.setConfig(k, id);
+    return { ok: true, id: id };
+  };
+
   A.adminConfig = function (env, b) {
     if (!admin(env, b, true)) return NO_AUT;
-    var permitidas = ['FACILITADOR_NOMBRE', 'FACILITADOR_RUN', 'FACILITADOR_TITULO', 'FACILITADOR_REGISTRO', 'REQUIERE_SESIONES', 'SESIONES_REQUERIDAS', 'HORAS_CURSO', 'MIN_MINUTOS_DS44', 'URL_SITIO', 'ORGANISMO', 'EMPRESA', 'RUT_EMPRESA'];
+    var permitidas = ['FACILITADOR_NOMBRE', 'FACILITADOR_RUN', 'FACILITADOR_TITULO', 'FACILITADOR_REGISTRO', 'REQUIERE_SESIONES', 'SESIONES_REQUERIDAS', 'HORAS_CURSO', 'MIN_MINUTOS_DS44', 'URL_SITIO', 'ORGANISMO', 'EMPRESA', 'RUT_EMPRESA', 'RL_NOMBRE', 'RL_RUN', 'RL_CARGO'];
     for (var k in (b.valores || {})) if (permitidas.indexOf(k) >= 0) env.setConfig(k, String(b.valores[k]));
     if (b.nuevaClaveAdmin) env.setConfig('ADMIN_CLAVE_HASH', sha256('gl-admin|' + b.nuevaClaveAdmin));
     if (b.nuevaClaveSupervisor) env.setConfig('SUPERVISOR_CLAVE_HASH', sha256('gl-admin|' + b.nuevaClaveSupervisor));
