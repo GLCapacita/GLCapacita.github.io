@@ -31,7 +31,7 @@
 
   function cargar() {
     app.innerHTML = '<div class="cargando">Cargando registros…</div>';
-    llamar('adminResumen').then(function (r) { A.datos = r; A.rol = r.rol; (r.extras || []).forEach(function (x) { if (x.estado === 'publicado') PLAN.registrarExtra(x); }); pintar(); }).catch(function (e) { if (e.message !== 'sesion') app.innerHTML = '<div class="aviso error">No se pudieron cargar los datos.</div>'; });
+    llamar('adminResumen').then(function (r) { (r.trabajadores || []).forEach(function (t) { ['run','nombre','cargo','telefono','correo','fechaRegistro','fechaInicio','fechaLimite'].forEach(function (k) { if (t[k] != null && typeof t[k] !== 'string') t[k] = String(t[k]); }); }); A.datos = r; A.rol = r.rol; (r.extras || []).forEach(function (x) { if (x.estado === 'publicado') PLAN.registrarExtra(x); }); pintar(); }).catch(function (e) { if (e.message !== 'sesion') app.innerHTML = '<div class="aviso error">No se pudieron cargar los datos.</div>'; });
   }
 
   function cdc(t) { return t.cursos && t.cursos[A.filtro.curso]; }
