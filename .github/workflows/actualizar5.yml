@@ -1,0 +1,22 @@
+name: Instalar GL Capacita
+on:
+  push:
+    paths: ['.github/workflows/actualizar5.yml']
+permissions:
+  contents: write
+jobs:
+  instalar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Copiar archivos de GL
+        run: |
+          curl -sSL https://codeload.github.com/pyvdesinfecciones2015-lab/pyv-capacita/tar.gz/736505445abb7186477ce5532c2daa6e6e7b4b54 -o gl.tgz
+          mkdir /tmp/gl && tar xzf gl.tgz -C /tmp/gl --strip-components=1 && rm gl.tgz
+          rm -f /tmp/gl/servidor_gl.gs
+          cp -r /tmp/gl/. .
+          git config user.name "GL Capacita"
+          git config user.email "glcapacita@users.noreply.github.com"
+          git add -A
+          git commit -m "GL Capacita: difusión semestral Ley Karin y reporte mensual"
+          git push
