@@ -2,7 +2,7 @@
 /* GL Capacita — catálogo de cursos (compartido entre la app y el servidor).
    Si cambias algo aquí, pega el mismo contenido en Plan.gs del Apps Script. */
 var PLAN = {
-  version: '2026.11-gl1',
+  version: '2026.11-gl2',
   notaAprobacion: 0.7,
 
   /* area: faena (pilotos en centros de cultivo y embarcaciones), taller (taller de mantención ROV) o mixto (gerencia: oficina, taller y visitas a faena) */
@@ -20,7 +20,7 @@ var PLAN = {
      minMin = minutos mínimos de permanencia real para dar la etapa por completada. */
   cursos: [
     { id: 'ds44', titulo: 'Curso obligatorio de prevención de riesgos', sub: 'Art. 16 D.S. 44 · 8 horas · Res. Ex. 1117/2026', obligatorio: true,
-      horas: 8, doc: 'certificado', vigenciaMeses: 24, plazoMeses: 3,
+      horas: 8, duracionMin: 480, doc: 'certificado', vigenciaMeses: 12, plazoMeses: 3,
       cargos: ['piloto', 'encargado_taller', 'asistente_taller', 'gerente_general', 'jefa_operaciones'],
       contenidos: 'Derechos y obligaciones (Ley 16.744 y D.S. 44) · Identificación de peligros y MIPER · Efectos en la salud · Medidas de control · Emergencias y desastres · Señalización · Incendios y extintores · Riesgos del cargo en GL · Talleres prácticos',
       modulos: [
@@ -63,32 +63,64 @@ var PLAN = {
         { id: 'encuesta', tipo: 'encuesta', titulo: 'Encuesta de satisfacción', modulo: 9 }
       ] },
 
-    { id: 'irl', titulo: 'Los riesgos de tu cargo (IRL)', sub: 'Información de los riesgos laborales · art. 15 D.S. 44', obligatorio: true,
-      horas: 1, doc: 'certificado', vigenciaMeses: 0, plazoMeses: 0, cargos: '*',
-      contenidos: 'Riesgos del cargo según la Matriz IPER v02 · Medidas preventivas y métodos de trabajo correctos · Rol en emergencias · Derechos de la persona trabajadora',
+    { id: 'irl', titulo: 'Los riesgos de tu cargo (IRL)', sub: 'Obligación de informar los riesgos laborales · art. 15 D.S. 44', obligatorio: true,
+      horas: 3, duracionMin: 180, doc: 'certificado', vigenciaMeses: 12, plazoMeses: 0, cargos: '*',
+      contenidos: 'Características del lugar de trabajo, equipos y orden y aseo · Riesgos del cargo según la Matriz IPER v02 · Evaluación P × S · Jerarquía de controles y métodos de trabajo correctos · Procedimientos del cargo · Productos y sustancias peligrosas (HDS y SGA) · Exposición a frío y radiación UV · Emergencias y rol en el plan · EPP · Qué hacer ante un accidente · Derechos y obligaciones',
       etapas: [
-        { id: 'l1', tipo: 'leccion', titulo: 'Cápsula: lo que puede pasar en tu trabajo', minMin: 8 },
+        { id: 'l1', tipo: 'leccion', titulo: 'Cápsula 1: tu derecho a saber', minMin: 10 },
+        { id: 'lw', tipo: 'leccion', titulo: 'Cápsula 2: tu lugar de trabajo', minMin: 15 },
+        { id: 'l2', tipo: 'leccion', titulo: 'Cápsula 3: cada riesgo de tu cargo, uno por uno', minMin: 25 },
         { id: 'j1', tipo: 'juego', titulo: 'Riesgo y consecuencia' },
+        { id: 't1', tipo: 'taller', titulo: 'Taller: los riesgos de mi puesto', minMin: 20 },
+        { id: 'l3', tipo: 'leccion', titulo: 'Cápsula 4: cómo se controlan y cómo trabajar bien', minMin: 25 },
+        { id: 'j2', tipo: 'juego', titulo: 'Ordena los controles' },
+        { id: 'ls', tipo: 'leccion', titulo: 'Cápsula 5: productos y sustancias peligrosas', minMin: 10 },
+        { id: 'lf', tipo: 'leccion', titulo: 'Cápsula 6: frío, lluvia y radiación UV', minMin: 10 },
+        { id: 'js', tipo: 'juego', titulo: 'Pictogramas de peligro' },
+        { id: 'l4', tipo: 'leccion', titulo: 'Cápsula 7: emergencias en GL y tu rol', minMin: 15 },
+        { id: 'j3', tipo: 'juego', titulo: '¿Qué hago si…? Emergencias' },
+        { id: 'l5', tipo: 'leccion', titulo: 'Cápsula 8: tu EPP y qué hacer ante un accidente', minMin: 15 },
+        { id: 'j4', tipo: 'juego', titulo: 'Derechos y obligaciones' },
+        { id: 't2', tipo: 'taller', titulo: 'Taller final: mi compromiso de seguridad', minMin: 10 },
         { id: 'q1', tipo: 'quiz', titulo: 'Evaluación', banco: 'pyv' },
         { id: 'f1', tipo: 'firma', titulo: 'Firma de recepción de la IRL' }
       ] },
 
-    { id: 'riohs', titulo: 'Reglamento Interno y Ley Karin', sub: 'RIOHS 2026 · Protocolo de prevención del acoso y la violencia', obligatorio: true,
-      horas: 1, doc: 'certificado', vigenciaMeses: 12, plazoMeses: 0, cargos: '*',
-      contenidos: 'Obligaciones y prohibiciones del RIOHS · Organización preventiva de GL · Delegado de SST · Acoso sexual, laboral y violencia en el trabajo · Canales de denuncia · Investigación y medidas de resguardo',
+    { id: 'riohs', titulo: 'Reglamento Interno de Orden, Higiene y Seguridad', sub: 'RIOHS 2026 de GL Robótica Submarina', obligatorio: true,
+      horas: 1, duracionMin: 60, doc: 'certificado', vigenciaMeses: 12, plazoMeses: 0, cargos: '*',
+      contenidos: 'Para qué sirve el RIOHS · Ingreso, contrato, jornada y remuneraciones · Obligaciones y prohibiciones · Normas de higiene y seguridad · Organización preventiva y Delegado de SST · Derecho a saber y a detener el trabajo · Accidentes y denuncia · Alcohol, drogas y tabaco · Sanciones, multas y reclamos',
       etapas: [
-        { id: 'l1', tipo: 'leccion', titulo: 'Cápsula: las reglas de GL y tus derechos', minMin: 10 },
+        { id: 'l1', tipo: 'leccion', titulo: 'Cápsula 1: normas de orden', minMin: 15 },
+        { id: 'l2', tipo: 'leccion', titulo: 'Cápsula 2: normas de higiene y seguridad', minMin: 15 },
         { id: 'j1', tipo: 'juego', titulo: '¿Se puede o no se puede?' },
+        { id: 't1', tipo: 'taller', titulo: 'Taller: el reglamento en tu trabajo', minMin: 15 },
         { id: 'q1', tipo: 'quiz', titulo: 'Evaluación', banco: 'riohs' },
-        { id: 'f1', tipo: 'firma', titulo: 'Firma: recibí el RIOHS y el protocolo Ley Karin' }
+        { id: 'f1', tipo: 'firma', titulo: 'Firma: recibí el Reglamento Interno' }
       ] },
 
-    { id: 'iper', titulo: 'Cómo leer la Matriz IPER de GL', sub: 'Peligro, riesgo, P × S y jerarquía de controles',
-      horas: 1, doc: 'certificado', vigenciaMeses: 0, plazoMeses: 0, cargos: ['piloto', 'encargado_taller', 'asistente_taller', 'gerente_general', 'jefa_operaciones'],
-      contenidos: 'Estructura de la Matriz IPER v02 · Evaluación P × S y niveles de riesgo · Protocolos MINSAL · Jerarquía de controles · Riesgo residual',
+    { id: 'karin', titulo: 'Ley Karin: prevención del acoso y la violencia en el trabajo', sub: 'Ley 21.643 · Protocolo de prevención de GL', obligatorio: true,
+      horas: 1, duracionMin: 60, doc: 'certificado', vigenciaMeses: 12, plazoMeses: 0, cargos: '*',
+      contenidos: 'Acoso sexual, acoso laboral y violencia de terceros · Conductas incívicas y sexismo · Principios del protocolo · Derechos y deberes · Riesgos psicosociales en faena y taller · Canales de denuncia · Medidas de resguardo · Investigación y plazos · Sanciones, reparación y protección contra represalias',
       etapas: [
-        { id: 'l1', tipo: 'leccion', titulo: 'Cápsula: cómo se lee la matriz', minMin: 8 },
-        { id: 't1', tipo: 'taller', titulo: 'Taller: evalúa tres riesgos reales', minMin: 12 },
+        { id: 'l1', tipo: 'leccion', titulo: 'Cápsula 1: qué es acoso y violencia en el trabajo', minMin: 15 },
+        { id: 'j1', tipo: 'juego', titulo: '¿Es acoso, violencia o no?' },
+        { id: 'l2', tipo: 'leccion', titulo: 'Cápsula 2: cómo prevenimos y cómo se denuncia en GL', minMin: 15 },
+        { id: 't1', tipo: 'taller', titulo: 'Taller: casos en faena y en el taller', minMin: 15 },
+        { id: 'q1', tipo: 'quiz', titulo: 'Evaluación', banco: 'karin' },
+        { id: 'f1', tipo: 'firma', titulo: 'Firma: recibí el protocolo Ley Karin' }
+      ] },
+
+    { id: 'iper', titulo: 'La Matriz IPER de GL: cómo se lee y qué dice de tu cargo', sub: 'Peligro, riesgo, P × S, controles y la matriz real de tu cargo',
+      horas: 1.5, duracionMin: 90, doc: 'certificado', vigenciaMeses: 12, plazoMeses: 0, cargos: ['piloto', 'encargado_taller', 'asistente_taller', 'gerente_general', 'jefa_operaciones'],
+      contenidos: 'Estructura de la Matriz IPER v02 · Peligro y riesgo · Evaluación P × S y niveles · Protocolos MINSAL e ISP · Jerarquía de controles · Riesgo residual · La matriz completa del cargo, fila por fila · Revisión participativa: riesgos faltantes y medidas',
+      etapas: [
+        { id: 'l1', tipo: 'leccion', titulo: 'Cápsula 1: cómo se lee la matriz', minMin: 8 },
+        { id: 'j2', tipo: 'juego', titulo: '¿Peligro o riesgo?' },
+        { id: 'l2', tipo: 'leccion', titulo: 'Cápsula 2: evaluar, controlar y el riesgo residual', minMin: 8 },
+        { id: 'j1', tipo: 'juego', titulo: 'Clasifica y ordena los controles' },
+        { id: 'lm', tipo: 'leccion', titulo: 'Cápsula 3: la Matriz IPER de tu cargo, fila por fila', minMin: 25 },
+        { id: 't1', tipo: 'taller', titulo: 'Taller: evalúa riesgos reales con P × S', minMin: 10 },
+        { id: 't2', tipo: 'taller', titulo: 'Taller: revisa tu matriz (¿falta algo? ¿las medidas sirven?)', minMin: 20 },
         { id: 'q1', tipo: 'quiz', titulo: 'Evaluación', banco: 'iper' }
       ] },
 
@@ -114,7 +146,7 @@ var PLAN = {
       ] },
 
     { id: 'acc', titulo: 'Qué hacer ante un accidente', sub: 'PRO-ACC-01 · notificación e investigación',
-      horas: 1, doc: 'certificado', vigenciaMeses: 0, plazoMeses: 0, cargos: '*',
+      horas: 1, doc: 'certificado', vigenciaMeses: 12, plazoMeses: 0, cargos: '*',
       contenidos: 'Accidente del trabajo, de trayecto, grave y fatal · Denuncia DIAT · Suspensión y notificación · Investigación · Estudiantes y seguro escolar',
       etapas: [
         { id: 'l1', tipo: 'leccion', titulo: 'Cápsula: paso a paso ante un accidente', minMin: 8 },
@@ -150,6 +182,12 @@ PLAN.etapas = [];
 PLAN.cursos.forEach(function (c) {
   c.etapas.forEach(function (e) { e.curso = c.id; e.local = e.id; e.id = c.id + '.' + e.id; if (e.modulo == null) e.modulo = 0; PLAN.etapas.push(e); });
 });
+PLAN.duracionTxt = function (min) {
+  min = Math.round(+min || 0);
+  if (min < 60) return min + ' minutos';
+  var h = Math.floor(min / 60), m = min % 60;
+  return h + (h === 1 ? ' hora' : ' horas') + (m ? ' ' + m + ' minutos' : '') + ' cronológica' + (h === 1 && !m ? '' : 's');
+};
 PLAN.curso = function (id) { for (var i = 0; i < PLAN.cursos.length; i++) if (PLAN.cursos[i].id === id) return PLAN.cursos[i]; return null; };
 PLAN.etapa = function (id) { for (var i = 0; i < PLAN.etapas.length; i++) if (PLAN.etapas[i].id === id) return PLAN.etapas[i]; return null; };
 PLAN.cargo = function (id) { for (var i = 0; i < PLAN.cargos.length; i++) if (PLAN.cargos[i].id === id) return PLAN.cargos[i]; return null; };
@@ -162,7 +200,7 @@ if (typeof module !== 'undefined') module.exports = PLAN;
 PLAN.registrarExtra = function (x) {
   var viejo = PLAN.curso(x.id);
   if (viejo) { PLAN.cursos.splice(PLAN.cursos.indexOf(viejo), 1); PLAN.etapas = PLAN.etapas.filter(function (e) { return e.curso !== x.id; }); }
-  var c = { id: x.id, titulo: x.titulo, sub: x.sub || 'Capacitación de la empresa', extra: true, horas: x.horas || 1, doc: 'certificado', vigenciaMeses: x.vigenciaMeses || 0, plazoMeses: 0,
+  var c = { id: x.id, titulo: x.titulo, sub: x.sub || 'Capacitación de la empresa', extra: true, horas: x.horas || 1, duracionMin: Math.max(60, Math.round((parseFloat(String(x.horas || 1).replace(',', '.')) || 1) * 60)), doc: 'certificado', vigenciaMeses: x.vigenciaMeses || 12, plazoMeses: 0,
     cargos: x.cargos, contenidos: x.sub || x.titulo, documentoUrl: x.documentoUrl || '',
     etapas: [{ id: 'l1', tipo: 'leccion', titulo: 'Cápsula', minMin: Math.max(2, Math.min(20, ((x.contenido && x.contenido.diapositivas) || []).length)) },
       { id: 'q1', tipo: 'quiz', titulo: 'Evaluación', banco: x.id }] };

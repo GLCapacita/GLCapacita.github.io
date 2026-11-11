@@ -91,6 +91,7 @@ var CORE = (function () {
   function cursoDe(item) { return String(item || '').split('.')[0]; }
   function aplica(c, cargo) { return c.cargos === '*' || c.cargos.indexOf(cargo) >= 0; }
   function logo() { return typeof LOGO_EMPRESA !== 'undefined' ? LOGO_EMPRESA : ''; }
+  function fechaCl(f) { var m = String(f || '').match(/^(\d{4})-(\d{2})-(\d{2})/); return m ? m[3] + '-' + m[2] + '-' + m[1] : String(f || ''); }
   function firmaImg(src) { return src && /^data:image\//.test(src) ? '<img class="fimg" src="' + src + '" alt="">' : '<div class="fesp"></div>'; }
   /* Carga las imágenes de firma (guardadas en Drive, carpeta Firmas) para incrustarlas en el PDF. */
   function conFirmas(env, C) {
@@ -134,6 +135,8 @@ var CORE = (function () {
   function vencido(env, c) { return !!(c && c.vence && env.parseFecha(c.vence) < env.now()); }
 
   /* ---------- reglas de cada curso ---------- */
+  /* Duración declarada del programa (min). El certificado no se emite con menos tiempo registrado. */
+  function duracionCurso(C, cur) { if (typeof GL_REVISION !== 'undefined' && GL_REVISION) return 0; return cur.id === 'ds44' ? Math.round(num(C.HORAS_CURSO) * 60) : num(cur.duracionMin || 0); }
   function requisitos(env, t, cursoId) {
     var C = cfg(env), cur = PLAN.curso(cursoId), P = progreso(env, t), faltan = [], hechos = 0, total = 0, seg = 0;
     var reqSes = cursoId === 'ds44' && C.REQUIERE_SESIONES === 'SI';
@@ -144,11 +147,11 @@ var CORE = (function () {
       if (ok) hechos++; else faltan.push(e.id);
       if (P[e.id]) seg += num(P[e.id].segundos);
     });
-    var minMin = cursoId === 'ds44' ? num(C.MIN_MINUTOS_DS44) : 0, faltaTiempo = 0;
-    if (minMin > 0 && seg < minMin * 60 * TOLERANCIA_TIEMPO) faltaTiempo = Math.ceil((minMin * 60 * TOLERANCIA_TIEMPO - seg) / 60);
+    var minMin = duracionCurso(C, cur), faltaTiempo = 0;
+    if (minMin > 0 && seg < minMin * 60) faltaTiempo = Math.ceil((minMin * 60 - seg) / 60);
     var plazoV = false;
     if (cursoId === 'ds44' && t.fechaLimite && !certDe(env, t, 'ds44')) plazoV = env.parseFecha(t.fechaLimite) < env.now();
-    return { curso: cursoId, total: total, hechos: hechos, faltan: faltan, segundos: seg, plazoVencido: plazoV, faltaTiempoMin: faltaTiempo,
+    return { curso: cursoId, total: total, hechos: hechos, faltan: faltan, segundos: seg, plazoVencido: plazoV, faltaTiempoMin: faltaTiempo, duracionMin: minMin,
       requiereSesiones: reqSes, sesionesRequeridas: num(C.SESIONES_REQUERIDAS), sesionesAsistidas: asistencias(env, t).length };
   }
   function perfil(env, t) {
@@ -183,7 +186,7 @@ var CORE = (function () {
     var cargo = PLAN.cargo(t.cargo); cargo = cargo ? cargo.nombre : t.cargo;
     var cur = PLAN.curso(cert.curso || 'ds44') || PLAN.cursos[0];
     var esCert = cur.doc === 'certificado';
-    var horas = cur.id === 'ds44' ? C.HORAS_CURSO : cur.horas;
+    var durTxt = PLAN.duracionTxt(duracionCurso(C, cur) || Math.round(num(cur.horas) * 60));
     var verif = (C.URL_SITIO ? C.URL_SITIO.replace(/\/$/, '') + '/verificar.html?c=' : 'Código: ') + cert.codigo;
     var texto = cur.id === 'ds44'
       ? 'aprobó el curso de Prevención de Riesgos Laborales conforme al artículo 16 del D.S. N° 44/2024 del Ministerio del Trabajo y Previsión Social y a la Guía Técnica aprobada por Resolución Exenta N° 1117/2026 de la Subsecretaría de Previsión Social.'
@@ -206,11 +209,11 @@ var CORE = (function () {
       '<h1>' + (esCert ? 'Certificado de capacitación' : 'Constancia de capacitación') + '</h1><div class="sub">' + esc(cur.titulo) + (cur.sub ? ' · ' + esc(cur.sub) : '') + '</div>' +
       '<p>Se certifica que</p><div class="nombre">' + esc(t.nombre) + '</div><div class="runc">RUN ' + esc(formatoRun(t.run)) + ' · ' + esc(cargo) + '</div>' +
       '<p>' + texto + '</p>' +
-      '<table><tr><td class="k">Duración del programa</td><td>' + esc(horas) + ' hora' + (num(horas) === 1 ? '' : 's') + ' cronológica' + (num(horas) === 1 ? '' : 's') + '</td></tr>' +
+      '<table><tr><td class="k">Duración del programa</td><td>' + esc(durTxt) + '</td></tr>' +
       '<tr><td class="k">Modalidad</td><td>E-learning asincrónico con cápsulas, actividades prácticas, talleres y evaluación</td></tr>' +
       '<tr><td class="k">Tiempo registrado en plataforma</td><td>' + horasTxt(seg) + '</td></tr>' +
-      '<tr><td class="k">Fecha de aprobación</td><td>' + esc(cert.fechaEmision) + '</td></tr>' +
-      '<tr><td class="k">Vigencia</td><td>' + (cert.vence ? 'Hasta ' + esc(cert.vence) : 'Sin vencimiento; se renueva ante cambios del cargo o del procedimiento') + '</td></tr>' +
+      '<tr><td class="k">Fecha de aprobación</td><td>' + esc(fechaCl(cert.fechaEmision)) + '</td></tr>' +
+      '<tr><td class="k">Vigencia</td><td>' + (cert.vence ? '12 meses, hasta el ' + esc(fechaCl(cert.vence)) + ', o antes si cambian el procedimiento o el cargo, o tras un accidente' : 'Hasta que cambien el procedimiento o el cargo, o tras un accidente') + '</td></tr>' +
       '<tr><td class="k">Contenidos</td><td>' + esc(cur.contenidos || '') + '</td></tr>' +
       '<tr><td class="k">Código de verificación</td><td><b>' + esc(cert.codigo) + '</b></td></tr></table>' +
       '<div class="firmas"><div class="firma">' + firmaImg(C._firmaApr) + '<div class="flinea"><b>' + esc(C.FACILITADOR_NOMBRE) + '</b><br>' + esc(C.FACILITADOR_TITULO) + (C.FACILITADOR_RUN ? '<br>RUN ' + esc(C.FACILITADOR_RUN) : '') + (C.FACILITADOR_REGISTRO ? '<br>Reg. SEREMI ' + esc(C.FACILITADOR_REGISTRO) : '') + '<br>Facilitadora · Prevención de Riesgos</div></div>' +
@@ -410,7 +413,7 @@ var CORE = (function () {
     if (!c) {
       if (R.plazoVencido) return { ok: false, error: 'Se cumplió el plazo de ' + cur.plazoMeses + ' meses sin terminar el curso. Habla con la encargada de prevención para reiniciarlo.' };
       if (R.faltan.length) return { ok: false, error: 'Aún te faltan etapas por completar.', faltan: R.faltan };
-      if (R.faltaTiempoMin) return { ok: false, error: 'Te faltan unos ' + R.faltaTiempoMin + ' minutos de permanencia en el curso. Repasa las cápsulas y talleres.' };
+      if (R.faltaTiempoMin) return { ok: false, faltaTiempo: R.faltaTiempoMin, error: 'Completaste todas las etapas, pero el programa dura ' + PLAN.duracionTxt(R.duracionMin) + ' y llevas ' + horasTxt(R.segundos) + ' registrados. Te faltan unos ' + R.faltaTiempoMin + ' minutos: repasa las cápsulas, lecturas y talleres del curso.' };
       var ahora = env.now(), prefijo = 'GL-';
       c = { codigo: prefijo + codigoCorto(env), run: t.run, nombre: t.nombre, cargo: t.cargo, ciclo: 1, fechaEmision: env.fmt(ahora, 'fecha'),
         vence: cur.vigenciaMeses ? env.fmt(sumarMeses(ahora, cur.vigenciaMeses), 'fecha') : '', horasProgramadas: cursoId === 'ds44' ? C.HORAS_CURSO : cur.horas,

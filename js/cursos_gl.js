@@ -139,39 +139,288 @@ CONTENIDO.firmas['irl.f1'] = function (cargo) {
     lista: R.map(function (r) { return [r.riesgo + ' (' + r.nivelTxt + ')', [].concat(r.administrativo.slice(0, 1), r.eppItems.slice(0, 3)).join('; ')]; }) };
 };
 
+/* ---------- IRL ampliada (3 horas, art. 15 D.S. 44) ---------- */
+function _lista(a, n) { return (a || []).filter(Boolean).slice(0, n || 4); }
+/* Protocolos y normas de vigilancia que activan los riesgos del cargo */
+var _PROTOCOLOS = [
+  { re: /ruido/i, id: 'PREXOR', nombre: 'Protocolo de Exposición Ocupacional a Ruido (PREXOR, MINSAL)', l: ['Se mide la dosis de ruido del puesto (compresores, herramientas, motores de la embarcación).', 'Si supera el criterio de acción, ingresas a vigilancia con audiometrías en la ACHS.', 'Protección auditiva donde esté indicado.'] },
+  { re: /radiaci.*(uv|no ionizante)/i, id: 'RUV', nombre: 'Guía Técnica de Radiación Ultravioleta de origen solar (MINSAL)', l: ['En el mar la radiación UV llega directa y reflejada en el agua, aun nublado.', 'GL tiene el informe cualitativo de exposición a radiación UV de los pilotos.', 'Protector solar, ropa manga larga, gorro legionario y lentes con filtro UV.', 'Revisa el índice UV del día.'] },
+  { re: /fr[ií]o/i, id: 'FRIO', nombre: 'Exposición a frío a la intemperie (D.S. 594 y guía del ISP)', l: ['Aplica al trabajo al aire libre con 10 °C o menos, considerando viento y lluvia.', 'Ropa en capas, cambio de ropa mojada, pausas de recuperación y vigilancia de síntomas de hipotermia.'] },
+  { re: /repetitivo/i, id: 'TMERT', nombre: 'Protocolo de vigilancia de trastornos musculoesqueléticos de extremidades superiores (TMERT-EESS, MINSAL)', l: ['Identifica tareas con movimientos repetidos de manos, muñecas y brazos (joystick, consola, armado fino en el banco).', 'Si el riesgo no es aceptable se aplican pausas, rotación y cambios en la tarea.'] },
+  { re: /manipulaci[oó]n manual/i, id: 'MMC', nombre: 'Ley 20.949 y Guía técnica de Manejo Manual de Carga', l: ['Peso máximo de 25 kg por persona; 20 kg para mujeres y menores de edad.', 'Las maletas del ROV, el umbilical y las baterías se levantan entre dos o con ayuda mecánica.', 'Carga pegada al cuerpo, espalda recta y sin girar el tronco.'] },
+  { re: /postural|postura/i, id: 'ERGO', nombre: 'Evaluación de sobrecarga postural (Guía técnica MINSAL y D.S. 594)', l: ['Posturas forzadas o mantenidas: inclinado sobre el banco, cuello flectado frente a la pantalla, sentado por horas.', 'Pausas activas, altura del banco y de la pantalla ajustadas y alternar posturas.'] },
+  { re: /psicosocial|carga de trabajo|equilibrio/i, id: 'CEAL', nombre: 'Protocolo de vigilancia de riesgos psicosociales · cuestionario CEAL-SM (SUSESO)', l: ['GL aplica el cuestionario CEAL-SM; tu participación es voluntaria y anónima.', 'Con los resultados se definen medidas sobre carga de trabajo, turnos y apoyo.'] },
+  { re: /violencia|acoso/i, id: 'KARIN', nombre: 'Ley 21.643 (Ley Karin) · prevención del acoso y la violencia en el trabajo', l: ['GL tiene un protocolo de prevención y canales de denuncia.', 'Puedes denunciar en la empresa o directamente en la Inspección del Trabajo; la investigación es reservada.'] },
+  { re: /aerosol|gases|vapores|qu[ií]mic/i, id: 'QUIM', nombre: 'D.S. 594 · agentes químicos y Hojas de Datos de Seguridad', l: ['Limpiacontactos, solventes, resinas, masillas y humos de soldadura tienen límites de exposición.', 'Revisa la HDS, ventila y usa la protección que indica.'] },
+  { re: /biol[oó]gic/i, id: 'BIO', nombre: 'D.S. 594 · agentes biológicos', l: ['Contacto con agua de mar, mortalidad, biofouling y residuos orgánicos al recuperar y limpiar el ROV.', 'Guantes, higiene de manos y desinfección de equipos entre centros.'] }
+];
+function _protocolosCargo(cargo) {
+  var R = _riesgosCargo(cargo), out = [];
+  _PROTOCOLOS.forEach(function (p) {
+    var rs = R.filter(function (r) { return p.re.test(r.riesgo); }).map(function (r) { return r.riesgo; });
+    if (rs.length) out.push({ id: p.id, nombre: p.nombre, l: p.l, riesgos: rs });
+  });
+  return out;
+}
+CONTENIDO.protocolosCargo = _protocolosCargo;
+
+/* Cápsula 2: el lugar de trabajo */
+CONTENIDO.lecciones['irl.lw'] = function (cargo) {
+  var area = PLAN.area(cargo), I = (window.IPER_EMPRESA || {})[cargo] || { riesgos: [], procesos: [] }, tareas = [];
+  I.riesgos.forEach(function (r) { (r.tareas || []).forEach(function (t) { if (tareas.indexOf(t) < 0) tareas.push(t); }); });
+  var d = [];
+  if (area === 'faena') d.push({ t: 'Dónde trabajas', x: _DONDE.faena, l: ['Pontones, módulos y pasillos de jaulas de los centros de cultivo, embarcaciones de apoyo, pangas y muelles de las mandantes.', 'Superficies mojadas, inestables y en movimiento por el oleaje.', 'Clima cambiante: viento, lluvia, frío y radiación UV incluso nublado.', 'Lugares aislados: la ayuda médica puede estar a horas de distancia y dependes de la embarcación del centro.'] });
+  else if (area === 'taller') d.push({ t: 'Dónde trabajas', x: _DONDE.taller, l: ['Recinto del taller con bancos de trabajo, repisas, bodega de equipos y zona de carga de baterías.', 'Oficina, cocina y baños en el primer piso; escalera interior y comedor en el segundo piso.', 'Calefacción con estufa a parafina y combustión lenta a leña: riesgo de incendio y de monóxido de carbono.', 'Una sola salida al exterior: debe estar siempre despejada.'] });
+  else d.push({ t: 'Dónde trabajas', x: _DONDE.mixto, l: ['Oficina y gestión administrativa de la empresa.', 'Visitas al taller de mantención ROV.', 'Visitas a faenas: pontones y embarcaciones de las mandantes.', 'Conducción a puertos, centros y trámites.'] });
+  if (tareas.length) d.push({ t: 'Tus tareas según la Matriz IPER', x: 'Estas son las tareas registradas para el cargo de ' + _nombreCargo(cargo) + ':', l: tareas.slice(0, 12) });
+  if (tareas.length > 12) d.push({ t: 'Más tareas de tu cargo', l: tareas.slice(12, 24) });
+  if (area === 'faena') {
+    d.push({ t: 'El ambiente de trabajo en el pontón', l: ['Pasillos y cubiertas resbaladizos: calzado antideslizante y manos libres al desplazarte.', 'Bordes sin baranda: chaleco salvavidas puesto y abrochado siempre.', 'Ruido de generadores y motores: protección auditiva donde esté indicado.', 'Buzos en el agua: el ROV no opera sin coordinación formal con el centro.'] });
+    d.push({ t: 'Equipos y herramientas', l: ['ROV (' + CONTENIDO.empresa.equipos.join(', ') + '), consola, umbilical y fuente de poder.', 'Baterías de litio y cargadores: se cargan sobre superficie no combustible y con supervisión.', 'Dron: solo con autorización y según DAN 151 de la DGAC.', 'Herramientas de corte de tensores y de extracción de mortalidad: revisa su estado antes de usarlas.'] });
+  } else if (area === 'taller') {
+    d.push({ t: 'Equipos y herramientas del taller', l: ['Cautín y estación de soldadura: soporte, extractor de humos y nada inflamable cerca.', 'Herramientas eléctricas: carcasa y cable sin daños, conectadas a enchufes en buen estado.', 'ROV en mantención: se desarma con la batería desconectada y con lentes de seguridad.', 'Baterías de litio: carga en la zona definida, sobre superficie no combustible y nunca sin supervisión.'] });
+  } else {
+    d.push({ t: 'Ambiente y equipos', l: ['Puesto de trabajo con pantalla a la altura de los ojos y pausas activas.', 'Vehículo de la empresa: revisión antes de salir, cinturón y sin celular al conducir.', 'En visitas a faena o al taller: el mismo EPP que exige el lugar.'] });
+  }
+  d.push({ t: 'Orden y aseo', x: 'El orden y el aseo son una medida de control: evitan caídas, golpes, incendios y pérdida de herramientas.', l: area === 'faena' ? ['Umbilical adujado y sin cruzar pasillos.', 'Maletas y equipos estibados y amarrados.', 'Residuos en sus contenedores; nada al mar.', 'Herramientas de vuelta en su lugar al terminar.'] : area === 'taller' ? ['Bancos despejados: inflamables en el gabinete, no junto al cautín.', 'Pasillos y salida sin maletas, bolsas ni cajas.', 'Repisas altas sin maletas pesadas.', 'Paños con solvente en tarro metálico con tapa; cenizas frías en recipiente metálico.'] : ['Pasillos y salidas libres.', 'Cables ordenados y enchufes sin sobrecarga.', 'Archivos y cajas en repisas firmes.'] });
+  d.push({ t: 'Servicios para ti', l: area === 'faena' ? ['Agua potable, alimentación y servicios higiénicos según la faena y la mandante.', 'Botiquín y medios de rescate del centro y de la embarcación.', 'Comunicación con la Jefa de Operaciones al inicio y al término de cada jornada.'] : ['Servicios higiénicos, cocina y comedor en el segundo piso.', 'Botiquín de primeros auxilios (sin medicamentos).', 'Extintores, lavaojos y teléfonos de emergencia publicados.'] });
+  return { diapositivas: d };
+};
+
+/* Cápsula 3: cada riesgo del cargo */
+CONTENIDO.lecciones['irl.l2'] = function (cargo) {
+  var R = _riesgosCargo(cargo).slice().sort(function (a, b) { return b.nivel - a.nivel; });
+  var d = [{ t: 'Tus riesgos, uno por uno', x: 'La Matriz IPER v02 de GL identifica ' + R.length + ' riesgos para el cargo de ' + _nombreCargo(cargo) + '. En cada tarjeta verás:',
+    l: ['Dónde aparece (tarea y peligro).', 'Qué te puede pasar.', 'Cómo se evalúa (Probabilidad × Severidad).', 'Qué controles existen y qué EPP usas.', 'Qué procedimiento lo regula.'],
+    tip: 'Lee cada tarjeta con calma y piensa en un momento real de tu trabajo en que te pasa. Puedes usar el botón Escuchar.' }];
+  R.forEach(function (r, i) {
+    var ctrl = [].concat(
+      _lista(r.eliminacion, 1).map(function (c) { return 'Eliminar: ' + c; }),
+      _lista(r.sustitucion, 1).map(function (c) { return 'Sustituir: ' + c; }),
+      _lista(r.ingenieria, 2).map(function (c) { return 'Ingeniería: ' + c; }),
+      _lista(r.senalizacion, 1).map(function (c) { return 'Señalización: ' + c; }),
+      _lista(r.administrativo, 3).map(function (c) { return 'Administrativo: ' + c; }));
+    d.push({ t: (i + 1) + '. ' + r.riesgo + ' · ' + r.nivelTxt + (r.tipo ? ' (' + r.tipo + ')' : ''),
+      x: 'Dónde aparece: ' + _lista(r.tareas, 2).join(' / ') + '.\nPeligro: ' + _lista(r.peligros, 2).join(' / ') + '.\nPuede causar: ' + _lista(r.consecuencias, 2).join(' / ') + '.',
+      l: [(r.p && r.s) ? 'Evaluación: P ' + r.p + ' × S ' + r.s + ' = ' + (r.p * r.s) + ' → ' + r.nivelTxt : 'Evaluación: ' + r.nivelTxt].concat(ctrl,
+        r.eppItems && r.eppItems.length ? ['EPP: ' + r.eppItems.slice(0, 6).join(', ')] : [],
+        r.pts && r.pts.length ? ['Procedimiento: ' + _lista(r.pts, 2).join(', ')] : []) });
+  });
+  var P = _protocolosCargo(cargo);
+  if (P.length) {
+    d.push({ t: 'Protocolos y normas que aplican a tu cargo', x: 'Según tus funciones, estos protocolos de vigilancia y normas se aplican a tu puesto. Algunos implican mediciones o evaluaciones de salud en la ACHS.', l: P.map(function (p) { return p.nombre; }) });
+    P.forEach(function (p) { d.push({ t: p.nombre, x: 'Riesgos de tu cargo que lo activan: ' + p.riesgos.join(', ') + '.', l: p.l }); });
+  }
+  d.push({ t: 'Lo importante', l: ['Los riesgos Importantes o Intolerables no se aceptan: si sus controles no están, el trabajo no empieza.', 'Si ves un riesgo que no aparece aquí, avísalo: la Matriz se actualiza con lo que informan los trabajadores.', 'Tienes derecho a detener tu trabajo ante un riesgo grave e inminente, avisando de inmediato.'] });
+  return { diapositivas: d };
+};
+CONTENIDO.talleres['irl.t1'] = {
+  intro: 'Este taller te ayuda a mirar tu propio puesto con la Matriz IPER en la mano. No hay respuestas únicas: lo que escribas queda registrado para la Asesora en Prevención de Riesgos y sirve para mejorar la Matriz.',
+  partes: [
+    { tipo: 'vep', desdeIper: true, n: 4 },
+    { tipo: 'abierta', p: 'Elige la tarea de tu trabajo donde te sientes más expuesto. ¿Qué tarea es, qué te podría pasar y qué control usas hoy para evitarlo?', min: 60, alApr: true,
+      modelo: 'Una buena respuesta nombra la tarea concreta (por ejemplo, recuperar el ROV desde el borde del pontón o desarmar un equipo en el banco), el riesgo (caída al agua, corte, incendio de batería) y el control real que se aplica (chaleco puesto, batería desconectada, lentes, guantes, coordinación con el centro).' },
+    { tipo: 'abierta', p: '¿Has visto un incidente o un "casi accidente" en tu trabajo? Cuéntalo sin nombres: qué pasó, por qué crees que pasó y qué habría que cambiar.', min: 40, alApr: true,
+      modelo: 'Los casi accidentes son avisos gratuitos. Informarlos permite corregir antes de que alguien se lesione. También puedes informarlos a la Jefa de Operaciones o al Delegado de SST.' },
+    { tipo: 'abierta', p: '¿Qué riesgo de tu trabajo crees que falta en la Matriz IPER, o cuál crees que está mal evaluado?', min: 20, alApr: true,
+      modelo: 'Gracias. La Asesora revisa estas respuestas al actualizar la Matriz IPER.' }
+  ]
+};
+
+/* Cápsula 4: controles y método de trabajo */
+CONTENIDO.lecciones['irl.l3'] = function (cargo) {
+  var area = PLAN.area(cargo);
+  var d = [
+    { t: 'La jerarquía de controles', x: 'No todos los controles protegen igual. La Matriz IPER de GL ordena las medidas de la más a la menos eficaz:', l: ['1. Eliminar el peligro.', '2. Sustituirlo por algo menos peligroso.', '3. Controles de ingeniería: resguardos, gabinete de inflamables, extractor de humos, zona de carga no combustible.', '4. Señalización y advertencias.', '5. Administrativos: procedimientos, AST, capacitación, supervisión, pausas.', '6. EPP: la última barrera.'] },
+    { t: 'Método de trabajo correcto', l: area === 'faena' ? ['Antes: inducción de la mandante, aviso de inicio a la Jefa de Operaciones, pronóstico y checklist preoperacional.', 'Durante: seguir el PTS-ROV-001, coordinar con el centro y no operar con buzos en el agua sin coordinación.', 'Al terminar: limpiar y desinfectar el equipo, ordenar y avisar el término de la jornada.', 'Si algo no está claro: detente y pregunta.'] : area === 'taller' ? ['Antes: orden del banco, inflamables guardados y EPP de la tarea.', 'Durante: seguir el PTS-TAL-001; batería desconectada antes de desarmar; carga de baterías supervisada.', 'Al terminar: apagar el cautín y los cargadores, ordenar y registrar en el libro del taller.', 'Si algo no está claro: detente y pregunta al encargado.'] : ['Planificar las faenas y los recursos con anticipación.', 'Exigir y verificar el cumplimiento de los procedimientos.', 'Suspender o reprogramar ante condiciones inseguras.', 'Dar el ejemplo: el mismo EPP y las mismas reglas en las visitas.'] },
+    { t: 'Cuándo detener el trabajo', l: area === 'faena' ? ['Viento, oleaje o visibilidad fuera de lo seguro.', 'Buzos en el agua sin coordinación previa.', 'Falla crítica del equipo o pérdida de control o comunicación.', 'Cualquier riesgo grave e inminente: te alejas y avisas de inmediato.'] : ['Humo, olor a quemado o una batería que se calienta o se hincha.', 'Un equipo o herramienta dañado.', 'Mareo o dolor de cabeza con las estufas encendidas.', 'Cualquier riesgo grave e inminente: te alejas y avisas de inmediato.'] }
+  ];
+  CONTENIDO.procedimientosDe(cargo).forEach(function (p) {
+    var x = _PTS[p.id];
+    if (!x) { d.push({ t: p.id + ' · ' + p.titulo, x: 'Documento que aplica a tu cargo. Lo puedes revisar completo en la plataforma.' }); return; }
+    var rol = (x.roles && x.roles[cargo]) || [];
+    var claves = [].concat.apply([], (x.pasos || []).map(function (s) { return (s.l || []).slice(0, 2); })).slice(0, 5);
+    d.push({ t: p.id + ' · ' + p.titulo, x: x.objetivo, l: [].concat(rol.length ? ['Tu responsabilidad: ' + rol.slice(0, 2).join(' ')] : [], claves.map(function (c) { return 'Paso clave: ' + c; }), (x.detener || []).slice(0, 2).map(function (c) { return 'Detener si: ' + c; })) });
+  });
+  d.push({ t: 'Tu parte', l: ['Conocer y aplicar los procedimientos de tu cargo.', 'Usar los controles que existen y no retirarlos.', 'Informar cuando un control no está o no sirve.', 'Cada procedimiento tiene su capacitación con certificado en la plataforma.'] });
+  return { diapositivas: d };
+};
+CONTENIDO.juegos['irl.j2'] = CONTENIDO.juegos['ds44.j4'];
+
+/* Cápsula 5: productos y sustancias peligrosas */
+CONTENIDO.lecciones['irl.ls'] = function (cargo) {
+  var area = PLAN.area(cargo);
+  var R = _riesgosCargo(cargo).filter(function (r) { return /qu[ií]mic|gases|vapores|aerosol/i.test(r.riesgo); });
+  var d = [{ t: 'Productos peligrosos en GL', x: 'En el trabajo se usan productos que pueden dañar tu salud o provocar un incendio si no se manejan bien.', l: ['Limpiacontactos en aerosol (contiene n-hexano: inflamable y dañino si se inhala).', 'Masillas, resinas y epóxicos: irritan la piel y los ojos y pueden causar alergia.', 'Alcohol isopropílico y solventes de limpieza.', 'Parafina de la estufa y combustibles de las embarcaciones.', 'Desinfectantes para lavar el ROV entre centros de cultivo.', 'Baterías de litio: no son un producto químico de uso, pero pueden incendiarse y liberar gases tóxicos.'] },
+    { t: 'La Hoja de Datos de Seguridad (HDS)', x: 'Cada producto químico tiene su HDS. Es obligatoria y debe estar disponible donde se usa.', l: ['Qué peligros tiene el producto.', 'Qué EPP usar al manipularlo.', 'Cómo almacenarlo y qué no mezclar.', 'Qué hacer si te salpica, lo inhalas o lo tragas.', 'Cómo actuar ante un derrame o un incendio.'] },
+    { t: 'La etiqueta y los pictogramas (SGA)', x: 'Los envases llevan pictogramas con borde rojo en forma de rombo:', l: ['Llama: inflamable.', 'Corrosión: quema piel y ojos.', 'Calavera: tóxico agudo.', 'Signo de exclamación: irritante o nocivo.', 'Silueta con estrella en el pecho: daño a la salud a largo plazo.', 'Cilindro: gas a presión.', 'Pez y árbol: peligroso para el medio acuático.'], tip: 'Las frases H del envase dicen el peligro exacto. Por ejemplo, la masilla del taller trae H315 (irrita la piel), H317 (alergia), H318 (daño ocular grave) y H412 (nociva para la vida acuática).' },
+    { t: 'Reglas de oro', l: ['Usa solo productos rotulados; nunca en botellas de bebida.', 'Nunca mezcles productos.', area === 'taller' ? 'Aerosoles y solventes lejos del cautín, de la estufa y de la combustión lenta.' : 'Aplica los productos con ventilación y lejos de fuentes de calor.', 'Guarda los productos cerrados, en el gabinete o lugar definido.', 'Ante un derrame: ventila, aleja fuentes de ignición, usa el kit de derrames y avisa.', 'Si te salpica en los ojos: lavaojos o agua corriente por 15 minutos y atención en la ACHS.'] }];
+  R.forEach(function (r) { d.push({ t: 'En tu cargo: ' + r.riesgo, x: 'Peligro: ' + _lista(r.peligros, 2).join(' / ') + '.', l: [].concat(_lista(r.administrativo, 2).map(function (c) { return 'Control: ' + c; }), r.eppItems && r.eppItems.length ? ['EPP: ' + r.eppItems.slice(0, 6).join(', ')] : []) }); });
+  if (!R.length) d.push({ t: 'En tu cargo', x: 'La Matriz IPER no registra exposición directa a sustancias peligrosas en tu cargo. Igual aplican estas reglas para productos de aseo, combustibles y en tus visitas al taller.' });
+  return { diapositivas: d };
+};
+CONTENIDO.juegos['irl.js'] = { intro: 'Une cada pictograma de peligro con lo que significa.', partes: [{ tipo: 'emparejar', pares: [
+  { a: 'Llama', b: 'Inflamable: se enciende con facilidad' },
+  { a: 'Líquido que corroe una mano y un metal', b: 'Corrosivo: quema piel y ojos' },
+  { a: 'Calavera con tibias', b: 'Toxicidad aguda: puede matar en pequeñas cantidades' },
+  { a: 'Signo de exclamación', b: 'Irritante o nocivo' },
+  { a: 'Silueta humana con estrella en el pecho', b: 'Daño grave a la salud a largo plazo' },
+  { a: 'Cilindro de gas', b: 'Gas a presión: puede explotar si se calienta' },
+  { a: 'Pez y árbol muerto', b: 'Peligroso para el medio ambiente acuático' }] }] };
+
+/* Cápsula 6: frío, lluvia y radiación UV */
+CONTENIDO.lecciones['irl.lf'] = function (cargo) {
+  var area = PLAN.area(cargo), R = _riesgosCargo(cargo);
+  var fr = R.filter(function (x) { return /fr[ií]o/i.test(x.riesgo); })[0], uv = R.filter(function (x) { return /radiaci/i.test(x.riesgo); })[0];
+  var d = [{ t: 'Trabajo a la intemperie en Aysén', x: area === 'faena' ? 'Los pilotos trabajan gran parte del año con 10 °C o menos, viento y lluvia, y además expuestos a la radiación UV del sol, que en el mar llega directa y reflejada en el agua.' : area === 'taller' ? 'En el taller trabajas bajo techo, pero sales al patio, cargas equipos y viajas a faenas. Además, la calefacción del taller trae sus propios riesgos.' : 'Tus visitas a faena, la navegación y la conducción te exponen a frío, lluvia y radiación UV.',
+    l: ['El viento y la ropa mojada hacen que el cuerpo pierda calor mucho más rápido.', 'El agua fría enfría el cuerpo mucho más rápido que el aire: una caída al agua es también un riesgo de hipotermia.', 'La radiación UV daña la piel y los ojos aunque el día esté nublado.'] }];
+  if (fr) d.push({ t: 'Frío en tu cargo', x: 'La Matriz IPER evalúa la exposición a frío como ' + fr.nivelTxt + ' para ' + _nombreCargo(cargo) + '.', l: ['Tareas: ' + _lista(fr.tareas, 3).join(' / ') + '.'].concat(_lista(fr.administrativo, 3).map(function (c) { return 'Control: ' + c; }), fr.eppItems && fr.eppItems.length ? ['EPP: ' + fr.eppItems.slice(0, 6).join(', ')] : []) });
+  d.push({ t: 'Qué le hace el frío al cuerpo', l: ['Hipotermia: empieza con tiritones fuertes, torpeza y cansancio; sigue con confusión, habla arrastrada y somnolencia. Es una emergencia.', 'Sabañones: enrojecimiento, picazón e inflamación de dedos, orejas y mejillas.', 'Manos frías: pierdes fuerza y precisión, y aumentan los cortes y los golpes.'] },
+    { t: 'Cómo te proteges del frío', l: ['Ropa en tres capas: interior que saque la humedad (no algodón), intermedia que abrigue y exterior impermeable y cortaviento.', 'Cabeza, manos y pies protegidos.', 'Ropa mojada se cambia de inmediato: lleva ropa seca de recambio.', 'Pausas para recuperar temperatura en un lugar abrigado y bebidas calientes; nunca alcohol.'] },
+    { t: 'Si alguien presenta hipotermia', l: ['Avisa de inmediato al jefe de centro o a la Jefa de Operaciones.', 'Llévalo a un lugar abrigado y protegido del viento.', 'Quítale la ropa mojada y abrígalo, empezando por el tronco.', 'Si está consciente, bebidas tibias y dulces.', 'No le frotes la piel; si está confuso o inconsciente, es una emergencia: ACHS 1404 o Autoridad Marítima 137.'] });
+  if (uv) d.push({ t: 'Radiación UV en tu cargo', x: 'La Matriz IPER evalúa la exposición a radiación UV como ' + uv.nivelTxt + '. GL tiene el informe cualitativo de exposición de los pilotos.', l: ['Protector solar factor 50 cada 2 horas, aun nublado.', 'Ropa manga larga, gorro legionario y lentes con filtro UV.', 'Revisa el índice UV del día y busca sombra en las pausas.'] });
+  if (area === 'taller') d.push({ t: 'La calefacción del taller', l: ['Estufa a parafina fuera de la vía de evacuación; se carga afuera, apagada y fría.', 'Combustión lenta sin papeles ni cartón alrededor; cenizas frías en tarro metálico con tapa.', 'Ventila el taller y respeta el detector de monóxido de carbono.', 'Mareo o dolor de cabeza: apagar, ventilar y salir al aire libre.'] });
+  d.push({ t: 'Tus derechos ante el clima', l: ['Recibir ropa de trabajo y EPP adecuados al frío y a la radiación UV, sin costo.', 'Pausas de recuperación cuando las condiciones lo exigen.', 'Detener la tarea si el frío, el viento o la lluvia la hacen insegura, avisando de inmediato.', 'Pedir la reposición de la ropa o el EPP dañado.'] });
+  return { diapositivas: d };
+};
+
+/* Cápsula 7: emergencias y tu rol */
+CONTENIDO.lecciones['irl.l4'] = function (cargo) {
+  var base = (CONTENIDO.lecciones['prrd.l1'] && CONTENIDO.lecciones['prrd.l1'].diapositivas) || [];
+  return { diapositivas: base.slice(0, base.length - 1).concat([{ t: 'Tu rol como ' + _nombreCargo(cargo), l: CONTENIDO.rolEmergencia[cargo] || [] },
+    { t: 'Números que debes conocer', l: CONTENIDO.directorio.slice(0, 9).map(function (x) { return x.n + ': ' + x.t; }) }]) };
+};
+CONTENIDO.juegos['irl.j3'] = CONTENIDO.juegos['ds44.j5'];
+
+/* Cápsula 8: EPP y accidentes */
+CONTENIDO.lecciones['irl.l5'] = function () {
+  var a = (CONTENIDO.lecciones['epp.l1'] && CONTENIDO.lecciones['epp.l1'].diapositivas) || [];
+  var b = (CONTENIDO.lecciones['acc.l1'] && CONTENIDO.lecciones['acc.l1'].diapositivas) || [];
+  return { diapositivas: a.concat(b) };
+};
+CONTENIDO.juegos['irl.j4'] = CONTENIDO.juegos['ds44.j1'];
+CONTENIDO.talleres['irl.t2'] = {
+  intro: 'Para cerrar, escribe tu compromiso. Queda registrado junto a tu firma de recepción de la IRL.',
+  partes: [
+    { tipo: 'abierta', p: 'Nombra los 3 riesgos de tu cargo que consideras más importantes y, para cada uno, la medida que vas a aplicar siempre.', min: 80, alApr: true,
+      modelo: 'Ejemplo: 1) Caída al agua: chaleco puesto y abrochado en todo momento en el pontón y la embarcación. 2) Incendio de baterías: cargarlas sobre superficie no combustible y nunca sin supervisión. 3) Cortes y proyección de partículas en el banco: lentes y guantes, y batería desconectada antes de desarmar.' },
+    { tipo: 'abierta', p: '¿A quién avisas, y cómo, si ves una condición insegura o te accidentas?', min: 30,
+      modelo: 'A la Jefa de Operaciones (y en faena al jefe de centro; en el taller al encargado) de inmediato, aunque parezca leve. Si te accidentas: primeros auxilios, atención en la ACHS y la empresa presenta la DIAT dentro de 24 horas. También puedes acudir al Delegado de SST.' }
+  ]
+};
+
 /* =====================================================================
-   REGLAMENTO INTERNO Y LEY KARIN
+   REGLAMENTO INTERNO DE ORDEN, HIGIENE Y SEGURIDAD (RIOHS 2026)
    ===================================================================== */
 CONTENIDO.lecciones['riohs.l1'] = { documento: 'pts/RIOHS.pdf', diapositivas: [
-  { t: 'Para qué sirve el Reglamento Interno', x: 'El Reglamento Interno de Orden, Higiene y Seguridad (RIOHS) 2026 de GL fija las obligaciones, prohibiciones y sanciones de todas las personas de la empresa, y las normas de seguridad para pilotos, taller y estudiantes en práctica.', l: ['Se entrega una copia a cada trabajador.', 'Se envía a la Inspección del Trabajo y a la SEREMI de Salud.', 'Rige para todas las faenas y para el taller.'] },
-  { t: 'Cómo se organiza la prevención en GL', l: ['Gerente General y Representante Legal: Omar Guajardo Calbucan.', 'Jefa de Operaciones y Encargada de Seguridad y Salud en el Trabajo: Mery Leal Vargas.', 'Asesora externa en Prevención de Riesgos: Iza Sandoval Salgado.', 'Delegado de Seguridad y Salud en el Trabajo: Damián González Mansilla, elegido por los trabajadores.', 'Organismo administrador del seguro: ACHS.'], tip: 'GL no tiene Comité Paritario porque ninguna faena reúne a más de 25 personas.' },
-  { t: 'Tus obligaciones principales', l: ['Cumplir los procedimientos de trabajo seguro y las normas de la mandante.', 'Usar y cuidar el EPP entregado.', 'Informar de inmediato todo accidente, incidente o condición insegura.', 'Participar en capacitaciones, simulacros y en la entrega del IRL.', 'Mantener el orden y aseo en el puesto de trabajo.'] },
-  { t: 'Prohibiciones principales', l: ['Trabajar bajo los efectos del alcohol, drogas o medicamentos que alteren tus capacidades.', 'Operar equipos sin autorización o facilitarlos a personas no autorizadas.', 'Intervenir equipos energizados o retirar protecciones.', 'Fumar o encender fuego cerca de inflamables o baterías.', 'Ocultar accidentes o incidentes.'], tip: 'Las infracciones se sancionan con amonestación verbal, escrita o multa, según el RIOHS.' },
-  { t: 'Ley Karin: qué está prohibido', l: ['Acoso sexual: requerimientos de carácter sexual no consentidos que amenazan o perjudican tu situación laboral.', 'Acoso laboral: agresión u hostigamiento, una sola vez o reiterado, que menoscaba, maltrata o humilla.', 'Violencia en el trabajo: la que ejercen terceros, como clientes o personal de la mandante.'] },
-  { t: 'Cómo denunciar', l: ['Ante la Jefatura de Operaciones o la Gerencia General.', 'Por el canal alternativo: la Asesora externa en Prevención de Riesgos.', 'Directamente ante la Inspección del Trabajo.', 'La denuncia puede ser verbal o escrita y es reservada.'], tip: 'Está prohibida cualquier represalia contra quien denuncia o declara como testigo.' },
-  { t: 'Qué pasa después', l: ['Se aplican medidas de resguardo de inmediato: por ejemplo, separar espacios o turnos.', 'Se investiga internamente o la Inspección del Trabajo, en los plazos de la ley.', 'Se ofrece atención psicológica temprana a través de la ACHS.', 'Las conclusiones se comunican y se aplican las medidas y sanciones.'] }
+  { t: 'Para qué sirve el Reglamento Interno', x: 'El Reglamento Interno de Orden, Higiene y Seguridad (RIOHS) 2026 de GL fija las normas de orden de la empresa, las obligaciones y prohibiciones de todas las personas, y las normas de higiene y seguridad para pilotos, taller y estudiantes en práctica.', l: ['Lo exigen el Código del Trabajo (arts. 153 y siguientes) y la Ley 16.744 (art. 67).', 'Se entrega a cada trabajador al ingresar, y tú firmas su recepción.', 'Lo puedes revisar completo en el documento de esta cápsula.'] },
+  { t: 'Cómo está organizado', l: ['Capítulo I · Normas de orden: ingreso, contrato, jornada, horas extraordinarias, remuneraciones, feriado, licencias y permisos, obligaciones, prohibiciones, sanciones y reclamos.', 'Capítulo II · Normas de higiene y seguridad: obligaciones y prohibiciones en prevención, EPP, accidentes, organización preventiva, protocolos de salud y riesgos específicos de GL.', 'Protocolos incorporados: Ley Karin, radiación UV, manejo manual de carga, TMERT, ruido, riesgos psicosociales y emergencias.'] },
+  { t: 'Ingreso y contrato', l: ['Al ingresar entregas tus antecedentes personales y la documentación que pide la empresa.', 'El contrato se firma por escrito y se te entrega una copia.', 'Cualquier cambio de tus datos (domicilio, estado civil, cargas) lo informas a la empresa.'] },
+  { t: 'Jornada de trabajo', l: ['La jornada ordinaria se ajusta a la Ley 21.561: baja gradualmente hasta 40 horas semanales en 2028.', 'Los pilotos trabajan en turnos de 14 por 14 días, de 08:00 a 20:00, autorizados por la Dirección del Trabajo.', 'El taller funciona de lunes a sábado, de 09:00 a 13:00 y de 14:00 a 17:00.', 'Las horas extraordinarias se pactan por escrito y se pagan con recargo.'] },
+  { t: 'Remuneraciones', l: ['Se pagan en la fecha y forma de tu contrato, con liquidación de sueldo.', 'Solo se descuentan las cotizaciones legales y lo que autorices por escrito, con los límites de la ley.', 'Hombres y mujeres que hacen un mismo trabajo reciben igual remuneración: si crees que no se cumple, puedes reclamar por escrito y la Gerencia responde en 30 días.'] },
+  { t: 'Feriado, licencias y permisos', l: ['Feriado anual de 15 días hábiles con remuneración íntegra.', 'Licencias médicas: avisa a la empresa y entrégala dentro del plazo legal.', 'Permisos legales: por nacimiento de un hijo, por matrimonio o acuerdo de unión civil, por fallecimiento de familiares, y permiso postnatal parental, entre otros.'] },
+  { t: 'Sanciones', x: 'Las faltas al Reglamento que no son causal de término del contrato se sancionan en forma gradual:', l: ['Primera falta leve: amonestación verbal o escrita del jefe directo.', 'Falta no leve o segunda amonestación: siempre por escrito, con copia a la Inspección del Trabajo.', 'Reincidencia: multa de hasta el 25% de la remuneración diaria.', 'Puedes reclamar una multa ante la Inspección del Trabajo.'] },
+  { t: 'Peticiones y reclamos', l: ['Puedes hacer consultas, peticiones o reclamos a la Jefa de Operaciones o a la Gerencia.', 'Para las materias de seguridad también puedes acudir al Delegado de SST o a la Asesora externa en Prevención de Riesgos.', 'Siempre puedes recurrir a la Inspección del Trabajo.'] }
 ] };
-CONTENIDO.juegos['riohs.j1'] = { intro: 'Según el Reglamento Interno y el protocolo Ley Karin, decide si cada conducta está permitida o prohibida.', partes: [{ tipo: 'clasificar',
+CONTENIDO.lecciones['riohs.l2'] = function (cargo) {
+  var area = PLAN.area(cargo);
+  return { documento: 'pts/RIOHS.pdf', diapositivas: [
+    { t: 'Cómo se organiza la prevención en GL', l: ['Gerente General y Representante Legal: ' + CONTENIDO.empresa.gerente + '.', 'Jefa de Operaciones y Encargada de Seguridad y Salud en el Trabajo: ' + CONTENIDO.empresa.encargada + '.', 'Asesora externa en Prevención de Riesgos: ' + CONTENIDO.empresa.apr + '.', 'Delegado de Seguridad y Salud en el Trabajo: ' + CONTENIDO.empresa.delegado + '.', 'GL no tiene Comité Paritario porque ninguna faena reúne a más de 25 personas; por eso existe el Delegado.', 'Organismo administrador del seguro: ' + CONTENIDO.empresa.organismo + '.'] },
+    { t: 'Tus obligaciones en seguridad', l: ['Cumplir los procedimientos de trabajo seguro y las normas de la mandante.', 'Usar y cuidar el EPP que se te entrega, y pedir su reposición cuando se daña.', 'Informar de inmediato todo accidente, incidente o condición insegura.', 'Participar en las capacitaciones, inducciones y simulacros.', 'Mantener el orden y aseo de tu lugar de trabajo.', 'Informar si estás tomando un medicamento que pueda afectar tu desempeño.'] },
+    { t: 'Prohibiciones en seguridad', l: ['Trabajar bajo los efectos del alcohol, drogas o medicamentos que alteren tus capacidades.', 'Operar equipos sin autorización o facilitarlos a personas no autorizadas.', 'Retirar o anular protecciones, resguardos o dispositivos de seguridad.', 'Intervenir equipos energizados o baterías conectadas.', 'Fumar o usar llama abierta cerca de inflamables, baterías en carga o en lugares prohibidos.', 'Hacer bromas o juegos que pongan en riesgo a otros.'] },
+    { t: 'Tus derechos', l: ['Derecho a saber: conocer los riesgos de tu trabajo, sus medidas de control y los métodos correctos (IRL).', 'Interrumpir el trabajo y alejarte ante un riesgo grave e inminente, avisando de inmediato (Código del Trabajo, art. 184 bis), sin que eso te perjudique.', 'Recibir el EPP sin costo.', 'Atención médica, rehabilitación y subsidios del seguro de la Ley 16.744 en la ACHS si te accidentas o enfermas por el trabajo.'] },
+    { t: 'Accidentes y enfermedades profesionales', l: ['Todo accidente, por leve que sea, se informa de inmediato a la Jefa de Operaciones.', 'La atención se hace en la ACHS; los estudiantes en práctica, en el servicio de salud público con el seguro escolar.', 'La empresa presenta la DIAT dentro de 24 horas.', 'Los accidentes graves y fatales suspenden la faena y se notifican de inmediato a la Inspección del Trabajo y a la SEREMI de Salud (600 42 000 22).', 'Debes colaborar con la investigación del accidente.'] },
+    { t: area === 'faena' ? 'Normas específicas para los pilotos' : area === 'taller' ? 'Normas específicas para el taller' : 'Normas específicas para la gerencia', l: area === 'faena' ? ['Chaleco salvavidas puesto y abrochado en pontones, embarcaciones y muelles.', 'Avisar el inicio y el término de cada jornada a la Jefa de Operaciones.', 'No operar el ROV con buzos en el agua sin coordinación formal.', 'Respetar las normas y la inducción de cada mandante.'] : area === 'taller' ? ['Desconectar la batería antes de desarmar un ROV y usar lentes de seguridad.', 'Cargar las baterías en la zona definida y nunca sin supervisión.', 'Inflamables en el gabinete, lejos del cautín y de la calefacción.', 'Los estudiantes en práctica trabajan siempre supervisados y no hacen tareas reservadas al encargado.'] : ['Disponer los recursos para la prevención y exigir su cumplimiento.', 'Conducir con licencia vigente, cinturón y sin usar el celular.', 'Usar el mismo EPP que exige el lugar en las visitas a faena y al taller.'] },
+    { t: 'Alcohol, drogas y tabaco', l: ['Está prohibido ingresar, consumir o trabajar bajo los efectos del alcohol o de drogas.', 'La empresa puede aplicar controles preventivos según su programa.', 'Prohibido fumar en el taller, en la oficina, en las embarcaciones y en los lugares señalizados.'] },
+    { t: 'Protocolos de salud incluidos en el Reglamento', l: ['Radiación UV de origen solar.', 'Manejo manual de carga (Ley 20.949): máximo 25 kg.', 'Trastornos musculoesqueléticos de extremidades superiores (TMERT).', 'Ruido (PREXOR).', 'Riesgos psicosociales (CEAL-SM).', 'Acoso y violencia en el trabajo (Ley Karin), que tiene su propia capacitación.'] }
+  ] };
+};
+CONTENIDO.juegos['riohs.j1'] = { intro: 'Según el Reglamento Interno, decide si cada conducta está permitida o prohibida.', partes: [{ tipo: 'clasificar',
   categorias: [{ id: 'si', nombre: 'Permitido o correcto' }, { id: 'no', nombre: 'Prohibido' }],
   items: [
-    { t: 'Detener la operación del ROV porque se viene el temporal', c: 'si', fb: 'Es tu derecho ante un riesgo grave e inminente.' },
+    { t: 'Detener la operación del ROV porque se viene el temporal', c: 'si', fb: 'Es tu derecho ante un riesgo grave e inminente (art. 184 bis).' },
     { t: 'Prestar el ROV a un trabajador del centro para que "pruebe"', c: 'no', fb: 'Prohibido facilitar equipos a personas no autorizadas.' },
-    { t: 'Burlarse a diario del acento de un compañero frente a otros', c: 'no', fb: 'Puede ser acoso laboral.' },
-    { t: 'Denunciar directamente en la Inspección del Trabajo', c: 'si', fb: 'Es uno de los canales de denuncia.' },
     { t: 'Trabajar con resaca después de una celebración', c: 'no', fb: 'Prohibido trabajar con tus capacidades alteradas.' },
     { t: 'Avisar un incidente sin lesionados', c: 'si', fb: 'Los incidentes se informan: así se previenen accidentes.' },
-    { t: 'Enviar mensajes de connotación sexual no deseados a una compañera', c: 'no', fb: 'Es acoso sexual.' },
-    { t: 'Cambiar de turno a quien denunció, como castigo', c: 'no', fb: 'Las represalias están prohibidas.' }
+    { t: 'Fumar junto a las baterías que se están cargando', c: 'no', fb: 'Prohibido fumar en el taller y cerca de baterías o inflamables.' },
+    { t: 'Pedir que te repongan los guantes rotos', c: 'si', fb: 'El EPP dañado se repone sin costo.' },
+    { t: 'Retirar la protección del esmeril porque molesta', c: 'no', fb: 'Prohibido retirar o anular protecciones.' },
+    { t: 'Reclamar una multa ante la Inspección del Trabajo', c: 'si', fb: 'Es un derecho que te reconoce el Reglamento.' },
+    { t: 'Desarmar un ROV con la batería conectada para ahorrar tiempo', c: 'no', fb: 'Prohibido intervenir equipos energizados.' }
   ] }] };
+CONTENIDO.talleres['riohs.t1'] = function (cargo) {
+  return { intro: 'Aplica el Reglamento a situaciones reales de tu trabajo. Tus respuestas quedan registradas para la Asesora en Prevención de Riesgos.', partes: [
+    { tipo: 'lectura', titulo: 'Situación', texto: PLAN.area(cargo) === 'faena' ? 'Llevas 10 días de turno. Un trabajador del centro te pide que lo dejes manejar el ROV "un ratito" para grabar un video. El jefe de centro dice que no hay problema.' : PLAN.area(cargo) === 'taller' ? 'Un viernes en la tarde hay apuro por entregar un equipo. Un compañero propone desarmarlo sin desconectar la batería y fumar un cigarro adentro porque afuera llueve.' : 'Visitas una faena con un cliente. En el pontón nadie usa chaleco salvavidas y te ofrecen uno "si quieres".' },
+    { tipo: 'abierta', p: '¿Qué dice el Reglamento sobre esta situación y qué haces tú?', min: 60, alApr: true, modelo: 'El Reglamento prohíbe facilitar equipos a personas no autorizadas, intervenir equipos energizados y fumar en lugares prohibidos, y obliga a usar el EPP. Lo correcto es negarse con respeto, explicar la norma y avisar a la Jefa de Operaciones si hay presión para incumplirla.' },
+    { tipo: 'abierta', p: '¿Qué norma del Reglamento te parece más difícil de cumplir en tu trabajo y por qué? ¿Qué propondrías?', min: 40, alApr: true, modelo: 'Gracias. Las propuestas sirven para revisar el Reglamento y las condiciones de trabajo.' }
+  ] };
+};
 CONTENIDO.quiz.riohs = { n: 6, preguntas: [
   { p: '¿Quién es la Encargada de Seguridad y Salud en el Trabajo de GL?', op: ['La Asesora externa', 'Mery Leal Vargas, Jefa de Operaciones', 'El jefe de centro de la mandante', 'El Delegado'], ok: 2, fbOk: 'Correcto.', fbNo: 'Es Mery Leal Vargas, Jefa de Operaciones.' },
-  { p: '¿Por qué GL no tiene Comité Paritario?', op: ['Porque no es obligatorio en ninguna empresa', 'Porque ninguna faena reúne a más de 25 personas; por eso tiene Delegado de SST', 'Porque la mandante lo prohíbe', 'Porque es una empresa nueva'], ok: 2, fbOk: 'Correcto.', fbNo: 'El Comité se exige por faena con más de 25 personas; GL tiene Delegado de SST.' },
-  { p: '¿Cuál de estos NO es un canal de denuncia de la Ley Karin en GL?', op: ['Jefatura de Operaciones', 'Inspección del Trabajo', 'Un comentario en el grupo de WhatsApp de la faena', 'Asesora externa (canal alternativo)'], ok: 3, fbOk: 'Correcto. La denuncia es reservada.', fbNo: 'La denuncia se hace por los canales formales, de forma reservada.' },
-  { p: 'Un trabajador de la mandante te insulta y amenaza en el pontón. ¿Qué es?', op: ['Un problema personal', 'Violencia en el trabajo ejercida por terceros, que puedes denunciar', 'Nada, porque no es de GL', 'Acoso sexual'], ok: 2, fbOk: 'Correcto.', fbNo: 'Es violencia en el trabajo y también está cubierta por el protocolo.' },
-  { p: '¿Qué pasa con quien denuncia?', op: ['Se le cambia de faena como sanción', 'Está protegido: cualquier represalia está prohibida', 'Debe pagar la investigación', 'Pierde su turno'], ok: 2, fbOk: 'Correcto.', fbNo: 'Las represalias están prohibidas.' },
-  { p: '¿Qué está prohibido según el RIOHS?', op: ['Usar el EPP', 'Trabajar bajo los efectos del alcohol o drogas', 'Avisar un incidente', 'Detener una tarea peligrosa'], ok: 2, fbOk: 'Correcto.', fbNo: 'Trabajar bajo los efectos del alcohol o drogas está prohibido.' }
+  { p: '¿Por qué GL no tiene Comité Paritario?', op: ['Porque no es obligatorio en ninguna empresa', 'Porque ninguna faena reúne a más de 25 personas; por eso tiene Delegado de SST', 'Porque la mandante lo prohíbe', 'Porque es una empresa nueva'], ok: 2, fbOk: 'Correcto.', fbNo: 'Ninguna faena supera las 25 personas: por eso GL tiene Delegado de SST.' },
+  { p: '¿Qué está prohibido según el RIOHS?', op: ['Usar el EPP', 'Trabajar bajo los efectos del alcohol o drogas', 'Avisar un incidente', 'Detener una tarea peligrosa'], ok: 2, fbOk: 'Correcto.', fbNo: 'Trabajar bajo los efectos del alcohol o drogas está prohibido.' },
+  { p: 'Reincides en una falta al Reglamento. ¿Cuál es la multa máxima?', op: ['Un día de sueldo', 'Hasta el 25% de la remuneración diaria', 'El 50% del sueldo mensual', 'No hay multas'], ok: 2, fbOk: 'Correcto.', fbNo: 'La multa no puede exceder el 25% de la remuneración diaria.' },
+  { p: 'Hay un riesgo grave e inminente en tu faena. ¿Qué te permite el Reglamento?', op: ['Nada: debes seguir hasta que te autoricen', 'Interrumpir el trabajo y alejarte, avisando de inmediato', 'Irte a tu casa sin avisar', 'Solo llamar a la mandante'], ok: 2, fbOk: 'Correcto (Código del Trabajo, art. 184 bis).', fbNo: 'Puedes interrumpir el trabajo y alejarte, avisando de inmediato.' },
+  { p: '¿Dentro de qué plazo la empresa presenta la DIAT?', op: ['24 horas', '5 días', '30 días', 'Solo si el accidente es grave'], ok: 1, fbOk: 'Correcto.', fbNo: 'La DIAT se presenta dentro de 24 horas.' },
+  { p: '¿Cuál es el peso máximo de carga manual por persona?', op: ['15 kg', '25 kg', '50 kg', 'No hay límite'], ok: 2, fbOk: 'Correcto (Ley 20.949).', fbNo: 'El máximo es 25 kg (20 kg para mujeres y menores de edad).' }
 ] };
-CONTENIDO.firmas['riohs.f1'] = function () { return { texto: 'Declaro que recibí el Reglamento Interno de Orden, Higiene y Seguridad 2026 y el Protocolo de prevención del acoso sexual, laboral y la violencia en el trabajo de ' + CONTENIDO.empresa.nombre + ', que conozco los canales de denuncia y que me comprometo a cumplir sus normas.' }; };
+CONTENIDO.firmas['riohs.f1'] = function () { return { texto: 'Declaro que recibí el Reglamento Interno de Orden, Higiene y Seguridad 2026 de ' + CONTENIDO.empresa.nombre + ', que se me explicó su contenido mediante esta capacitación y que me comprometo a cumplirlo.' }; };
+
+/* =====================================================================
+   LEY KARIN (Ley 21.643) · PROTOCOLO DE PREVENCIÓN DE GL
+   ===================================================================== */
+CONTENIDO.lecciones['karin.l1'] = { documento: 'pts/LEY-KARIN.pdf', diapositivas: [
+  { t: 'Un trabajo libre de violencia', x: 'La Ley 21.643, conocida como Ley Karin, obliga a todas las empresas a prevenir, investigar y sancionar el acoso laboral, el acoso sexual y la violencia en el trabajo. GL tiene su Protocolo de prevención, actualizado en noviembre de 2026.', l: ['Aplica a todas las personas que trabajan o se relacionan con GL: gerencia, pilotos, taller, estudiantes en práctica, contratistas, mandantes, clientes y visitas.', 'Aplica en el taller, en las faenas, en las embarcaciones, en los traslados y también en los medios digitales (WhatsApp, correo, redes).'] },
+  { t: 'Acoso sexual', x: 'Requerimientos de carácter sexual, por cualquier medio, no consentidos por quien los recibe, que amenazan o perjudican su situación laboral o sus oportunidades en el empleo.', l: ['Comentarios, insinuaciones o contacto físico de carácter sexual no deseado.', 'Envío de mensajes, fotos o videos sexuales.', 'Incluye el acoso por medios digitales.', 'La falta de consentimiento, la jerarquía y el aislamiento (por ejemplo, en una faena) son claves para evaluarlo.'] },
+  { t: 'Acoso laboral', x: 'Toda agresión u hostigamiento, por cualquier medio, de la empresa o de uno o más trabajadores contra otro, una sola vez o de manera reiterada, que provoque menoscabo, maltrato o humillación, o que amenace o perjudique su situación laboral.', l: ['Basta una sola vez: ya no se exige que sea reiterado.', 'Ejemplos: humillar o gritar frente a otros, aislar a alguien, burlarse de su acento u origen, asignar tareas imposibles para que falle, difundir rumores.'] },
+  { t: 'Violencia de terceros', x: 'Conductas que afectan a los trabajadores por parte de personas ajenas a la relación laboral: clientes, mandantes, proveedores, usuarios o visitas.', l: ['Ejemplo: un trabajador de la mandante te insulta o amenaza en el pontón.', 'En GL es especialmente relevante en las faenas y en la coordinación con los centros de cultivo.', 'También se denuncia y la empresa debe protegerte.'] },
+  { t: 'Conductas incívicas y sexismo', l: ['Conductas incívicas: tratos descorteses o groseros que, aunque no busquen dañar, deterioran el respeto y pueden escalar a violencia.', 'Sexismo: expresiones o prácticas basadas en la idea de inferioridad por sexo o género, incluso como "bromas".', 'GL las gestiona como señales tempranas: se corrigen antes de que escalen.'] },
+  { t: 'Los principios del protocolo', l: ['Confidencialidad y reserva.', 'Imparcialidad: quien investiga no depende de las partes.', 'Celeridad: dentro de los plazos legales.', 'Debido proceso: ambas partes son oídas.', 'No revictimización: no se hace repetir el relato ni se expone a la persona.', 'Protección: medidas de resguardo inmediatas, que no son una sanción anticipada.', 'Perspectiva de género.'] },
+  { t: 'Tus derechos y deberes', l: ['Derecho a un trato respetuoso y libre de violencia.', 'Derecho a denunciar sin represalias.', 'Deber de tratar con respeto a todas las personas.', 'Deber de colaborar con las investigaciones con información veraz.', 'Deber de respetar la confidencialidad.', 'Deber de informar riesgos psicosociales que observes, sobre todo en faena.'] }
+] };
+CONTENIDO.juegos['karin.j1'] = { intro: 'Según la Ley Karin y el protocolo de GL, clasifica cada situación.', partes: [{ tipo: 'clasificar',
+  categorias: [{ id: 'sex', nombre: 'Acoso sexual' }, { id: 'lab', nombre: 'Acoso laboral' }, { id: 'ter', nombre: 'Violencia de terceros' }, { id: 'no', nombre: 'No es acoso ni violencia' }],
+  items: [
+    { t: 'Un compañero te envía por WhatsApp fotos de carácter sexual que no pediste', c: 'sex', fb: 'Es acoso sexual, también por medios digitales.' },
+    { t: 'Tu jefe te grita y te trata de inútil frente a todo el taller', c: 'lab', fb: 'Basta una vez si hay menoscabo o humillación: es acoso laboral.' },
+    { t: 'Un trabajador del centro de cultivo te amenaza porque el ROV demoró la faena', c: 'ter', fb: 'Es violencia ejercida por un tercero (la mandante).' },
+    { t: 'Tu jefa te pide corregir un informe técnico con errores, con respeto', c: 'no', fb: 'Corregir el trabajo con respeto es parte normal de la supervisión.' },
+    { t: 'Dejan fuera a un compañero de toda la información de los turnos para que falle', c: 'lab', fb: 'Aislar a alguien para perjudicarlo es acoso laboral.' },
+    { t: 'Un supervisor le insinúa a una estudiante en práctica que su evaluación depende de salir con él', c: 'sex', fb: 'Es acoso sexual, agravado por la relación de poder.' },
+    { t: 'Un cliente insulta por teléfono a la Jefa de Operaciones', c: 'ter', fb: 'Es violencia de terceros; también se denuncia.' },
+    { t: 'No te asignan horas extraordinarias porque no hay trabajo extra', c: 'no', fb: 'No es acoso si no hay trato hostil ni perjuicio intencional.' }
+  ] }] };
+CONTENIDO.lecciones['karin.l2'] = function (cargo) {
+  return { documento: 'pts/LEY-KARIN.pdf', diapositivas: [
+    { t: 'Cómo prevenimos en GL', l: ['Política de tolerancia cero al acoso y la violencia, y de buen trato.', 'Identificación de los riesgos psicosociales en la Matriz IPER.', 'Cuestionario CEAL-SM con apoyo de la ACHS.', 'Reglas de convivencia en faena y en el taller, y gestión de la carga de trabajo y los turnos.', 'Pautas para la relación con mandantes y clientes.', 'Capacitación anual y difusión de los canales de denuncia dos veces al año.'] },
+    { t: 'Riesgos que GL reconoce', l: ['Turnos largos y alta exigencia: fatiga e irritabilidad.', 'Aislamiento en faena y dependencia de una sola jefatura.', 'Cultura técnica jerárquica que normaliza el trato hostil.', 'Presión de mandantes y clientes por plazos.', 'Convivencia en el espacio reducido del taller y relación jerárquica con los estudiantes en práctica, que requieren especial resguardo.'] },
+    { t: 'Cómo denunciar', l: ['Por escrito al correo glroboticasubmarina@gmail.com (recomendado, deja registro).', 'En forma verbal ante la responsable del protocolo, Mery Leal Vargas, Jefa de Operaciones: se levanta un acta y recibes copia.', 'Teléfono de orientación: +56 9 7828 1635.', 'Canal alternativo, si la denuncia involucra a la Gerencia o a la Jefatura de Operaciones: la Asesora externa en Prevención de Riesgos, ' + CONTENIDO.empresa.apr + '.', 'Directamente en la Inspección del Trabajo, en cualquier momento.'], tip: 'Antes de denunciar puedes pedir orientación, sin contar detalles íntimos ni obligación de denunciar.' },
+    { t: 'Qué debe tener la denuncia', l: ['Quiénes están involucrados.', 'Qué pasó, cuándo y dónde.', 'Testigos, si los hay.', 'Pruebas: mensajes, correos, audios o fotos.', 'Cómo te ha afectado.', 'Si falta algo, la denuncia se recibe igual y se completa después.'] },
+    { t: 'Medidas de resguardo', x: 'Al recibir la denuncia, GL adopta de inmediato (su estándar es dentro de 24 horas) medidas para proteger a quien denuncia. No son sanciones.', l: ['Separar espacios, turnos o faenas.', 'Redistribuir la jornada o cambiar funciones temporalmente sin bajar el sueldo.', 'Instrucción de no contacto.', 'Atención psicológica temprana en la ACHS.'] },
+    { t: 'Investigación y plazos', l: ['En 3 días la empresa decide si investiga internamente o envía los antecedentes a la Inspección del Trabajo.', 'La investigación es escrita, reservada y ambas partes son oídas.', 'Debe terminar en un máximo de 30 días.', 'El informe se envía a la Inspección del Trabajo, que tiene 30 días para pronunciarse.', 'La empresa aplica las medidas o sanciones dentro de 15 días desde que recibe el informe.'] },
+    { t: 'Sanciones y reparación', l: ['Sanciones según el Reglamento Interno: amonestación verbal o escrita, multa, capacitación obligatoria, cambio de funciones o término del contrato en los casos graves.', 'Medidas de reparación: apoyo psicológico en la ACHS, reintegro protegido y ajustes en la organización del trabajo, con seguimiento a los 30, 60 y 90 días.'] },
+    { t: 'Prohibidas las represalias', l: ['Nadie puede ser castigado por denunciar, por ser víctima o por declarar como testigo.', 'Son represalias: cambios arbitrarios de turno, aislamiento, quitar funciones, amenazas u hostigamiento.', 'Cualquier represalia se investiga con prioridad y puede ser una falta grave.'] }
+  ] };
+};
+CONTENIDO.talleres['karin.t1'] = function (cargo) {
+  var faena = PLAN.area(cargo) === 'faena';
+  return { intro: 'Lee cada caso y responde como si te pasara a ti o a un compañero. Tus respuestas quedan registradas de forma reservada para la Asesora en Prevención de Riesgos.', partes: [
+    { tipo: 'lectura', titulo: 'Caso 1', texto: faena ? 'Estás solo en una faena. Desde hace una semana un trabajador del centro hace comentarios sobre tu cuerpo y te escribe mensajes de noche. Te da vergüenza contarlo.' : 'Una estudiante en práctica te cuenta que un trabajador del taller le hace comentarios de carácter sexual y que le da miedo decirlo porque puede afectar su evaluación.' },
+    { tipo: 'abierta', p: '¿Qué tipo de conducta es, qué canales existen y qué medidas de resguardo se podrían pedir?', min: 70, alApr: true, modelo: 'Es acoso sexual (o violencia de un tercero, si viene de la mandante). Se puede pedir orientación y denunciar por correo, en forma verbal ante la Jefa de Operaciones, por el canal alternativo de la Asesora o en la Inspección del Trabajo. Medidas: separar a las personas, cambiar faena o turno, no contacto y atención psicológica en la ACHS. Guardar los mensajes como prueba.' },
+    { tipo: 'lectura', titulo: 'Caso 2', texto: 'En el grupo de WhatsApp del trabajo se burlan a diario de un compañero por su forma de hablar. Él no dice nada, pero cada vez participa menos.' },
+    { tipo: 'abierta', p: '¿Es acoso laboral? ¿Qué puedes hacer tú como compañero?', min: 50, alApr: true, modelo: 'Puede ser acoso laboral: hay menoscabo y humillación por medios digitales. Como compañero: no participar, apoyar a la persona, orientarla sobre los canales y, si corresponde, informar a la responsable del protocolo. Los testigos también están protegidos contra represalias.' }
+  ] };
+};
+CONTENIDO.quiz.karin = { n: 6, preguntas: [
+  { p: 'Según la Ley Karin, ¿el acoso laboral exige que la conducta sea reiterada?', op: ['Sí, siempre', 'No: puede bastar una sola vez si provoca menoscabo, maltrato o humillación', 'Solo si hay testigos', 'Solo si es por escrito'], ok: 2, fbOk: 'Correcto.', fbNo: 'Puede bastar una sola vez.' },
+  { p: 'Un trabajador de la mandante te insulta y amenaza en el pontón. ¿Qué es?', op: ['Un problema personal', 'Violencia en el trabajo ejercida por terceros, que puedes denunciar', 'Nada, porque no es de GL', 'Acoso sexual'], ok: 2, fbOk: 'Correcto.', fbNo: 'Es violencia de terceros y se denuncia.' },
+  { p: '¿Cuál de estos NO es un canal de denuncia en GL?', op: ['El correo de la empresa', 'La Inspección del Trabajo', 'Un comentario en el grupo de WhatsApp de la faena', 'La Asesora externa (canal alternativo)'], ok: 3, fbOk: 'Correcto. La denuncia se hace por los canales formales.', fbNo: 'Un comentario en un grupo no es una denuncia.' },
+  { p: '¿En cuánto tiempo debe terminar la investigación?', op: ['5 días', '15 días', '30 días como máximo', 'No hay plazo'], ok: 3, fbOk: 'Correcto.', fbNo: 'La investigación termina en un máximo de 30 días.' },
+  { p: '¿Qué son las medidas de resguardo?', op: ['Una sanción anticipada para el denunciado', 'Medidas inmediatas para proteger a quien denuncia, como separar espacios o dar atención psicológica', 'Un trámite opcional', 'Medidas que se aplican al final'], ok: 2, fbOk: 'Correcto.', fbNo: 'Son medidas inmediatas de protección; no son sanciones.' },
+  { p: '¿Qué pasa con quien denuncia o declara como testigo?', op: ['Se le cambia de faena como castigo', 'Está protegido: cualquier represalia está prohibida', 'Debe pagar la investigación', 'Pierde su turno'], ok: 2, fbOk: 'Correcto.', fbNo: 'Las represalias están prohibidas.' },
+  { p: '¿Quién recibe la denuncia si involucra a la Jefatura de Operaciones?', op: ['La misma Jefa de Operaciones', 'La Asesora externa en Prevención de Riesgos o la Inspección del Trabajo', 'Nadie', 'La mandante'], ok: 2, fbOk: 'Correcto.', fbNo: 'Se usa el canal alternativo: la Asesora externa o la Inspección del Trabajo.' }
+] };
+CONTENIDO.firmas['karin.f1'] = function () { return { texto: 'Declaro que recibí el Protocolo de prevención del acoso sexual, laboral y la violencia en el trabajo (Ley 21.643) de ' + CONTENIDO.empresa.nombre + ', que conozco los canales de denuncia y las medidas de resguardo, y que me comprometo a mantener un trato respetuoso y libre de violencia.' }; };
 
 /* =====================================================================
    CÓMO LEER LA MATRIZ IPER
@@ -203,6 +452,60 @@ CONTENIDO.quiz.iper = { n: 6, preguntas: [
   { p: '¿Qué es el riesgo residual?', op: ['El riesgo antes de evaluar', 'El riesgo que queda después de aplicar los controles', 'Un riesgo que no se puede medir', 'El riesgo de otra empresa'], ok: 2, fbOk: 'Correcto.', fbNo: 'Es el nivel que queda después de aplicar las medidas de control.' },
   { p: 'Ves un peligro nuevo que no está en la matriz. ¿Qué haces?', op: ['Nada', 'Aviso a la Jefa de Operaciones o a la Asesora para actualizarla', 'Lo anoto para mí', 'Espero a la próxima auditoría'], ok: 2, fbOk: 'Correcto.', fbNo: 'Avisar permite actualizar la matriz y los controles.' }
 ] };
+
+/* ---------- Matriz IPER ampliada: la matriz real del cargo y su revisión participativa ---------- */
+CONTENIDO.juegos['iper.j1'] = CONTENIDO.juegos['ds44.j4'];
+CONTENIDO.juegos['iper.j2'] = function (cargo) {
+  var R = _riesgosCargo(cargo).slice(0, 12), it = [];
+  R.slice(0, 5).forEach(function (r) { if (r.peligros[0]) it.push({ t: r.peligros[0], c: 'pel', fb: 'Es un peligro: la fuente o condición que puede causar daño.' }); });
+  R.slice(0, 5).forEach(function (r) { it.push({ t: r.riesgo, c: 'rie', fb: 'Es un riesgo: la posibilidad de que el peligro te dañe (lo que puede pasar).' }); });
+  return { intro: 'En la matriz, el peligro es la fuente del daño y el riesgo es lo que puede pasar. Clasifica estos textos reales de la Matriz IPER de tu cargo.', partes: [{ tipo: 'clasificar',
+    categorias: [{ id: 'pel', nombre: 'Peligro' }, { id: 'rie', nombre: 'Riesgo' }], items: it }] };
+};
+CONTENIDO.lecciones['iper.l2'] = { diapositivas: [
+  { t: 'Probabilidad (P)', x: '¿Qué tan seguido puede ocurrir?', l: ['Baja = 1: rara vez.', 'Media = 2: varias veces.', 'Alta = 4: siempre o casi siempre.'] },
+  { t: 'Severidad (S)', x: '¿Qué tan grave sería el daño?', l: ['Ligeramente dañino = 1: lesiones superficiales, molestias.', 'Dañino = 2: laceraciones, quemaduras, esguinces, fracturas menores.', 'Extremadamente dañino = 4: lesiones graves, amputaciones, muerte.'] },
+  { t: 'El nivel de riesgo: P × S', l: ['1 o 2 · Tolerable: se mantienen los controles.', '4 · Moderado: hay que reducirlo en un plazo definido.', '8 · Importante: no se empieza ni continúa hasta reducirlo.', '16 · Intolerable: no se empieza; si no se puede reducir, el trabajo se prohíbe.'], tip: 'Ejemplo: caída al agua desde el pontón, P 2 × S 4 = 8 Importante. Por eso el chaleco salvavidas es obligatorio siempre.' },
+  { t: 'Riesgos que se evalúan con protocolo', x: 'Varios riesgos de salud no se evalúan con P × S sino con su protocolo o guía:', l: ['Radiación UV de origen solar: guía técnica MINSAL (GL tiene el informe cualitativo).', 'Frío a la intemperie: D.S. 594 y guía del ISP.', 'Movimientos repetitivos: TMERT-EESS.', 'Manejo manual de carga: Ley 20.949.', 'Riesgos psicosociales: CEAL-SM.', 'Químicos: D.S. 594 y la HDS de cada producto.'] },
+  { t: 'La jerarquía de controles', l: ['1. Eliminación: quitar el peligro.', '2. Sustitución: cambiarlo por algo menos peligroso.', '3. Ingeniería: resguardos, gabinete de inflamables, extractor de humos, barandas.', '4. Señalización y advertencias.', '5. Administrativos: procedimientos, AST, capacitación, pausas.', '6. EPP: la última barrera.'], tip: 'Cuando revises tu matriz, pregúntate: ¿se podría subir un escalón? Un control de ingeniería protege aunque alguien se olvide.' },
+  { t: 'El riesgo residual', x: 'Es el riesgo que queda después de aplicar los controles. La matriz lo vuelve a evaluar.', l: ['Si el residual sigue Importante o Intolerable, los controles no bastan y se agregan medidas.', 'El residual solo es real si los controles se cumplen todos los días.', 'Por eso tú eres parte del control: si falta uno, la tarea no empieza.'] },
+  { t: 'Cuándo se actualiza la matriz', l: ['Cuando cambian las tareas, los equipos, los lugares o los productos.', 'Después de un accidente o incidente relevante.', 'Cuando cambia la normativa.', 'Cuando los trabajadores informan riesgos nuevos o medidas que no funcionan: eso es lo que harás en el taller de este curso.', 'Cada cambio queda registrado en la hoja «Control de cambios».'] }
+] };
+
+/* La matriz completa del cargo, fila por fila */
+CONTENIDO.lecciones['iper.lm'] = function (cargo) {
+  var I = (window.IPER_EMPRESA || {})[cargo] || { riesgos: [], procesos: [] }, R = I.riesgos.slice();
+  R.sort(function (a, b) { return (b.nivel || 0) - (a.nivel || 0); });
+  var cuenta = {}; R.forEach(function (r) { cuenta[r.nivelTxt] = (cuenta[r.nivelTxt] || 0) + 1; });
+  var tareas = []; R.forEach(function (r) { (r.tareas || []).forEach(function (t) { if (tareas.indexOf(t) < 0) tareas.push(t); }); });
+  var d = [{ t: 'La Matriz IPER de tu cargo', x: 'Ahora vas a leer la matriz real de GL para el cargo de ' + _nombreCargo(cargo) + ': ' + R.length + ' riesgos en ' + tareas.length + ' tareas. Léela con ojo crítico: al final del curso te vamos a preguntar si falta algo y si las medidas sirven.',
+    l: Object.keys(cuenta).map(function (k) { return k + ': ' + cuenta[k] + ' riesgo' + (cuenta[k] === 1 ? '' : 's'); }),
+    tip: 'La matriz completa en Excel es un documento que tienes derecho a conocer: pídela a la Jefa de Operaciones o a la Asesora.' }];
+  d.push({ t: 'Las tareas de tu cargo', l: tareas.slice(0, 14) });
+  if (tareas.length > 14) d.push({ t: 'Más tareas de tu cargo', l: tareas.slice(14, 28) });
+  R.forEach(function (r, i) {
+    function grupo(et, a) { return (a || []).filter(Boolean).map(function (c) { return et + ': ' + c; }); }
+    d.push({ t: 'Fila ' + (i + 1) + ' de ' + R.length + ' · ' + r.riesgo + (r.codigo ? ' (' + r.codigo + ')' : ''),
+      x: 'Tipo: ' + (r.tipo || '—') + '\nTareas: ' + (r.tareas || []).join(' / ') + '\nPeligros: ' + (r.peligros || []).join(' / ') + '\nConsecuencias: ' + (r.consecuencias || []).join(' / '),
+      l: [(r.p && r.s) ? 'Evaluación: P ' + r.p + ' × S ' + r.s + ' = ' + (r.p * r.s) + ' → ' + r.nivelTxt : 'Evaluación: ' + r.nivelTxt].concat(
+        grupo('Eliminar', r.eliminacion), grupo('Sustituir', r.sustitucion), grupo('Ingeniería', r.ingenieria), grupo('Señalización', r.senalizacion), grupo('Administrativo', r.administrativo),
+        r.eppItems && r.eppItems.length ? ['EPP: ' + r.eppItems.join(', ')] : [], r.pts && r.pts.length ? ['Procedimiento: ' + r.pts.join(', ')] : []) });
+  });
+  d.push({ t: 'Ahora te toca a ti', l: ['¿Hay alguna tarea que haces y que no aparece?', '¿Hay algún peligro que conoces y que no está?', '¿Alguna evaluación te parece muy baja o muy alta para lo que vives en terreno?', '¿Las medidas se cumplen de verdad? ¿Falta algún control o EPP?', 'Lo vas a responder en el taller «Revisa tu matriz».'] });
+  return { diapositivas: d };
+};
+
+/* Revisión participativa de la matriz del cargo */
+CONTENIDO.talleres['iper.t2'] = function (cargo) {
+  var R = _riesgosCargo(cargo).slice().sort(function (a, b) { return (b.nivel || 0) - (a.nivel || 0); });
+  var items = R.map(function (r) { var c = [].concat(r.ingenieria || [], r.administrativo || []).filter(Boolean).slice(0, 2); return r.riesgo + ' (' + r.nivelTxt + ')' + (c.length ? ' · ' + c.join('; ') : '') + (r.eppItems && r.eppItems.length ? ' · EPP: ' + r.eppItems.slice(0, 3).join(', ') : ''); });
+  return { intro: 'Este taller es tu revisión de la Matriz IPER. Lo que marques y escribas llega a la Asesora en Prevención de Riesgos y se usa para actualizar la matriz. No hay respuestas correctas o incorrectas: importa lo que pasa de verdad en tu trabajo.', partes: [
+    { tipo: 'registro', titulo: 'Revisión de las medidas de la Matriz IPER (' + _nombreCargo(cargo) + ')', opciones: ['Correctas y se cumplen', 'Faltan o no se cumplen', 'No lo sé'], items: items },
+    { tipo: 'abierta', p: '¿Qué tarea, peligro o riesgo de tu trabajo NO está en la matriz? Descríbelo: qué haces, dónde y qué te podría pasar.', min: 30, alApr: true, modelo: 'Gracias. Cada riesgo nuevo que informas se evalúa y, si corresponde, se agrega a la matriz con sus controles.' },
+    { tipo: 'abierta', p: 'De los riesgos que marcaste con medidas que faltan o no se cumplen, elige uno: ¿qué pasa en la práctica y qué medida propones? Indica en qué escalón de la jerarquía está.', min: 40, alApr: true, modelo: 'Una buena propuesta prioriza eliminar, sustituir o aislar el peligro (ingeniería) antes que depender solo de instrucciones o del EPP.' },
+    { tipo: 'abierta', p: '¿Alguna evaluación (P × S) te parece mal calculada para lo que vives en terreno? ¿Cuál y por qué?', min: 20, alApr: true, modelo: 'Gracias. Si la tarea se hace más seguido o con más peligro del registrado, la evaluación se revisa.' }
+  ] };
+};
 
 /* =====================================================================
    EMERGENCIAS (PDR-01 FAENAS Y PDR-02 TALLER)
